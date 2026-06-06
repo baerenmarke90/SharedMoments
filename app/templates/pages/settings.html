@@ -283,16 +283,20 @@
 
               {% for user_setting in user_settings %}
               {% if user_setting.name == 'darkmode' %}
-              <a class="row padding primary-container wave" onclick="toggleDarkmode()">
+              <div class="row padding primary-container" style="margin:0;">
                 <i>{{ user_setting.icon }}</i>
                 <div class="max">
-                  <h6 class="small" id="{{ user_setting.name }}-name">{{ _(user_setting.name) }}</h6>
+                  <h6 class="small">{{ _(user_setting.name) }}</h6>
                 </div>
-                <label class="switch">
-                  <input type="checkbox" id="darkmode-toggle" {{ 'checked' if user_setting.value == 'TRUE' }}>
-                  <span></span>
-                </label>
-              </a>
+                <div class="field suffix border" style="min-width:9rem; margin:0;">
+                  <select id="darkmode-select" onchange="setDarkmode(this.value)">
+                    <option value="FALSE" {% if user_setting.value == 'FALSE' %}selected{% endif %}>{{ _('Light') }}</option>
+                    <option value="TRUE" {% if user_setting.value == 'TRUE' %}selected{% endif %}>{{ _('Dark') }}</option>
+                    <option value="AUTO" {% if user_setting.value == 'AUTO' %}selected{% endif %}>{{ _('System') }}</option>
+                  </select>
+                  <i>arrow_drop_down</i>
+                </div>
+              </div>
               {% elif user_setting.name == 'language' %}
               <a class="row padding primary-container wave" onclick="editSetting('{{user_setting.name}}', 'language')">
                 <i>{{ user_setting.icon }}</i>

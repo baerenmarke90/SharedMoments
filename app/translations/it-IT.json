@@ -4198,5 +4198,21 @@
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Se non hai richiesto questa operazione, puoi ignorare questa email."
+    },
+    {
+        "entityID": 0,
+        "fieldName": "Light",
+        "helpText": "",
+        "languageCode": "it-IT",
+        "entityType": "ui",
+        "translatedText": "Chiaro"
+    },
+    {
+        "entityID": 0,
+        "fieldName": "Dark",
+        "helpText": "",
+        "languageCode": "it-IT",
+        "entityType": "ui",
+        "translatedText": "Scuro"
     }
 ]

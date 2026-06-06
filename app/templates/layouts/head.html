@@ -11,8 +11,8 @@
 <!-- SortableJS (Drag & Drop) -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" defer></script>
 <!-- BeerCSS -->
-{% if accent_color and accent_color != '#6750A4' %}
-<style id="theme-cloak">body { opacity: 0; } body.theme-ready { opacity: 1; }</style>
+{% if (accent_color and accent_color != '#6750A4') or (darkmode and darkmode.value == 'AUTO') %}
+<style id="theme-cloak">body { opacity: 0; } body.theme-ready { opacity: 1; transition: opacity 0.05s; }</style>
 {% endif %}
 <link href="https://cdn.jsdelivr.net/npm/beercss@3.6.13/dist/cdn/beer.min.css" rel="stylesheet">
 <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.6.13/dist/cdn/beer.min.js"></script>
@@ -21,9 +21,28 @@
 <script type="module">
   window.applyTheme = async (hex) => await ui('theme', hex);
   const accentColor = '{{ accent_color|default("#6750A4") }}';
-  if (accentColor && accentColor !== '#6750A4') {
+  const darkmodeValue = '{{ darkmode.value if darkmode else "FALSE" }}';
+
+  if (darkmodeValue === 'AUTO') {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    document.body.classList.toggle('dark', mq.matches);
+    if (accentColor && accentColor !== '#6750A4') {
+      await ui('theme', accentColor);
+    }
+    window.__autoDarkMq = mq;
+    window.__autoDarkMqListener = async (e) => {
+      document.body.classList.toggle('dark', e.matches);
+      const currentAccent = document.getElementById('input-custom-accent-color')?.value
+        || document.querySelector('meta[name="theme-color"]')?.content;
+      if (currentAccent && typeof window.applyTheme === 'function') {
+        await window.applyTheme(currentAccent);
+      }
+    };
+    mq.addEventListener('change', window.__autoDarkMqListener);
+  } else if (accentColor && accentColor !== '#6750A4') {
     await ui('theme', accentColor);
   }
+
   document.body.classList.add('theme-ready');
   const cloak = document.getElementById('theme-cloak');
   if (cloak) cloak.remove();
