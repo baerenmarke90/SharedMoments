@@ -4198,5 +4198,21 @@
         "languageCode": "de-DE",
         "entityType": "ui",
         "translatedText": "Falls du dies nicht angefordert hast, kannst du diese E-Mail ignorieren."
+    },
+    {
+        "entityID": 0,
+        "fieldName": "Light",
+        "helpText": "",
+        "languageCode": "de-DE",
+        "entityType": "ui",
+        "translatedText": "Hell"
+    },
+    {
+        "entityID": 0,
+        "fieldName": "Dark",
+        "helpText": "",
+        "languageCode": "de-DE",
+        "entityType": "ui",
+        "translatedText": "Dunkel"
     }
 ]

@@ -4198,5 +4198,21 @@
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "If you did not request this, you can ignore this e-mail."
+    },
+    {
+        "entityID": 0,
+        "fieldName": "Light",
+        "helpText": "",
+        "languageCode": "en-US",
+        "entityType": "ui",
+        "translatedText": "Light"
+    },
+    {
+        "entityID": 0,
+        "fieldName": "Dark",
+        "helpText": "",
+        "languageCode": "en-US",
+        "entityType": "ui",
+        "translatedText": "Dark"
     }
 ]
