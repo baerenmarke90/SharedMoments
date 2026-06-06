@@ -278,6 +278,13 @@ def update_settings():
         setting = request.form['setting']
         value = request.form['value']
 
+        if setting == 'title' and not value.strip():
+            return jsonify({
+                'status': 'error',
+                'message': _('Title cannot be empty'),
+                'data': {'error_code': 400}
+            }), 400
+
         if setting in ('banner_image', 'family_banner_image', 'friends_banner_image') and value:
             ext = value.rsplit('.', 1)[-1].lower() if '.' in value else ''
             if ext not in IMAGE_EXTENSIONS:
@@ -743,10 +750,17 @@ def upload():
 def item():
     if request.method == 'POST':
         try:
-            title = request.form.get('title')
+            title = request.form.get('title', '').strip()
             content = request.form.get('content', '')
             content_type = request.form.get('contentType')
+
+            if not request.form.get('listType'):
+                return jsonify({'status': 'error', 'message': _('Missing required fields'), 'data': {'error_code': 400}}), 400
+
             list_type = int(request.form['listType'])
+
+            if not title and not content and content_type == 'list':
+                return jsonify({'status': 'error', 'message': _('Please enter a title'), 'data': {'error_code': 400}}), 400
 
             perm_check = require_list_permission('Create', list_type)
             if perm_check is not None:
@@ -872,6 +886,9 @@ def item_by_id(id):
     if request.method == 'GET':
         try:
             item = get_item_by_id(id)
+
+            if not item:
+                return jsonify({'status': 'error', 'message': _('Item not found'), 'data': {'error_code': 404}}), 404
 
             perm_check = require_list_permission('Update', item.listType)
             if perm_check is not None:

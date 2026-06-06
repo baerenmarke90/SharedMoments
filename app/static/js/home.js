@@ -364,13 +364,22 @@ async function saveNewHomeItem(btn) {
       return;
    }
 
+   var titleValue = document.getElementById("div-create-home-item-title").value;
+   var hasFiles = document.getElementById('file-input-create-home-item').files.length > 0;
+   var contentValue = document.getElementById("textarea-create-home-item-content").value;
+
+   if (!titleValue.trim() && !hasFiles && !contentValue.trim()) {
+      showSnackbar('home', true, 'error', _('Please enter a title or add media'), null, false);
+      return;
+   }
+
    btnLoading(btn);
 
    // === Online-Erstellung (Original-Logik) ===
    errorOnUpload = false; // Reset error state
    document.getElementById('dialog-create-new-home-item').style.overflow = "hidden"; // Verhindere das Scrollen im Modal
 
-   if (document.getElementById('file-input-create-home-item').files.length > 0) { // Wenn Bilder ausgewählt sind
+   if (hasFiles) { // Wenn Bilder ausgewählt sind
       document.getElementById('div-overlay-new-home-item').classList.add('active');
       document.getElementById('progress-new-home-item').style.display = "";
       document.getElementById('headline-article-new-home-item').textContent = _('Upload Files...');

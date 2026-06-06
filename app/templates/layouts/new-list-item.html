@@ -19,6 +19,11 @@
    async function saveNewListItem() {
       var title = document.getElementById("div-create-list-item-title").value;
 
+      if (!title.trim()) {
+         showSnackbar('list', true, 'error', _('Please enter a title'), null, false);
+         return;
+      }
+
       // Offline: direkt in Outbox speichern ohne Fetch-Versuch
       if (!navigator.onLine && typeof addToOutbox === 'function') {
          return saveListItemToOutbox(title);

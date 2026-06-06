@@ -115,8 +115,14 @@ function validatePath(path) {
     }
     if (path.length === 0) {
         helper.textContent = _('Only lowercase letters, numbers and hyphens');
-        helper.className = 'helper';
-        input.classList.remove('invalid');
+        helper.className = 'helper error';
+        input.classList.add('invalid');
+        return false;
+    }
+    if (!/^[a-z0-9-]+$/.test(path)) {
+        helper.textContent = _('Only lowercase letters, numbers and hyphens');
+        helper.className = 'helper error';
+        input.classList.add('invalid');
         return false;
     }
     helper.textContent = _('Only lowercase letters, numbers and hyphens');

@@ -265,8 +265,11 @@ def gallery(id):
     try:
         item = get_item_by_id(id)
 
+        if not item:
+            return redirect(url_for('pages.home'))
+
         if not item.contentType.startswith('gallery'):
-            raise Exception(_('Item is not a gallery'))
+            return redirect(url_for('pages.home'))
 
         list_types = get_all_list_types()
         title = get_display_title()
