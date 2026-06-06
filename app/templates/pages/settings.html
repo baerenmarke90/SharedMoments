@@ -283,7 +283,7 @@
 
               {% for user_setting in user_settings %}
               {% if user_setting.name == 'darkmode' %}
-              <div class="row padding primary-container" style="border-radius: 0.75rem; align-items: center;">
+              <div class="row padding primary-container" style="margin:0;">
                 <i>{{ user_setting.icon }}</i>
                 <div class="max">
                   <h6 class="small">{{ _(user_setting.name) }}</h6>
