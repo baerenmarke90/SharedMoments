@@ -82,7 +82,7 @@
     {
         "entityID": 0,
         "fieldName": "banner_text_anniversary",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
+        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
         "languageCode": "it-IT",
         "entityType": "static",
         "translatedText": "Siamo {relationship_status} da {years_count}, {months_count} e {days_count}. Equivale a {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni."
@@ -90,7 +90,7 @@
     {
         "entityID": 0,
         "fieldName": "banner_text_engaged",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
+        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
         "languageCode": "it-IT",
         "entityType": "static",
         "translatedText": "Siamo {relationship_status} da {years_count}, {months_count} e {days_count}. Equivale a {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni. Siamo in una relazione dal {anniversary_date}."
@@ -98,7 +98,7 @@
     {
         "entityID": 0,
         "fieldName": "banner_text_wedding",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
+        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
         "languageCode": "it-IT",
         "entityType": "static",
         "translatedText": "Siamo {relationship_status} da {years_count}, {months_count} e {days_count}. Equivale a {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni."
@@ -1538,7 +1538,7 @@
     {
         "entityID": 0,
         "fieldName": "Birthday of {name}",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Compleanno di {name}"
@@ -1546,7 +1546,7 @@
     {
         "entityID": 0,
         "fieldName": "{n}-Year Milestone",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Siamo stati insieme per {n} anni"
@@ -1554,7 +1554,7 @@
     {
         "entityID": 0,
         "fieldName": "{n}-Day Milestone",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Traguardo di {n} giorni"
@@ -1562,7 +1562,7 @@
     {
         "entityID": 0,
         "fieldName": "Countdown: {title}",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Conto alla rovescia: {title}"
@@ -1570,7 +1570,7 @@
     {
         "entityID": 0,
         "fieldName": "Countdown \"{title}\" reached!",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Conto alla rovescia \"{title}\" raggiunto!"
@@ -1578,7 +1578,7 @@
     {
         "entityID": 0,
         "fieldName": "Today is {title}!",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Oggi è {title}!"
@@ -1586,7 +1586,7 @@
     {
         "entityID": 0,
         "fieldName": "{title} in 1 day",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "{title} tra 1 giorno"
@@ -1594,7 +1594,7 @@
     {
         "entityID": 0,
         "fieldName": "{title} in {days} days",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "{title} tra {days} giorni"
@@ -1602,7 +1602,7 @@
     {
         "entityID": 0,
         "fieldName": "{title} is on {date}",
-        "helpText": "",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "{title} è il {date}"
@@ -3282,7 +3282,7 @@
     {
         "entityID": 0,
         "fieldName": "banner_text_family",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
+        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
         "languageCode": "it-IT",
         "entityType": "static",
         "translatedText": "La nostra famiglia — {years_count}, {months_count} e {days_count} di ricordi condivisi. Sono {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni di crescita insieme."
@@ -3290,7 +3290,7 @@
     {
         "entityID": 0,
         "fieldName": "banner_text_friends",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
+        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
         "languageCode": "it-IT",
         "entityType": "static",
         "translatedText": "Amici da {years_count}, {months_count} e {days_count}. Sono {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni di momenti indimenticabili."
