@@ -346,18 +346,37 @@ function sendSettingUpdateWithCallback(setting, value, callback) {
 }
 
 // --- Darkmode ---
-function toggleDarkmode() {
+function setDarkmode(value) {
     if (!navigator.onLine) {
         showSnackbar('settings', true, 'error', _('You are offline'), null, false);
         return;
     }
-    const toggle = document.getElementById('darkmode-toggle');
-    toggle.checked = !toggle.checked;
-    const value = toggle.checked ? 'TRUE' : 'FALSE';
 
-    document.body.classList.toggle('dark', toggle.checked);
+    const previousDark = document.body.classList.contains('dark');
 
-    // Re-apply accent color theme for new mode
+    if (value === 'AUTO') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.classList.toggle('dark', prefersDark);
+        if (!window.__autoDarkMqListener) {
+            window.__autoDarkMq = window.matchMedia('(prefers-color-scheme: dark)');
+            window.__autoDarkMqListener = async (e) => {
+                document.body.classList.toggle('dark', e.matches);
+                const accentHex = document.getElementById('input-custom-accent-color')?.value
+                    || document.querySelector('meta[name="theme-color"]')?.content;
+                if (accentHex && typeof window.applyTheme === 'function') {
+                    await window.applyTheme(accentHex);
+                }
+            };
+            window.__autoDarkMq.addEventListener('change', window.__autoDarkMqListener);
+        }
+    } else {
+        if (window.__autoDarkMq && window.__autoDarkMqListener) {
+            window.__autoDarkMq.removeEventListener('change', window.__autoDarkMqListener);
+            window.__autoDarkMqListener = null;
+        }
+        document.body.classList.toggle('dark', value === 'TRUE');
+    }
+
     const accentHex = document.getElementById('input-custom-accent-color')?.value
         || document.querySelector('meta[name="theme-color"]')?.content;
     if (accentHex && typeof window.applyTheme === 'function') {
@@ -378,15 +397,17 @@ function toggleDarkmode() {
                 showSnackbar('settings', true, 'green', result.message, null, false);
             } else {
                 showSnackbar('settings', true, 'error', result.message, result, true);
-                toggle.checked = !toggle.checked;
-                document.body.classList.toggle('dark', toggle.checked);
+                document.body.classList.toggle('dark', previousDark);
+                const sel = document.getElementById('darkmode-select');
+                if (sel) sel.value = previousDark ? 'TRUE' : 'FALSE';
             }
         })
         .catch((error) => {
             if (String(error) == "TypeError: Failed to fetch") error = _('Server not reachable');
             showSnackbar('settings', true, 'error', error, null, false);
-            toggle.checked = !toggle.checked;
-            document.body.classList.toggle('dark', toggle.checked);
+            document.body.classList.toggle('dark', previousDark);
+            const sel = document.getElementById('darkmode-select');
+            if (sel) sel.value = previousDark ? 'TRUE' : 'FALSE';
         });
 }
 
