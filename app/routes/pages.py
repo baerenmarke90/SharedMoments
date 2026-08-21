@@ -384,6 +384,212 @@ def _build_couple_home_recent(
     return recent[:5]
 
 
+
+_STORY_MONTH_NAMES = (
+    '',
+    'Januar',
+    'Februar',
+    'März',
+    'April',
+    'Mai',
+    'Juni',
+    'Juli',
+    'August',
+    'September',
+    'Oktober',
+    'November',
+    'Dezember',
+)
+
+
+def _story_month_label(value):
+    return f'{_STORY_MONTH_NAMES[value.month]} {value.year}'
+
+
+def _build_story_entries(
+    items,
+    moments,
+    shared_heart_moments,
+    can_view_items,
+    can_view_moments,
+):
+    """Build the relationship chronology from existing SharedMoments data."""
+    entries = []
+
+    if can_view_items:
+        for item, user in items:
+            event_dt = _as_datetime(item.dateCreated)
+            if not event_dt:
+                continue
+
+            image_url = None
+            first_media = None
+
+            if item.contentURL:
+                first_media = item.contentURL.split(';')[0].strip()
+
+            if first_media:
+                if item.contentType in ('image', 'galleryStartWithImage'):
+                    image_url = f'/api/v2/media/{first_media}'
+                elif item.contentType in (
+                    'video',
+                    'video-mov',
+                    'galleryStartWithVideo',
+                ):
+                    image_url = f'/api/v2/media/thumb/{first_media}'
+
+            is_gallery = item.contentType in (
+                'galleryStartWithImage',
+                'galleryStartWithVideo',
+            )
+
+            entries.append({
+                'type': 'memory',
+                'type_label': 'Erinnerung',
+                'icon': 'photo_library' if is_gallery else (
+                    'notes' if item.contentType == 'text' else 'photo'
+                ),
+                'id': item.id,
+                'title': item.title or 'Erinnerung',
+                'text': item.content or '',
+                'event_date': event_dt,
+                'date_label': event_dt.strftime('%d.%m.%Y'),
+                'year': event_dt.year,
+                'month_key': event_dt.strftime('%Y-%m'),
+                'month_label': _story_month_label(event_dt),
+                'author_name': user.firstName if user else '',
+                'author_picture': user.profilePicture if user else None,
+                'image_url': image_url,
+                'href': (
+                    f'/gallery/{item.id}'
+                    if item.contentType in (
+                        'galleryStartWithImage',
+                        'galleryStartWithVideo',
+                        'video',
+                        'video-mov',
+                    )
+                    else f'/memories#article_{item.id}'
+                ),
+                'is_gallery': is_gallery,
+            })
+
+    if can_view_moments:
+        for item, user in moments:
+            event_dt = _as_datetime(item.dateCreated)
+            if not event_dt:
+                continue
+
+            entries.append({
+                'type': 'milestone',
+                'type_label': 'Meilenstein',
+                'icon': 'star',
+                'id': item.id,
+                'title': item.title or 'Meilenstein',
+                'text': item.content or '',
+                'event_date': event_dt,
+                'date_label': event_dt.strftime('%d.%m.%Y'),
+                'year': event_dt.year,
+                'month_key': event_dt.strftime('%Y-%m'),
+                'month_label': _story_month_label(event_dt),
+                'author_name': user.firstName if user else '',
+                'author_picture': user.profilePicture if user else None,
+                'image_url': None,
+                'href': None,
+                'is_gallery': False,
+            })
+
+    for heart_moment in shared_heart_moments:
+        try:
+            event_dt = datetime.fromisoformat(heart_moment['momentDate'])
+        except (TypeError, ValueError, KeyError):
+            continue
+
+        author = heart_moment.get('author') or {}
+        media_filename = heart_moment.get('mediaFilename')
+
+        entries.append({
+            'type': 'heart',
+            'type_label': 'Herzmoment',
+            'icon': 'favorite',
+            'id': heart_moment['id'],
+            'title': 'Herzmoment',
+            'text': heart_moment.get('description') or '',
+            'event_date': event_dt,
+            'date_label': event_dt.strftime('%d.%m.%Y'),
+            'year': event_dt.year,
+            'month_key': event_dt.strftime('%Y-%m'),
+            'month_label': _story_month_label(event_dt),
+            'author_name': author.get('firstName', ''),
+            'author_picture': author.get('profilePicture'),
+            'image_url': (
+                f"/api/v2/heart-moments/{heart_moment['id']}/image"
+                f"?v={heart_moment.get('dateModified', '')}"
+                if media_filename else None
+            ),
+            'href': f"/heart-moments?highlight={heart_moment['id']}",
+            'is_gallery': False,
+        })
+
+    entries.sort(
+        key=lambda entry: (
+            entry['event_date'],
+            entry['id'],
+        ),
+        reverse=True,
+    )
+    return entries
+
+
+def _filter_story_entries(entries, entry_type, selected_year, search_query):
+    filtered = entries
+
+    if entry_type != 'all':
+        filtered = [
+            entry for entry in filtered
+            if entry['type'] == entry_type
+        ]
+
+    if selected_year:
+        filtered = [
+            entry for entry in filtered
+            if entry['year'] == selected_year
+        ]
+
+    if search_query:
+        needle = search_query.casefold()
+
+        def matches(entry):
+            haystack = ' '.join((
+                entry.get('type_label') or '',
+                entry.get('title') or '',
+                entry.get('text') or '',
+                entry.get('author_name') or '',
+            )).casefold()
+            return needle in haystack
+
+        filtered = [entry for entry in filtered if matches(entry)]
+
+    return filtered
+
+
+def _group_story_entries(entries):
+    groups = []
+    current_key = None
+
+    for entry in entries:
+        if entry['month_key'] != current_key:
+            current_key = entry['month_key']
+            groups.append({
+                'key': current_key,
+                'label': entry['month_label'],
+                'entries': [],
+            })
+
+        groups[-1]['entries'].append(entry)
+
+    return groups
+
+
 @pages_bp.route('/home')
 @jwt_required
 def home():
@@ -550,6 +756,114 @@ def memories():
         )
     except Exception as e:
         log('error', f'Error while rendering memories page: {e}')
+        return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/story')
+@jwt_required
+def story():
+    """Relationship-first chronology for the Couples edition."""
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        list_types = get_all_list_types()
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+
+        can_view_items = has_list_permission('View', 'Home')
+        can_view_moments = has_list_permission('View', 'Moments')
+
+        home_list_type = get_list_type_by_title('Home')
+        moments_list_type = get_list_type_by_title('Moments')
+
+        items = (
+            get_items_by_type(
+                home_list_type.id,
+                'desc',
+                edition=sm_edition,
+            )
+            if can_view_items and home_list_type
+            else []
+        )
+
+        moments = (
+            get_items_by_type(
+                moments_list_type.id,
+                'desc',
+                edition=sm_edition,
+            )
+            if can_view_moments and moments_list_type
+            else []
+        )
+
+        from app.heart_moments import list_heart_moments
+
+        shared_heart_moments = list_heart_moments(
+            g.user_id,
+            filter_name='shared',
+        )
+
+        all_entries = _build_story_entries(
+            items,
+            moments,
+            shared_heart_moments,
+            can_view_items,
+            can_view_moments,
+        )
+
+        entry_type = str(request.args.get('type', 'all')).strip().lower()
+        allowed_types = {'all', 'memory', 'heart', 'milestone'}
+        if entry_type not in allowed_types:
+            entry_type = 'all'
+
+        search_query = str(request.args.get('q', '')).strip()
+
+        year_value = str(request.args.get('year', '')).strip()
+        selected_year = None
+        if year_value:
+            try:
+                selected_year = int(year_value)
+            except ValueError:
+                selected_year = None
+
+        available_years = sorted(
+            {entry['year'] for entry in all_entries},
+            reverse=True,
+        )
+
+        if selected_year not in available_years:
+            selected_year = None
+
+        filtered_entries = _filter_story_entries(
+            all_entries,
+            entry_type,
+            selected_year,
+            search_query,
+        )
+
+        story_groups = _group_story_entries(filtered_entries)
+
+        return render_template(
+            'pages/story.html',
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            list_types=list_types,
+            sm_edition=sm_edition,
+            page_title='Unsere Geschichte',
+            story_groups=story_groups,
+            story_total=len(filtered_entries),
+            story_type=entry_type,
+            story_year=selected_year,
+            story_years=available_years,
+            story_query=search_query,
+        )
+
+    except Exception as e:
+        log('error', f'Error while rendering story page: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
 
 

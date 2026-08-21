@@ -15,6 +15,12 @@
        <i>{{ list_type.icon }}</i>
        <span>{% if nav_edition == 'couples' and list_type.title == 'Home' %}Wir{% else %}{{ _(list_type.title) }}{% endif %}</span>
        </a>
+       {% if nav_edition == 'couples' and list_type.title == 'Home' %}
+       <a href="/story">
+          <i>auto_stories</i>
+          <span>Unsere Geschichte</span>
+       </a>
+       {% endif %}
        {% endif %}
        {% endfor %}
 

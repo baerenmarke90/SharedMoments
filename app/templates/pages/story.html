@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>{{ title.value }}</title>
+      {% include 'layouts/head.html' %}
+      <style>
+         .story-page {
+            max-width: 820px;
+            margin: 0 auto;
+            padding-bottom: 5rem;
+         }
+
+         .story-intro {
+            margin: 0.5rem 0 1.2rem;
+            opacity: 0.78;
+         }
+
+         .story-controls {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 1.5rem;
+         }
+
+         .story-filter-row {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.35rem;
+            scrollbar-width: none;
+         }
+
+         .story-filter-row::-webkit-scrollbar {
+            display: none;
+         }
+
+         .story-filter-row a {
+            flex: 0 0 auto;
+            text-decoration: none;
+         }
+
+         .story-search-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 150px;
+            gap: 0.75rem;
+            margin-top: 0.8rem;
+         }
+
+         .story-search-field {
+            position: relative;
+         }
+
+         .story-search-field input {
+            padding-right: 3rem;
+         }
+
+         .story-search-button {
+            position: absolute;
+            right: 0.4rem;
+            top: 50%;
+            transform: translateY(-50%);
+         }
+
+         .story-month {
+            margin-top: 1.7rem;
+         }
+
+         .story-month-title {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin: 0 0 0.7rem 0.2rem;
+         }
+
+         .story-month-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--outline-variant);
+         }
+
+         .story-card {
+            overflow: hidden;
+            margin-bottom: 0.8rem;
+         }
+
+         .story-card-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+         }
+
+         .story-card-grid {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr);
+            min-height: 138px;
+         }
+
+         .story-card-media {
+            width: 100%;
+            height: 100%;
+            min-height: 138px;
+            object-fit: cover;
+            display: block;
+         }
+
+         .story-card-placeholder {
+            min-height: 138px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-container-high);
+         }
+
+         .story-card-placeholder > i {
+            font-size: 2.4rem;
+            opacity: 0.72;
+         }
+
+         .story-card-body {
+            min-width: 0;
+            padding: 1rem;
+         }
+
+         .story-card-type {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0.78;
+         }
+
+         .story-card-type > i {
+            font-size: 1.15rem;
+         }
+
+         .story-card-title {
+            margin: 0;
+            line-height: 1.3;
+         }
+
+         .story-card-text {
+            margin: 0.55rem 0 0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+         }
+
+         .story-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+            font-size: 0.85rem;
+            opacity: 0.74;
+         }
+
+         .story-card-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+         }
+
+         .story-gallery-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-left: 0.35rem;
+         }
+
+         .story-empty {
+            text-align: center;
+            padding: 3rem 1.2rem;
+         }
+
+         .story-empty > i {
+            font-size: 3rem;
+            opacity: 0.7;
+         }
+
+         .story-result-count {
+            margin: 0.7rem 0.2rem 0;
+            font-size: 0.85rem;
+            opacity: 0.68;
+         }
+
+         @media (max-width: 600px) {
+            .story-page {
+               padding-left: 0.2rem;
+               padding-right: 0.2rem;
+            }
+
+            .story-search-row {
+               grid-template-columns: 1fr;
+            }
+
+            .story-card-grid {
+               grid-template-columns: 96px minmax(0, 1fr);
+               min-height: 118px;
+            }
+
+            .story-card-media,
+            .story-card-placeholder {
+               min-height: 118px;
+            }
+
+            .story-card-body {
+               padding: 0.85rem;
+            }
+         }
+      </style>
+   </head>
+
+   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive story-page">
+         <p class="story-intro">
+            Erinnerungen, Herzmomente und Meilensteine – chronologisch als eure gemeinsame Geschichte.
+         </p>
+
+         <section class="story-controls">
+            <nav class="story-filter-row">
+               {% set year_arg = story_year if story_year else None %}
+               {% set query_arg = story_query if story_query else None %}
+
+               <a class="chip round {% if story_type == 'all' %}fill{% endif %}"
+                  href="{{ url_for('pages.story', type='all', year=year_arg, q=query_arg) }}">
+                  <i>all_inclusive</i>
+                  <span>Alles</span>
+               </a>
+
+               <a class="chip round {% if story_type == 'memory' %}fill{% endif %}"
+                  href="{{ url_for('pages.story', type='memory', year=year_arg, q=query_arg) }}">
+                  <i>photo_library</i>
+                  <span>Erinnerungen</span>
+               </a>
+
+               <a class="chip round {% if story_type == 'heart' %}fill{% endif %}"
+                  href="{{ url_for('pages.story', type='heart', year=year_arg, q=query_arg) }}">
+                  <i>favorite</i>
+                  <span>Herzmomente</span>
+               </a>
+
+               <a class="chip round {% if story_type == 'milestone' %}fill{% endif %}"
+                  href="{{ url_for('pages.story', type='milestone', year=year_arg, q=query_arg) }}">
+                  <i>star</i>
+                  <span>Meilensteine</span>
+               </a>
+            </nav>
+
+            <form method="get" action="{{ url_for('pages.story') }}">
+               <input type="hidden" name="type" value="{{ story_type }}">
+
+               <div class="story-search-row">
+                  <div class="field border round story-search-field">
+                     <input type="search"
+                            name="q"
+                            value="{{ story_query }}"
+                            placeholder="Unsere Geschichte durchsuchen">
+                     <i>search</i>
+                     <button type="submit"
+                             class="circle transparent story-search-button"
+                             aria-label="Suchen">
+                        <i>arrow_forward</i>
+                     </button>
+                  </div>
+
+                  <div class="field border round suffix">
+                     <select name="year" onchange="this.form.submit()">
+                        <option value="">Alle Jahre</option>
+                        {% for year in story_years %}
+                        <option value="{{ year }}"
+                                {% if story_year == year %}selected{% endif %}>
+                           {{ year }}
+                        </option>
+                        {% endfor %}
+                     </select>
+                     <i>calendar_month</i>
+                  </div>
+               </div>
+            </form>
+
+            {% if story_query or story_year or story_type != 'all' %}
+            <nav class="right-align" style="margin-top:0.4rem;">
+               <a href="{{ url_for('pages.story') }}">Filter zurücksetzen</a>
+            </nav>
+            {% endif %}
+
+            <p class="story-result-count">
+               {{ story_total }} {% if story_total == 1 %}Eintrag{% else %}Einträge{% endif %}
+            </p>
+         </section>
+
+         {% if story_groups %}
+            {% for group in story_groups %}
+            <section class="story-month" id="story-month-{{ group.key }}">
+               <h5 class="story-month-title">{{ group.label }}</h5>
+
+               {% for entry in group.entries %}
+               <article class="surface-container story-card">
+                  {% if entry.href %}
+                  <a class="story-card-link" href="{{ entry.href }}">
+                  {% endif %}
+
+                     <div class="story-card-grid">
+                        {% if entry.image_url %}
+                        <img class="story-card-media"
+                             src="{{ entry.image_url }}"
+                             alt=""
+                             loading="lazy">
+                        {% else %}
+                        <div class="story-card-placeholder">
+                           <i>{{ entry.icon }}</i>
+                        </div>
+                        {% endif %}
+
+                        <div class="story-card-body">
+                           <div class="story-card-type">
+                              <i>{{ entry.icon }}</i>
+                              <span>{{ entry.type_label }}</span>
+                              {% if entry.is_gallery %}
+                              <span class="story-gallery-badge">
+                                 <i>collections</i>
+                                 Galerie
+                              </span>
+                              {% endif %}
+                           </div>
+
+                           {% if entry.type != 'heart' %}
+                           <h6 class="story-card-title">{{ entry.title }}</h6>
+                           {% endif %}
+
+                           {% if entry.text %}
+                           <p class="story-card-text">{{ entry.text }}</p>
+                           {% endif %}
+
+                           <div class="story-card-meta">
+                              {% if entry.author_picture %}
+                              <img class="story-card-avatar"
+                                   src="/api/v2/media/static/{{ entry.author_picture }}"
+                                   alt="">
+                              {% endif %}
+
+                              <span>{{ entry.date_label }}</span>
+
+                              {% if entry.author_name %}
+                              <span>·</span>
+                              <span>{{ entry.author_name }}</span>
+                              {% endif %}
+                           </div>
+                        </div>
+                     </div>
+
+                  {% if entry.href %}
+                  </a>
+                  {% endif %}
+               </article>
+               {% endfor %}
+            </section>
+            {% endfor %}
+         {% else %}
+         <article class="surface-container story-empty">
+            <i>auto_stories</i>
+            {% if story_query or story_year or story_type != 'all' %}
+            <h5>Keine passenden Einträge gefunden</h5>
+            <p>Ändere die Suche oder setze die Filter zurück.</p>
+            <a class="button round" href="{{ url_for('pages.story') }}">
+               Filter zurücksetzen
+            </a>
+            {% else %}
+            <h5>Eure Geschichte beginnt hier.</h5>
+            <p>Erinnerungen, gemeinsame Herzmomente und Meilensteine erscheinen automatisch an dieser Stelle.</p>
+            <a class="button round" href="/memories">
+               Erste Erinnerung hinzufügen
+            </a>
+            {% endif %}
+         </article>
+         {% endif %}
+
+         {% include 'layouts/footer.html' %}
+      </main>
+
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+   </body>
+</html>
