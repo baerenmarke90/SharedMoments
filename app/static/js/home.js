@@ -1863,3 +1863,44 @@ function copyShareLink() {
    }
 }
 
+function showCoupleMemoryDetails(element) {
+   if (!element) return;
+
+   const title = element.dataset.title || 'Erinnerung';
+   const content = element.dataset.content || '';
+   const date = element.dataset.date || '';
+   const author = element.dataset.author || '';
+   const imageUrl = element.dataset.image || '';
+
+   const titleEl = document.getElementById('couple-memory-detail-title');
+   const textEl = document.getElementById('couple-memory-detail-text');
+   const metaEl = document.getElementById('couple-memory-detail-meta');
+   const imageEl = document.getElementById('couple-memory-detail-image');
+
+   if (!titleEl || !textEl || !metaEl || !imageEl) return;
+
+   titleEl.textContent = title;
+
+   if (content.trim()) {
+      textEl.textContent = content;
+      textEl.style.display = '';
+   } else {
+      textEl.textContent = '';
+      textEl.style.display = 'none';
+   }
+
+   metaEl.textContent = [date, author].filter(Boolean).join(' · ');
+
+   if (imageUrl) {
+      imageEl.src = imageUrl;
+      imageEl.alt = title;
+      imageEl.style.display = 'block';
+   } else {
+      imageEl.removeAttribute('src');
+      imageEl.alt = '';
+      imageEl.style.display = 'none';
+   }
+
+   callUi('#dialog-couple-memory-detail');
+}
+
