@@ -171,6 +171,27 @@ def _as_datetime(value):
     return None
 
 
+def _item_has_explicit_date(item):
+    """Return True when dateCreated came from the optional date input.
+
+    SharedMoments currently stores both meanings in Item.dateCreated:
+    - a user-selected HTML date is stored at midnight
+    - no selected date keeps the real creation timestamp including time
+
+    This lets existing data retain the intended UX without a schema migration.
+    """
+    value = _as_datetime(getattr(item, 'dateCreated', None))
+    if not value:
+        return False
+
+    return (
+        value.hour == 0
+        and value.minute == 0
+        and value.second == 0
+        and value.microsecond == 0
+    )
+
+
 def _next_annual_occurrence(month, day, today):
     """Return the next valid annual occurrence on or after today."""
     if not month or not day:
@@ -305,15 +326,19 @@ def _build_couple_home_recent(
             ):
                 url = f'/gallery/{item.id}'
 
-            activity_dt = _as_datetime(item.dateModified) or event_dt
+            date_is_explicit = _item_has_explicit_date(item)
 
             recent.append({
                 'type': 'memory',
                 'icon': 'notes' if item.contentType == 'text' else 'photo',
                 'title': item.title or 'Erinnerung',
                 'text': item.content or '',
-                'sort_date': activity_dt,
-                'date_label': event_dt.strftime('%d.%m.%Y'),
+                'sort_date': event_dt,
+                'date_label': (
+                    event_dt.strftime('%d.%m.%Y')
+                    if date_is_explicit
+                    else ''
+                ),
                 'author_name': user.firstName if user else '',
                 'author_picture': user.profilePicture if user else None,
                 'image_url': image_url,
@@ -326,14 +351,12 @@ def _build_couple_home_recent(
             if not event_dt:
                 continue
 
-            activity_dt = _as_datetime(item.dateModified) or event_dt
-
             recent.append({
                 'type': 'milestone',
                 'icon': 'star',
                 'title': item.title or 'Meilenstein',
                 'text': item.content or '',
-                'sort_date': activity_dt,
+                'sort_date': event_dt,
                 'date_label': event_dt.strftime('%d.%m.%Y'),
                 'author_name': user.firstName if user else '',
                 'author_picture': user.profilePicture if user else None,
@@ -352,23 +375,12 @@ def _build_couple_home_recent(
         author = heart_moment.get('author') or {}
         media_filename = heart_moment.get('mediaFilename')
 
-        activity_dt = event_dt
-        for activity_field in ('dateModified', 'dateCreated'):
-            activity_value = heart_moment.get(activity_field)
-            if not activity_value:
-                continue
-            try:
-                activity_dt = datetime.fromisoformat(activity_value)
-                break
-            except (TypeError, ValueError):
-                continue
-
         recent.append({
             'type': 'heart',
             'icon': 'favorite',
             'title': 'Herzmoment',
             'text': heart_moment.get('description') or '',
-            'sort_date': activity_dt,
+            'sort_date': event_dt,
             'date_label': event_dt.strftime('%d.%m.%Y'),
             'author_name': author.get('firstName', ''),
             'author_picture': author.get('profilePicture'),
@@ -453,7 +465,11 @@ def _build_story_entries(
                 'title': item.title or 'Erinnerung',
                 'text': item.content or '',
                 'event_date': event_dt,
-                'date_label': event_dt.strftime('%d.%m.%Y'),
+                'date_label': (
+                    event_dt.strftime('%d.%m.%Y')
+                    if _item_has_explicit_date(item)
+                    else ''
+                ),
                 'year': event_dt.year,
                 'month_key': event_dt.strftime('%Y-%m'),
                 'month_label': _story_month_label(event_dt),

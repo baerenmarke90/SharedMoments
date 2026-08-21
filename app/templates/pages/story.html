@@ -351,11 +351,13 @@
                                    alt="">
                               {% endif %}
 
+                              {% if entry.date_label %}
                               <span>{{ entry.date_label }}</span>
+                              {% endif %}
 
                               {% if entry.author_name %}
-                              <span>·</span>
-                              <span>{{ entry.author_name }}</span>
+                                 {% if entry.date_label %}<span>·</span>{% endif %}
+                                 <span>{{ entry.author_name }}</span>
                               {% endif %}
                            </div>
                         </div>

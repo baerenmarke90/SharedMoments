@@ -75,15 +75,27 @@
    white-space: nowrap;
 }
 .couple-row-meta {
+   display: flex;
+   align-items: center;
+   flex-wrap: wrap;
+   gap: 0.3rem;
    font-size: 0.85rem;
    opacity: 0.72;
+}
+.couple-recent-leading {
+   width: 58px;
+   height: 58px;
+   flex: 0 0 58px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
 }
 .couple-recent-thumb {
    width: 58px;
    height: 58px;
    border-radius: 0.8rem;
    object-fit: cover;
-   flex: 0 0 auto;
+   display: block;
 }
 .couple-recent-text {
    display: -webkit-box;
@@ -93,11 +105,12 @@
    margin-top: 0.2rem;
 }
 .couple-recent-avatar {
-   width: 30px;
-   height: 30px;
+   width: 22px;
+   height: 22px;
    object-fit: cover;
    border-radius: 50%;
-   flex: 0 0 auto;
+   flex: 0 0 22px;
+   margin-left: 0.05rem;
 }
 .couple-empty {
    text-align: center;
@@ -234,14 +247,16 @@
                     {% endif %}>
                {% endif %}
 
-                  {% if entry.image_url %}
-                  <img class="couple-recent-thumb"
-                       src="{{ entry.image_url }}"
-                       alt=""
-                       loading="lazy">
-                  {% else %}
-                  <i class="couple-recent-icon">{{ entry.icon }}</i>
-                  {% endif %}
+                  <div class="couple-recent-leading">
+                     {% if entry.image_url %}
+                     <img class="couple-recent-thumb"
+                          src="{{ entry.image_url }}"
+                          alt=""
+                          loading="lazy">
+                     {% else %}
+                     <i class="couple-recent-icon">{{ entry.icon }}</i>
+                     {% endif %}
+                  </div>
 
                   <div class="couple-row-main">
                      <div class="couple-row-title">{{ entry.title }}</div>
@@ -251,17 +266,23 @@
                      {% endif %}
 
                      <div class="couple-row-meta">
-                        {{ entry.date_label }}
-                        {% if entry.author_name %} · {{ entry.author_name }}{% endif %}
+                        {% if entry.date_label %}
+                        <span>{{ entry.date_label }}</span>
+                        {% endif %}
+
+                        {% if entry.author_name %}
+                           {% if entry.date_label %}<span>·</span>{% endif %}
+                           <span>{{ entry.author_name }}</span>
+
+                           {% if entry.author_picture %}
+                           <img class="couple-recent-avatar"
+                                src="/api/v2/media/static/{{ entry.author_picture }}"
+                                alt=""
+                                loading="lazy">
+                           {% endif %}
+                        {% endif %}
                      </div>
                   </div>
-
-                  {% if entry.author_picture %}
-                  <img class="couple-recent-avatar"
-                       src="/api/v2/media/static/{{ entry.author_picture }}"
-                       alt=""
-                       loading="lazy">
-                  {% endif %}
 
                {% if entry.url %}
                </a>
