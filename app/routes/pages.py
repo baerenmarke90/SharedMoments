@@ -8,7 +8,10 @@ from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_item_by_id, get_user_settings, get_list_type_by_content_url, get_all_settings,
     get_shared_item_ids, get_list_type_by_title, ensure_countdown_list_type,
     ensure_banner_song_setting, get_all_reminders, get_user_muted_reminder_ids,
-    ensure_notification_settings, get_passkeys_by_user, get_all_users)
+    ensure_notification_settings, get_passkeys_by_user, get_all_users,
+    get_couple_chapters, get_couple_chapter, create_couple_chapter,
+    update_couple_chapter, delete_couple_chapter, get_couple_chapter_links,
+    replace_couple_chapter_links, get_couple_chapter_link_map)
 from app.logger import log
 import os
 from app.utils import generate_banner_text
@@ -581,11 +584,16 @@ def _filter_story_entries(entries, entry_type, selected_year, search_query):
         needle = search_query.casefold()
 
         def matches(entry):
+            chapter_titles = ' '.join(
+                chapter.get('title') or ''
+                for chapter in entry.get('chapters', [])
+            )
             haystack = ' '.join((
                 entry.get('type_label') or '',
                 entry.get('title') or '',
                 entry.get('text') or '',
                 entry.get('author_name') or '',
+                chapter_titles,
             )).casefold()
             return needle in haystack
 
@@ -610,6 +618,164 @@ def _group_story_entries(entries):
         groups[-1]['entries'].append(entry)
 
     return groups
+
+
+def _parse_optional_form_date(value):
+    value = str(value or '').strip()
+    if not value:
+        return None
+    return date.fromisoformat(value)
+
+
+def _chapter_date_label(chapter):
+    start_date = chapter.get('startDate')
+    end_date = chapter.get('endDate')
+
+    if start_date and end_date:
+        if start_date == end_date:
+            return start_date.strftime('%d.%m.%Y')
+        return (
+            f"{start_date.strftime('%d.%m.%Y')} – "
+            f"{end_date.strftime('%d.%m.%Y')}"
+        )
+
+    if start_date:
+        return start_date.strftime('%d.%m.%Y')
+
+    if end_date:
+        return f"bis {end_date.strftime('%d.%m.%Y')}"
+
+    return ''
+
+
+def _couple_content_for_chapters(sm_edition, user_id):
+    can_view_items = has_list_permission('View', 'Home')
+    can_view_moments = has_list_permission('View', 'Moments')
+
+    home_list_type = get_list_type_by_title('Home')
+    moments_list_type = get_list_type_by_title('Moments')
+
+    memories = (
+        get_items_by_type(
+            home_list_type.id,
+            'desc',
+            edition=sm_edition,
+        )
+        if can_view_items and home_list_type
+        else []
+    )
+
+    moments = (
+        get_items_by_type(
+            moments_list_type.id,
+            'desc',
+            edition=sm_edition,
+        )
+        if can_view_moments and moments_list_type
+        else []
+    )
+
+    from app.heart_moments import list_heart_moments
+
+    shared_heart_moments = list_heart_moments(
+        user_id,
+        filter_name='shared',
+    )
+
+    entries = _build_story_entries(
+        memories,
+        moments,
+        shared_heart_moments,
+        can_view_items,
+        can_view_moments,
+    )
+
+    return {
+        'memories': memories,
+        'moments': moments,
+        'heart_moments': shared_heart_moments,
+        'entries': entries,
+        'can_view_items': can_view_items,
+        'can_view_moments': can_view_moments,
+    }
+
+
+def _chapter_summary(chapter, links, content):
+    item_ids = links.get('item_ids', set())
+    heart_ids = links.get('heart_ids', set())
+
+    entries = [
+        entry
+        for entry in content['entries']
+        if (
+            entry['id'] in heart_ids
+            if entry['type'] == 'heart'
+            else entry['id'] in item_ids
+        )
+    ]
+
+    cover_url = next(
+        (
+            entry['image_url']
+            for entry in entries
+            if entry.get('image_url')
+        ),
+        None,
+    )
+
+    result = dict(chapter)
+    result.update({
+        'date_label': _chapter_date_label(chapter),
+        'cover_url': cover_url,
+        'memory_count': sum(
+            1 for entry in entries if entry['type'] == 'memory'
+        ),
+        'heart_count': sum(
+            1 for entry in entries if entry['type'] == 'heart'
+        ),
+        'milestone_count': sum(
+            1 for entry in entries if entry['type'] == 'milestone'
+        ),
+        'entry_count': len(entries),
+        'entries': entries,
+    })
+    return result
+
+
+def _chapter_form_values():
+    title = str(request.form.get('title', '')).strip()
+    description = str(request.form.get('description', '')).strip()
+    location_name = str(request.form.get('location_name', '')).strip()
+
+    if not title:
+        raise ValueError('Bitte gib dem Kapitel einen Titel.')
+
+    if len(title) > 255:
+        raise ValueError('Der Titel darf höchstens 255 Zeichen lang sein.')
+
+    if len(location_name) > 255:
+        raise ValueError('Der Ort darf höchstens 255 Zeichen lang sein.')
+
+    try:
+        start_date = _parse_optional_form_date(
+            request.form.get('start_date')
+        )
+        end_date = _parse_optional_form_date(
+            request.form.get('end_date')
+        )
+    except ValueError as exc:
+        raise ValueError('Bitte verwende gültige Datumsangaben.') from exc
+
+    if start_date and end_date and end_date < start_date:
+        raise ValueError('Das Enddatum darf nicht vor dem Startdatum liegen.')
+
+    return {
+        'title': title,
+        'description': description,
+        'start_date': start_date,
+        'end_date': end_date,
+        'location_name': location_name,
+    }
 
 
 @pages_bp.route('/home')
@@ -841,6 +1007,258 @@ def milestones():
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
 
 
+@pages_bp.route('/chapters')
+@jwt_required
+def chapters():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        list_types = get_all_list_types()
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+
+        content = _couple_content_for_chapters(
+            sm_edition,
+            g.user_id,
+        )
+        link_map = get_couple_chapter_link_map()
+
+        chapter_cards = [
+            _chapter_summary(
+                chapter,
+                link_map['by_chapter'].get(
+                    chapter['id'],
+                    {'item_ids': set(), 'heart_ids': set()},
+                ),
+                content,
+            )
+            for chapter in get_couple_chapters()
+        ]
+
+        return render_template(
+            'pages/chapters.html',
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            list_types=list_types,
+            sm_edition=sm_edition,
+            page_title='Kapitel',
+            chapters=chapter_cards,
+            chapter_error=request.args.get('error', ''),
+        )
+
+    except Exception as e:
+        log('error', f'Error while rendering chapters page: {e}')
+        return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/chapters/create', methods=['POST'])
+@jwt_required
+def create_chapter_page():
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    try:
+        values = _chapter_form_values()
+        chapter_id = create_couple_chapter(
+            title=values['title'],
+            description=values['description'],
+            start_date=values['start_date'],
+            end_date=values['end_date'],
+            location_name=values['location_name'],
+            created_by_user=g.user_id,
+        )
+        return redirect(url_for('pages.chapter', chapter_id=chapter_id))
+    except ValueError as exc:
+        return redirect(url_for('pages.chapters', error=str(exc)))
+    except Exception as e:
+        log('error', f'Error while creating couple chapter: {e}')
+        return redirect(url_for(
+            'pages.chapters',
+            error='Das Kapitel konnte nicht erstellt werden.',
+        ))
+
+
+@pages_bp.route('/chapters/<int:chapter_id>')
+@jwt_required
+def chapter(chapter_id):
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        chapter_data = get_couple_chapter(chapter_id)
+        if not chapter_data:
+            return redirect(url_for('pages.chapters'))
+
+        list_types = get_all_list_types()
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+
+        content = _couple_content_for_chapters(
+            sm_edition,
+            g.user_id,
+        )
+        links = get_couple_chapter_links(chapter_id)
+        chapter_data = _chapter_summary(
+            chapter_data,
+            links,
+            content,
+        )
+
+        linked_item_ids = links['item_ids']
+        linked_heart_ids = links['heart_ids']
+
+        candidates = []
+        for entry in content['entries']:
+            candidate = dict(entry)
+            candidate['linked'] = (
+                entry['id'] in linked_heart_ids
+                if entry['type'] == 'heart'
+                else entry['id'] in linked_item_ids
+            )
+            candidates.append(candidate)
+
+        return render_template(
+            'pages/chapter.html',
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            list_types=list_types,
+            sm_edition=sm_edition,
+            page_title=chapter_data['title'],
+            chapter=chapter_data,
+            chapter_entries=chapter_data['entries'],
+            chapter_candidates=candidates,
+            chapter_error=request.args.get('error', ''),
+        )
+
+    except Exception as e:
+        log('error', f'Error while rendering chapter {chapter_id}: {e}')
+        return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/chapters/<int:chapter_id>/update', methods=['POST'])
+@jwt_required
+def update_chapter_page(chapter_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    if not get_couple_chapter(chapter_id):
+        return redirect(url_for('pages.chapters'))
+
+    try:
+        values = _chapter_form_values()
+        update_couple_chapter(
+            chapter_id=chapter_id,
+            title=values['title'],
+            description=values['description'],
+            start_date=values['start_date'],
+            end_date=values['end_date'],
+            location_name=values['location_name'],
+        )
+        return redirect(url_for('pages.chapter', chapter_id=chapter_id))
+    except ValueError as exc:
+        return redirect(url_for(
+            'pages.chapter',
+            chapter_id=chapter_id,
+            error=str(exc),
+        ))
+    except Exception as e:
+        log('error', f'Error while updating couple chapter {chapter_id}: {e}')
+        return redirect(url_for(
+            'pages.chapter',
+            chapter_id=chapter_id,
+            error='Das Kapitel konnte nicht gespeichert werden.',
+        ))
+
+
+@pages_bp.route('/chapters/<int:chapter_id>/links', methods=['POST'])
+@jwt_required
+def update_chapter_links_page(chapter_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    if not get_couple_chapter(chapter_id):
+        return redirect(url_for('pages.chapters'))
+
+    try:
+        content = _couple_content_for_chapters(
+            sm_edition,
+            g.user_id,
+        )
+
+        valid_item_ids = {
+            entry['id']
+            for entry in content['entries']
+            if entry['type'] in {'memory', 'milestone'}
+        }
+        valid_heart_ids = {
+            entry['id']
+            for entry in content['entries']
+            if entry['type'] == 'heart'
+        }
+
+        def parse_ids(values):
+            parsed = set()
+            for value in values:
+                try:
+                    parsed.add(int(value))
+                except (TypeError, ValueError):
+                    continue
+            return parsed
+
+        requested_item_ids = parse_ids(
+            request.form.getlist('item_ids')
+        )
+        requested_heart_ids = parse_ids(
+            request.form.getlist('heart_ids')
+        )
+
+        replace_couple_chapter_links(
+            chapter_id,
+            requested_item_ids & valid_item_ids,
+            requested_heart_ids & valid_heart_ids,
+        )
+
+        return redirect(url_for('pages.chapter', chapter_id=chapter_id))
+
+    except Exception as e:
+        log('error', f'Error while linking couple chapter {chapter_id}: {e}')
+        return redirect(url_for(
+            'pages.chapter',
+            chapter_id=chapter_id,
+            error='Die Verknüpfungen konnten nicht gespeichert werden.',
+        ))
+
+
+@pages_bp.route('/chapters/<int:chapter_id>/delete', methods=['POST'])
+@jwt_required
+def delete_chapter_page(chapter_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    try:
+        delete_couple_chapter(chapter_id)
+    except Exception as e:
+        log('error', f'Error while deleting couple chapter {chapter_id}: {e}')
+        return redirect(url_for(
+            'pages.chapter',
+            chapter_id=chapter_id,
+            error='Das Kapitel konnte nicht gelöscht werden.',
+        ))
+
+    return redirect(url_for('pages.chapters'))
+
+
 @pages_bp.route('/story')
 @jwt_required
 def story():
@@ -895,6 +1313,17 @@ def story():
             can_view_items,
             can_view_moments,
         )
+
+        chapter_link_map = get_couple_chapter_link_map()
+        for entry in all_entries:
+            if entry['type'] == 'heart':
+                entry['chapters'] = chapter_link_map[
+                    'heart_chapters'
+                ].get(entry['id'], [])
+            else:
+                entry['chapters'] = chapter_link_map[
+                    'item_chapters'
+                ].get(entry['id'], [])
 
         entry_type = str(request.args.get('type', 'all')).strip().lower()
         allowed_types = {'all', 'memory', 'heart', 'milestone'}

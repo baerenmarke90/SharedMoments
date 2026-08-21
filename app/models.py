@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Date, Boolean, Text, TIMESTAMP, ForeignKey, LargeBinary, func, Index, UniqueConstraint, DateTime, event
+from sqlalchemy import create_engine, Column, Integer, String, Date, Boolean, Text, TIMESTAMP, ForeignKey, LargeBinary, func, Index, UniqueConstraint, DateTime, Float, event
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from config import Config
 from flask_bcrypt import generate_password_hash, check_password_hash
@@ -305,6 +305,62 @@ class HeartMoment(Base):
     )
 
     author = relationship('User', foreign_keys=[authorUserID])
+
+class CoupleChapter(Base):
+    __tablename__ = 'coupleChapters'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, default='')
+    startDate = Column(Date, nullable=True, index=True)
+    endDate = Column(Date, nullable=True)
+    locationName = Column(String(255), nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    createdByUser = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    creator = relationship('User', foreign_keys=[createdByUser])
+
+
+class CoupleChapterItem(Base):
+    __tablename__ = 'coupleChapterItems'
+
+    chapterID = Column(
+        Integer,
+        ForeignKey('coupleChapters.id'),
+        primary_key=True,
+    )
+    itemID = Column(
+        Integer,
+        ForeignKey('items.id'),
+        primary_key=True,
+        index=True,
+    )
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+
+
+class CoupleChapterHeartMoment(Base):
+    __tablename__ = 'coupleChapterHeartMoments'
+
+    chapterID = Column(
+        Integer,
+        ForeignKey('coupleChapters.id'),
+        primary_key=True,
+    )
+    heartMomentID = Column(
+        Integer,
+        ForeignKey('heartMoments.id'),
+        primary_key=True,
+        index=True,
+    )
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+
 
 class ListType(Base):
     __tablename__ = 'listTypes'

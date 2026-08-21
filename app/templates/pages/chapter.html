@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>{{ chapter.title }} · {{ title.value }}</title>
+      {% include 'layouts/head.html' %}
+      <style>
+         .chapter-page {
+            max-width: 820px;
+            margin: 0 auto;
+            padding-bottom: 6rem;
+         }
+
+         .chapter-hero {
+            overflow: hidden;
+            margin-bottom: 1rem;
+         }
+
+         .chapter-hero-cover {
+            width: 100%;
+            max-height: 340px;
+            object-fit: cover;
+            display: block;
+         }
+
+         .chapter-hero-placeholder {
+            min-height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-container);
+            color: var(--on-primary-container);
+         }
+
+         .chapter-hero-placeholder > i {
+            font-size: 4rem;
+         }
+
+         .chapter-hero-body {
+            padding: 1rem;
+         }
+
+         .chapter-meta {
+            display: flex;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+            margin-top: 0.45rem;
+            opacity: 0.75;
+         }
+
+         .chapter-meta > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+         }
+
+         .chapter-description {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            margin: 0.9rem 0 0;
+         }
+
+         .chapter-author {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+         }
+
+         .chapter-author img {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+         }
+
+         .chapter-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 1rem;
+         }
+
+         .chapter-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin: 1.4rem 0 0.65rem 0.2rem;
+         }
+
+         .chapter-entry {
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+         }
+
+         .chapter-entry-link {
+            display: grid;
+            grid-template-columns: 115px minmax(0, 1fr);
+            color: inherit;
+            text-decoration: none;
+            min-height: 116px;
+         }
+
+         .chapter-entry-media,
+         .chapter-entry-placeholder {
+            width: 100%;
+            min-height: 116px;
+            height: 100%;
+         }
+
+         .chapter-entry-media {
+            object-fit: cover;
+            display: block;
+         }
+
+         .chapter-entry-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-container-high);
+         }
+
+         .chapter-entry-placeholder > i {
+            font-size: 2rem;
+         }
+
+         .chapter-entry-heart > i {
+            color: #e56aa6;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+
+         .chapter-entry-body {
+            min-width: 0;
+            padding: 0.85rem;
+         }
+
+         .chapter-entry-type {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            opacity: 0.75;
+         }
+
+         .chapter-entry-title {
+            margin: 0.25rem 0 0;
+         }
+
+         .chapter-entry-text {
+            margin: 0.4rem 0 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: pre-wrap;
+         }
+
+         .chapter-entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            margin-top: 0.55rem;
+            font-size: 0.82rem;
+            opacity: 0.72;
+         }
+
+         .chapter-entry-avatar {
+            width: 23px;
+            height: 23px;
+            border-radius: 50%;
+            object-fit: cover;
+         }
+
+         .chapter-empty {
+            text-align: center;
+            padding: 2rem 1rem;
+         }
+
+         .chapter-link-search {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            padding-top: 0.25rem;
+            background: var(--surface);
+         }
+
+         .chapter-link-section {
+            margin-top: 1rem;
+         }
+
+         .chapter-link-option {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.65rem 0;
+         }
+
+         .chapter-link-option + .chapter-link-option {
+            border-top: 1px solid var(--outline-variant);
+         }
+
+         .chapter-link-thumb {
+            width: 42px;
+            height: 42px;
+            border-radius: 0.65rem;
+            object-fit: cover;
+         }
+
+         .chapter-link-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-container-high);
+         }
+
+         .chapter-link-icon-heart {
+            color: #e56aa6;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+
+         .chapter-error {
+            margin-bottom: 1rem;
+         }
+
+         @media (max-width: 600px) {
+            .chapter-page {
+               padding-left: 0.2rem;
+               padding-right: 0.2rem;
+            }
+
+            .chapter-entry-link {
+               grid-template-columns: 92px minmax(0, 1fr);
+            }
+
+            .chapter-entry-media,
+            .chapter-entry-placeholder {
+               min-height: 108px;
+            }
+         }
+      </style>
+   </head>
+
+   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive chapter-page">
+         {% if chapter_error %}
+         <article class="error-container chapter-error">
+            <div class="padding">{{ chapter_error }}</div>
+         </article>
+         {% endif %}
+
+         <article class="surface-container chapter-hero">
+            {% if chapter.cover_url %}
+            <img class="chapter-hero-cover"
+                 src="{{ chapter.cover_url }}"
+                 alt=""
+                 loading="lazy">
+            {% else %}
+            <div class="chapter-hero-placeholder">
+               <i>auto_stories</i>
+            </div>
+            {% endif %}
+
+            <div class="chapter-hero-body">
+               <h4 style="margin:0;">{{ chapter.title }}</h4>
+
+               <div class="chapter-meta">
+                  {% if chapter.date_label %}
+                  <span>
+                     <i>calendar_month</i>
+                     {{ chapter.date_label }}
+                  </span>
+                  {% endif %}
+
+                  {% if chapter.locationName %}
+                  <span>
+                     <i>location_on</i>
+                     {{ chapter.locationName }}
+                  </span>
+                  {% endif %}
+
+                  {% if chapter.creator %}
+                  <span class="chapter-author">
+                     <span>von {{ chapter.creator.firstName }}</span>
+                     {% if chapter.creator.profilePicture %}
+                     <img src="/api/v2/media/static/{{ chapter.creator.profilePicture }}"
+                          alt=""
+                          loading="lazy">
+                     {% endif %}
+                  </span>
+                  {% endif %}
+               </div>
+
+               {% if chapter.description %}
+               <p class="chapter-description">{{ chapter.description }}</p>
+               {% endif %}
+
+               <div class="chapter-actions">
+                  <button class="small round"
+                          onclick="callUi('#dialog-link-chapter-content')">
+                     <i>add_link</i>
+                     Inhalte verknüpfen
+                  </button>
+                  <button class="small round border"
+                          onclick="callUi('#dialog-edit-chapter')">
+                     <i>edit</i>
+                     Bearbeiten
+                  </button>
+               </div>
+            </div>
+         </article>
+
+         <h5 class="chapter-section-title">
+            <i>history</i>
+            <span>In diesem Kapitel</span>
+         </h5>
+
+         {% if chapter_entries %}
+            {% for entry in chapter_entries %}
+            <article class="surface-container chapter-entry">
+               {% if entry.href %}
+               <a class="chapter-entry-link" href="{{ entry.href }}">
+               {% else %}
+               <div class="chapter-entry-link">
+               {% endif %}
+
+                  {% if entry.image_url %}
+                  <img class="chapter-entry-media"
+                       src="{{ entry.image_url }}"
+                       alt=""
+                       loading="lazy">
+                  {% else %}
+                  <div class="chapter-entry-placeholder chapter-entry-{{ entry.type }}">
+                     <i>{{ entry.icon }}</i>
+                  </div>
+                  {% endif %}
+
+                  <div class="chapter-entry-body">
+                     <div class="chapter-entry-type">
+                        <i>{{ entry.icon }}</i>
+                        {{ entry.type_label }}
+                     </div>
+
+                     {% if entry.type != 'heart' %}
+                     <h6 class="chapter-entry-title">{{ entry.title }}</h6>
+                     {% endif %}
+
+                     {% if entry.text %}
+                     <p class="chapter-entry-text">{{ entry.text }}</p>
+                     {% endif %}
+
+                     <div class="chapter-entry-meta">
+                        {% if entry.date_label %}
+                        <span>{{ entry.date_label }}</span>
+                        {% endif %}
+                        {% if entry.author_name %}
+                           {% if entry.date_label %}<span>·</span>{% endif %}
+                           <span>{{ entry.author_name }}</span>
+                           {% if entry.author_picture %}
+                           <img class="chapter-entry-avatar"
+                                src="/api/v2/media/static/{{ entry.author_picture }}"
+                                alt=""
+                                loading="lazy">
+                           {% endif %}
+                        {% endif %}
+                     </div>
+                  </div>
+
+               {% if entry.href %}
+               </a>
+               {% else %}
+               </div>
+               {% endif %}
+            </article>
+            {% endfor %}
+         {% else %}
+         <article class="surface-container chapter-empty">
+            <i>link</i>
+            <h5>Noch keine Inhalte verknüpft</h5>
+            <p>
+               Wähle Erinnerungen, Herzmomente oder Meilensteine aus, die zu diesem Kapitel gehören.
+            </p>
+            <button class="round" onclick="callUi('#dialog-link-chapter-content')">
+               Inhalte auswählen
+            </button>
+         </article>
+         {% endif %}
+
+         <nav style="margin-top:1.2rem;">
+            <a href="{{ url_for('pages.chapters') }}">
+               <i>arrow_back</i>
+               Alle Kapitel
+            </a>
+         </nav>
+      </main>
+
+      <div class="overlay"
+           id="div-overlay-edit-chapter"
+           onclick="callUi('#dialog-edit-chapter')"></div>
+
+      <dialog class="modal" id="dialog-edit-chapter">
+         <form method="post"
+               action="{{ url_for('pages.update_chapter_page', chapter_id=chapter.id) }}">
+            <h5>Kapitel bearbeiten</h5>
+
+            <div class="field label border">
+               <input type="text"
+                      name="title"
+                      maxlength="255"
+                      value="{{ chapter.title }}"
+                      required>
+               <label>Titel</label>
+            </div>
+
+            <div class="field label border extra">
+               <textarea name="description">{{ chapter.description }}</textarea>
+               <label>Beschreibung (optional)</label>
+            </div>
+
+            <div class="grid">
+               <div class="s12 m6">
+                  <div class="field label border">
+                     <input type="date"
+                            name="start_date"
+                            value="{{ chapter.startDate.isoformat() if chapter.startDate else '' }}">
+                     <label>Startdatum (optional)</label>
+                  </div>
+               </div>
+               <div class="s12 m6">
+                  <div class="field label border">
+                     <input type="date"
+                            name="end_date"
+                            value="{{ chapter.endDate.isoformat() if chapter.endDate else '' }}">
+                     <label>Enddatum (optional)</label>
+                  </div>
+               </div>
+            </div>
+
+            <div class="field label border prefix">
+               <i>location_on</i>
+               <input type="text"
+                      name="location_name"
+                      maxlength="255"
+                      value="{{ chapter.locationName }}">
+               <label>Ort (optional)</label>
+            </div>
+
+            <nav class="right-align no-space">
+               <button type="button"
+                       class="transparent link"
+                       onclick="callUi('#dialog-edit-chapter')">
+                  Abbrechen
+               </button>
+               <button type="submit" class="transparent link">
+                  Speichern
+               </button>
+            </nav>
+         </form>
+
+         <form method="post"
+               action="{{ url_for('pages.delete_chapter_page', chapter_id=chapter.id) }}"
+               onsubmit="return confirm('Kapitel wirklich löschen? Die verknüpften Erinnerungen, Herzmomente und Meilensteine bleiben erhalten.');">
+            <button type="submit" class="transparent error">
+               <i>delete</i>
+               Kapitel löschen
+            </button>
+         </form>
+      </dialog>
+
+      <div class="overlay"
+           id="div-overlay-link-chapter-content"
+           onclick="callUi('#dialog-link-chapter-content')"></div>
+
+      <dialog class="max" id="dialog-link-chapter-content">
+         <form method="post"
+               action="{{ url_for('pages.update_chapter_links_page', chapter_id=chapter.id) }}">
+            <nav>
+               <button type="button"
+                       class="circle transparent"
+                       onclick="callUi('#dialog-link-chapter-content')">
+                  <i>close</i>
+               </button>
+               <h5 class="max">Inhalte verknüpfen</h5>
+               <button type="submit" class="transparent link">
+                  Speichern
+               </button>
+            </nav>
+
+            <div class="chapter-link-search">
+               <div class="field border round prefix">
+                  <i>search</i>
+                  <input type="search"
+                         id="chapter-link-search"
+                         placeholder="Erinnerungen und Momente durchsuchen"
+                         oninput="filterChapterCandidates(this.value)">
+               </div>
+            </div>
+
+            {% set candidate_groups = [
+               ('memory', 'Erinnerungen', 'photo_library'),
+               ('heart', 'Herzmomente', 'favorite'),
+               ('milestone', 'Meilensteine', 'star')
+            ] %}
+
+            {% for group_type, group_label, group_icon in candidate_groups %}
+            <section class="chapter-link-section" data-chapter-group="{{ group_type }}">
+               <h6>
+                  <i>{{ group_icon }}</i>
+                  {{ group_label }}
+               </h6>
+
+               {% set ns = namespace(count=0) %}
+               {% for entry in chapter_candidates if entry.type == group_type %}
+                  {% set ns.count = ns.count + 1 %}
+                  <label class="chapter-link-option"
+                         data-chapter-candidate
+                         data-search="{{ (entry.type_label ~ ' ' ~ entry.title ~ ' ' ~ entry.text ~ ' ' ~ entry.author_name)|lower }}">
+                     {% if entry.image_url %}
+                     <img class="chapter-link-thumb"
+                          src="{{ entry.image_url }}"
+                          alt=""
+                          loading="lazy">
+                     {% else %}
+                     <i class="chapter-link-icon {% if entry.type == 'heart' %}chapter-link-icon-heart{% endif %}">
+                        {{ entry.icon }}
+                     </i>
+                     {% endif %}
+
+                     <span>
+                        <strong>
+                           {% if entry.type == 'heart' %}
+                              {{ entry.text|truncate(70) }}
+                           {% else %}
+                              {{ entry.title }}
+                           {% endif %}
+                        </strong>
+                        <span class="small" style="display:block;opacity:.72;">
+                           {% if entry.date_label %}{{ entry.date_label }}{% endif %}
+                           {% if entry.author_name %}
+                              {% if entry.date_label %} · {% endif %}{{ entry.author_name }}
+                           {% endif %}
+                        </span>
+                     </span>
+
+                     <input type="checkbox"
+                            name="{% if entry.type == 'heart' %}heart_ids{% else %}item_ids{% endif %}"
+                            value="{{ entry.id }}"
+                            {% if entry.linked %}checked{% endif %}>
+                  </label>
+               {% endfor %}
+
+               {% if ns.count == 0 %}
+               <p class="small" style="opacity:.65;">Keine Einträge vorhanden.</p>
+               {% endif %}
+            </section>
+            {% endfor %}
+         </form>
+      </dialog>
+
+      <script>
+         function filterChapterCandidates(value) {
+            const needle = String(value || '').trim().toLocaleLowerCase();
+            const candidates = document.querySelectorAll('[data-chapter-candidate]');
+
+            candidates.forEach((candidate) => {
+               const haystack = String(candidate.dataset.search || '');
+               candidate.style.display = (!needle || haystack.includes(needle))
+                  ? ''
+                  : 'none';
+            });
+
+            document.querySelectorAll('[data-chapter-group]').forEach((group) => {
+               const hasVisible = Array.from(
+                  group.querySelectorAll('[data-chapter-candidate]')
+               ).some((candidate) => candidate.style.display !== 'none');
+
+               group.style.display = hasVisible ? '' : 'none';
+            });
+         }
+      </script>
+
+      {% include 'layouts/footer.html' %}
+   </body>
+</html>

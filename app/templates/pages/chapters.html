@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>{{ title.value }}</title>
+      {% include 'layouts/head.html' %}
+      <style>
+         .chapters-page {
+            max-width: 820px;
+            margin: 0 auto;
+            padding-bottom: 6rem;
+         }
+
+         .chapters-intro {
+            margin: 0.6rem 0 1.1rem;
+            opacity: 0.78;
+         }
+
+         .chapter-card {
+            overflow: hidden;
+            margin-bottom: 0.9rem;
+         }
+
+         .chapter-card-link {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr);
+            color: inherit;
+            text-decoration: none;
+            min-height: 145px;
+         }
+
+         .chapter-cover {
+            width: 100%;
+            height: 100%;
+            min-height: 145px;
+            object-fit: cover;
+            display: block;
+         }
+
+         .chapter-cover-placeholder {
+            min-height: 145px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-container);
+            color: var(--on-primary-container);
+         }
+
+         .chapter-cover-placeholder > i {
+            font-size: 2.8rem;
+         }
+
+         .chapter-card-body {
+            min-width: 0;
+            padding: 1rem;
+         }
+
+         .chapter-card-title {
+            margin: 0 0 0.3rem;
+         }
+
+         .chapter-card-meta {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            font-size: 0.88rem;
+            opacity: 0.75;
+         }
+
+         .chapter-card-meta > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+         }
+
+         .chapter-card-description {
+            margin: 0.65rem 0 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+         }
+
+         .chapter-card-counts {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+         }
+
+         .chapters-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+         }
+
+         .chapters-empty > i {
+            font-size: 3rem;
+            opacity: 0.72;
+         }
+
+         .chapter-error {
+            margin-bottom: 1rem;
+         }
+
+         @media (max-width: 600px) {
+            .chapters-page {
+               padding-left: 0.2rem;
+               padding-right: 0.2rem;
+            }
+
+            .chapter-card-link {
+               grid-template-columns: 105px minmax(0, 1fr);
+               min-height: 130px;
+            }
+
+            .chapter-cover,
+            .chapter-cover-placeholder {
+               min-height: 130px;
+            }
+
+            .chapter-card-body {
+               padding: 0.85rem;
+            }
+         }
+      </style>
+   </head>
+
+   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive chapters-page">
+         <p class="chapters-intro">
+            Kapitel verbinden zusammengehörige Erinnerungen, Herzmomente und Meilensteine – zum Beispiel einen Urlaub, einen Ausflug oder eine besondere Phase eurer Beziehung.
+         </p>
+
+         {% if chapter_error %}
+         <article class="error-container chapter-error">
+            <div class="padding">
+               {{ chapter_error }}
+            </div>
+         </article>
+         {% endif %}
+
+         {% if chapters %}
+            {% for chapter in chapters %}
+            <article class="surface-container chapter-card">
+               <a class="chapter-card-link"
+                  href="{{ url_for('pages.chapter', chapter_id=chapter.id) }}">
+                  {% if chapter.cover_url %}
+                  <img class="chapter-cover"
+                       src="{{ chapter.cover_url }}"
+                       alt=""
+                       loading="lazy">
+                  {% else %}
+                  <div class="chapter-cover-placeholder">
+                     <i>auto_stories</i>
+                  </div>
+                  {% endif %}
+
+                  <div class="chapter-card-body">
+                     <h5 class="chapter-card-title">{{ chapter.title }}</h5>
+
+                     <div class="chapter-card-meta">
+                        {% if chapter.date_label %}
+                        <span>
+                           <i>calendar_month</i>
+                           {{ chapter.date_label }}
+                        </span>
+                        {% endif %}
+
+                        {% if chapter.locationName %}
+                        <span>
+                           <i>location_on</i>
+                           {{ chapter.locationName }}
+                        </span>
+                        {% endif %}
+                     </div>
+
+                     {% if chapter.description %}
+                     <p class="chapter-card-description">
+                        {{ chapter.description }}
+                     </p>
+                     {% endif %}
+
+                     <div class="chapter-card-counts">
+                        {% if chapter.memory_count %}
+                        <span class="chip small round">
+                           <i>photo_library</i>
+                           {{ chapter.memory_count }}
+                        </span>
+                        {% endif %}
+                        {% if chapter.heart_count %}
+                        <span class="chip small round">
+                           <i>favorite</i>
+                           {{ chapter.heart_count }}
+                        </span>
+                        {% endif %}
+                        {% if chapter.milestone_count %}
+                        <span class="chip small round">
+                           <i>star</i>
+                           {{ chapter.milestone_count }}
+                        </span>
+                        {% endif %}
+                        {% if not chapter.entry_count %}
+                        <span class="chip small round">Noch leer</span>
+                        {% endif %}
+                     </div>
+                  </div>
+               </a>
+            </article>
+            {% endfor %}
+         {% else %}
+         <article class="surface-container chapters-empty">
+            <i>auto_stories</i>
+            <h5>Noch keine Kapitel</h5>
+            <p>
+               Legt euer erstes Kapitel an und verbindet danach passende Inhalte miteinander.
+            </p>
+            <button class="round" onclick="callUi('#dialog-create-chapter')">
+               <i>add</i>
+               Erstes Kapitel erstellen
+            </button>
+         </article>
+         {% endif %}
+      </main>
+
+      <div class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index:90;">
+         <button class="square round extra"
+                 aria-label="Kapitel erstellen"
+                 onclick="callUi('#dialog-create-chapter')"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
+
+      <div class="overlay"
+           id="div-overlay-create-chapter"
+           onclick="callUi('#dialog-create-chapter')"></div>
+
+      <dialog class="modal" id="dialog-create-chapter">
+         <form method="post" action="{{ url_for('pages.create_chapter_page') }}">
+            <h5>Neues Kapitel</h5>
+            <p class="small">
+               Ein Kapitel bündelt Inhalte, die zu demselben Erlebnis gehören.
+            </p>
+
+            <div class="field label border">
+               <input type="text" name="title" maxlength="255" required>
+               <label>Titel</label>
+            </div>
+
+            <div class="field label border extra">
+               <textarea name="description"></textarea>
+               <label>Beschreibung (optional)</label>
+            </div>
+
+            <div class="grid">
+               <div class="s12 m6">
+                  <div class="field label border">
+                     <input type="date" name="start_date">
+                     <label>Startdatum (optional)</label>
+                  </div>
+               </div>
+               <div class="s12 m6">
+                  <div class="field label border">
+                     <input type="date" name="end_date">
+                     <label>Enddatum (optional)</label>
+                  </div>
+               </div>
+            </div>
+
+            <div class="field label border prefix">
+               <i>location_on</i>
+               <input type="text" name="location_name" maxlength="255">
+               <label>Ort (optional)</label>
+            </div>
+
+            <nav class="right-align no-space">
+               <button type="button"
+                       class="transparent link"
+                       onclick="callUi('#dialog-create-chapter')">
+                  Abbrechen
+               </button>
+               <button type="submit" class="transparent link">
+                  Erstellen
+               </button>
+            </nav>
+         </form>
+      </dialog>
+
+      {% include 'layouts/footer.html' %}
+   </body>
+</html>

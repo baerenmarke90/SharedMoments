@@ -1,7 +1,8 @@
 from sqlalchemy.exc import IntegrityError
 from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, Setting,
     UserSetting, Item, ItemShare, ListType, SessionLocal, RelationshipStatus, Translation,
-    Reminder, ReminderMute, PushSubscription, NotificationLog)
+    Reminder, ReminderMute, PushSubscription, NotificationLog, CoupleChapter,
+    CoupleChapterItem, CoupleChapterHeartMoment)
 from sqlalchemy.orm import joinedload
 from datetime import date
 from sqlalchemy import desc, asc, and_, or_
@@ -903,6 +904,10 @@ def delete_item(item_id):
             ).delete()
             session.delete(reminder)
 
+        session.query(CoupleChapterItem).filter(
+            CoupleChapterItem.itemID == item_id
+        ).delete()
+
         session.query(ItemShare).filter(ItemShare.itemID == item_id).delete()
 
         item = session.query(Item).filter(Item.id == item_id).first()
@@ -912,6 +917,267 @@ def delete_item(item_id):
         # Commit even when the Item itself is already gone: this also cleans
         # a remaining linked reminder if delete_item() is called for that ID.
         session.commit()
+    finally:
+        session.close()
+
+
+# Couple Chapters
+
+def _serialize_couple_chapter(chapter, creator=None):
+    return {
+        'id': chapter.id,
+        'title': chapter.title,
+        'description': chapter.description or '',
+        'startDate': chapter.startDate,
+        'endDate': chapter.endDate,
+        'locationName': chapter.locationName or '',
+        'latitude': chapter.latitude,
+        'longitude': chapter.longitude,
+        'createdByUser': chapter.createdByUser,
+        'dateCreated': chapter.dateCreated,
+        'dateModified': chapter.dateModified,
+        'creator': {
+            'id': creator.id,
+            'firstName': creator.firstName or '',
+            'profilePicture': creator.profilePicture,
+        } if creator else None,
+    }
+
+
+def get_couple_chapters():
+    session = SessionLocal()
+    try:
+        rows = (
+            session.query(CoupleChapter, User)
+            .join(User, CoupleChapter.createdByUser == User.id)
+            .all()
+        )
+        chapters = [
+            _serialize_couple_chapter(chapter, creator)
+            for chapter, creator in rows
+        ]
+        def chapter_sort_key(chapter):
+            created = chapter['dateCreated']
+            if created and hasattr(created, 'date'):
+                created = created.date()
+            return (
+                chapter['startDate'] or created or date.min,
+                created or date.min,
+                chapter['id'],
+            )
+
+        chapters.sort(
+            key=chapter_sort_key,
+            reverse=True,
+        )
+        return chapters
+    finally:
+        session.close()
+
+
+def get_couple_chapter(chapter_id):
+    session = SessionLocal()
+    try:
+        row = (
+            session.query(CoupleChapter, User)
+            .join(User, CoupleChapter.createdByUser == User.id)
+            .filter(CoupleChapter.id == chapter_id)
+            .first()
+        )
+        if not row:
+            return None
+        return _serialize_couple_chapter(row[0], row[1])
+    finally:
+        session.close()
+
+
+def create_couple_chapter(
+    title,
+    description,
+    start_date,
+    end_date,
+    location_name,
+    created_by_user,
+):
+    session = SessionLocal()
+    try:
+        chapter = CoupleChapter(
+            title=title,
+            description=description or '',
+            startDate=start_date,
+            endDate=end_date,
+            locationName=location_name or '',
+            createdByUser=created_by_user,
+        )
+        session.add(chapter)
+        session.commit()
+        session.refresh(chapter)
+        return chapter.id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def update_couple_chapter(
+    chapter_id,
+    title,
+    description,
+    start_date,
+    end_date,
+    location_name,
+):
+    session = SessionLocal()
+    try:
+        chapter = (
+            session.query(CoupleChapter)
+            .filter(CoupleChapter.id == chapter_id)
+            .first()
+        )
+        if not chapter:
+            return False
+
+        chapter.title = title
+        chapter.description = description or ''
+        chapter.startDate = start_date
+        chapter.endDate = end_date
+        chapter.locationName = location_name or ''
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def delete_couple_chapter(chapter_id):
+    session = SessionLocal()
+    try:
+        chapter = (
+            session.query(CoupleChapter)
+            .filter(CoupleChapter.id == chapter_id)
+            .first()
+        )
+        if not chapter:
+            return False
+
+        session.query(CoupleChapterItem).filter(
+            CoupleChapterItem.chapterID == chapter_id
+        ).delete()
+        session.query(CoupleChapterHeartMoment).filter(
+            CoupleChapterHeartMoment.chapterID == chapter_id
+        ).delete()
+        session.delete(chapter)
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def get_couple_chapter_links(chapter_id):
+    session = SessionLocal()
+    try:
+        item_ids = {
+            row[0]
+            for row in session.query(CoupleChapterItem.itemID).filter(
+                CoupleChapterItem.chapterID == chapter_id
+            ).all()
+        }
+        heart_ids = {
+            row[0]
+            for row in session.query(
+                CoupleChapterHeartMoment.heartMomentID
+            ).filter(
+                CoupleChapterHeartMoment.chapterID == chapter_id
+            ).all()
+        }
+        return {
+            'item_ids': item_ids,
+            'heart_ids': heart_ids,
+        }
+    finally:
+        session.close()
+
+
+def replace_couple_chapter_links(chapter_id, item_ids, heart_ids):
+    session = SessionLocal()
+    try:
+        session.query(CoupleChapterItem).filter(
+            CoupleChapterItem.chapterID == chapter_id
+        ).delete()
+        session.query(CoupleChapterHeartMoment).filter(
+            CoupleChapterHeartMoment.chapterID == chapter_id
+        ).delete()
+
+        for item_id in sorted(set(item_ids)):
+            session.add(CoupleChapterItem(
+                chapterID=chapter_id,
+                itemID=item_id,
+            ))
+
+        for heart_id in sorted(set(heart_ids)):
+            session.add(CoupleChapterHeartMoment(
+                chapterID=chapter_id,
+                heartMomentID=heart_id,
+            ))
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def get_couple_chapter_link_map():
+    """Return chapter links in both directions for UI aggregation."""
+    session = SessionLocal()
+    try:
+        chapters = {
+            chapter.id: {
+                'id': chapter.id,
+                'title': chapter.title,
+            }
+            for chapter in session.query(CoupleChapter).all()
+        }
+
+        by_chapter = {
+            chapter_id: {
+                'item_ids': set(),
+                'heart_ids': set(),
+            }
+            for chapter_id in chapters
+        }
+        item_chapters = {}
+        heart_chapters = {}
+
+        for link in session.query(CoupleChapterItem).all():
+            if link.chapterID not in chapters:
+                continue
+            by_chapter[link.chapterID]['item_ids'].add(link.itemID)
+            item_chapters.setdefault(link.itemID, []).append(
+                chapters[link.chapterID]
+            )
+
+        for link in session.query(CoupleChapterHeartMoment).all():
+            if link.chapterID not in chapters:
+                continue
+            by_chapter[link.chapterID]['heart_ids'].add(link.heartMomentID)
+            heart_chapters.setdefault(link.heartMomentID, []).append(
+                chapters[link.chapterID]
+            )
+
+        return {
+            'chapters': chapters,
+            'by_chapter': by_chapter,
+            'item_chapters': item_chapters,
+            'heart_chapters': heart_chapters,
+        }
     finally:
         session.close()
 

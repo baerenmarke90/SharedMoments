@@ -170,6 +170,28 @@
             line-height: 1.3;
          }
 
+         .story-chapter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.55rem;
+         }
+
+         .story-chapter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.18rem 0.5rem;
+            border-radius: 999px;
+            background: var(--secondary-container);
+            color: var(--on-secondary-container);
+            font-size: 0.78rem;
+         }
+
+         .story-chapter-tag > i {
+            font-size: 0.95rem;
+         }
+
          .story-card-text {
             margin: 0.55rem 0 0;
             white-space: pre-wrap;
@@ -255,8 +277,15 @@
 
       <main class="responsive story-page">
          <p class="story-intro">
-            Erinnerungen, Herzmomente und Meilensteine – chronologisch als eure gemeinsame Geschichte.
+            Erinnerungen, Herzmomente und Meilensteine – chronologisch als eure gemeinsame Geschichte. Kapitel verbinden zusammengehörige Erlebnisse miteinander.
          </p>
+
+         <nav class="right-align" style="margin:-0.45rem 0 1rem;">
+            <a href="{{ url_for('pages.chapters') }}">
+               <i>auto_stories</i>
+               Kapitel ansehen
+            </a>
+         </nav>
 
          <section class="story-controls">
             <nav class="story-filter-row">
@@ -368,6 +397,17 @@
 
                            {% if entry.type != 'heart' %}
                            <h6 class="story-card-title">{{ entry.title }}</h6>
+                           {% endif %}
+
+                           {% if entry.chapters %}
+                           <div class="story-chapter-tags">
+                              {% for chapter in entry.chapters %}
+                              <span class="story-chapter-tag">
+                                 <i>auto_stories</i>
+                                 {{ chapter.title }}
+                              </span>
+                              {% endfor %}
+                           </div>
                            {% endif %}
 
                            {% if entry.text %}
