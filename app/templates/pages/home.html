@@ -451,7 +451,7 @@
                     onclick="callUi('#dialog-couple-create')">
                <i>close</i>
             </button>
-            <h6 class="max" style="margin:0;line-height:1.3;white-space:normal;">Was möchtest du festhalten?</h6>
+            <h6 class="max" style="margin:0;line-height:1.3;white-space:normal;">Was möchtest du hinzufügen?</h6>
          </nav>
 
          <div class="space"></div>
@@ -488,6 +488,26 @@
             <i>chevron_right</i>
          </a>
          {% endif %}
+
+         <a class="row padding"
+            href="{{ url_for('pages.plans', create=1) }}">
+            <i>explore</i>
+            <div class="max">
+               <strong>Plan</strong>
+               <div class="small">Etwas, das ihr zusammen machen oder erleben wollt</div>
+            </div>
+            <i>chevron_right</i>
+         </a>
+
+         <a class="row padding"
+            href="{{ url_for('pages.chapters', create=1) }}">
+            <i>auto_stories</i>
+            <div class="max">
+               <strong>Kapitel</strong>
+               <div class="small">Zusammengehörige Erlebnisse miteinander verbinden</div>
+            </div>
+            <i>chevron_right</i>
+         </a>
       </dialog>
       {% endif %}
 

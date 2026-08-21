@@ -299,5 +299,22 @@
       {% include 'layouts/footer.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>
+      <script>
+         document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('create') !== '1') return;
+
+            window.setTimeout(() => {
+               callUi('#dialog-create-chapter');
+            }, 0);
+
+            params.delete('create');
+            const query = params.toString();
+            const cleanUrl = window.location.pathname
+               + (query ? `?${query}` : '')
+               + window.location.hash;
+            window.history.replaceState({}, '', cleanUrl);
+         });
+      </script>
    </body>
 </html>
