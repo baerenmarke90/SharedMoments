@@ -3,83 +3,258 @@
 
 <head>
     <title>{{ title.value }}</title>
+
     {% include 'layouts/head.html' %}
+
+    <style>
+        .list-item-row {
+            transition:
+                background 0.15s ease,
+                outline 0.15s ease;
+        }
+
+        .list-select-control {
+            display: none !important;
+        }
+
+        body.list-selection-active
+        .list-select-control {
+            display: inline-flex !important;
+        }
+
+        body.list-selection-active
+        .list-status-control {
+            display: none !important;
+        }
+
+        body.list-selection-active
+        .list-delete-button {
+            display: none !important;
+        }
+
+        .list-item-selected {
+            background:
+                var(--secondary-container);
+
+            outline:
+                2px solid var(--primary);
+
+            border-radius:
+                1rem;
+        }
+
+        #footer-list-selection {
+            z-index: 100;
+        }
+    </style>
 </head>
 
+
 <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+
     <!-- Header -->
     {% include 'layouts/header.html' %}
 
-       <!-- Overlay wenn Nav-Drawer geöffnet -->
-   <div class="overlay" id="div-overlay-nav-drawer" onclick="callUi('#dialog-nav-drawer')"></div>
 
-      <!-- Overlay für New-List-Item-Dialog -->
-      <div class="overlay" id="div-overlay-new-list-item" onclick="callUi('#dialog-create-new-list-item')"></div>
+    <!-- Overlay Navigation -->
+    <div
+        class="overlay"
+        id="div-overlay-nav-drawer"
+        onclick="callUi('#dialog-nav-drawer')">
+    </div>
 
-   <!-- Nav-Drawer -->
-   <div id="div-render-nav-drawer">
-      {% include 'layouts/nav-drawer.html' %}
-   </div>
 
-    <!-- Feed-Karten -->
+    <!-- Overlay neuer Listeneintrag -->
+    <div
+        class="overlay"
+        id="div-overlay-new-list-item"
+        onclick="callUi('#dialog-create-new-list-item')">
+    </div>
+
+
+    <!-- Nav Drawer -->
+    <div id="div-render-nav-drawer">
+        {% include 'layouts/nav-drawer.html' %}
+    </div>
+
+
     <main class="responsive">
 
         <div id="div-render-list-items">
             {% include 'layouts/list-items.html' %}
-         </div>
+        </div>
 
-        <!-- Dialog zum Erstellen eines neuen Eintrags -->
-      {% if has_list_permission('Create', list_type_title) %}
-      <div id="div-render-new-list-item">
-        {% include 'layouts/new-list-item.html' %}
-     </div>
-      {% endif %}
 
-       
-        <script>
-            function checkCheckbox(element) {
-                var checkbox = element.querySelector('input[type="checkbox"]');
-                checkbox.checked = !checkbox.checked;
-            }
-        </script>
-        <!-- Footer -->
+        {% if has_list_permission('Create', list_type_title) %}
+        <div id="div-render-new-list-item">
+            {% include 'layouts/new-list-item.html' %}
+        </div>
+        {% endif %}
+
+
         {% include 'layouts/footer.html' %}
+
     </main>
 
-    <!-- FAB um neuen Eintrag zu erstellen -->
+
+    <!-- Neuer Eintrag -->
     {% if has_list_permission('Create', list_type_title) %}
-    <div id="div-fab-create-new-list-entry" class="fixed bottom right" style="margin-right: 8px;margin-bottom: 16px;z-index: 90;" onclick="callUi('#dialog-create-new-list-item')">
-        <button class="square round extra"
-            style="box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16), 0px 3px 6px rgba(0, 0, 0, 0.23);">
+    <div
+        id="div-fab-create-new-list-entry"
+        class="fixed bottom right"
+        style="
+            margin-right: 8px;
+            margin-bottom: 16px;
+            z-index: 90;
+        "
+        onclick="callUi('#dialog-create-new-list-item')">
+
+        <button
+            class="square round extra"
+            style="
+                box-shadow:
+                    0 3px 6px rgba(0,0,0,.16),
+                    0 3px 6px rgba(0,0,0,.23);
+            ">
+
             <i>add</i>
+
         </button>
+
     </div>
     {% endif %}
 
-    <div class="snackbar" id="list-snackbar">
-        <div class="max" id="list-snackbar-text" onclick="document.getElementById('list-snackbar').classList.remove('active');"></div>
-        <a id="list-snackbar-more-link"></a>
-     </div>
 
-     <div class="overlay" id="div-overlay-list-error">
+    <!-- Mehrfach-Auswahlleiste -->
+    {% if has_list_permission('Delete', list_type_title) %}
+    <footer
+        class="fixed bottom secondary-container"
+        id="footer-list-selection"
+        style="display:none;">
+
+        <nav>
+
+            <button
+                type="button"
+                class="circle transparent"
+                onclick="exitListSelectionMode()">
+
+                <i>close</i>
+
+            </button>
+
+
+            <a
+                class="chip no-border secondary small round">
+
+                <i class="small">
+                    check_circle
+                </i>
+
+                <span id="list-selection-count">
+                    0
+                </span>
+
+            </a>
+
+
+            <div class="max"></div>
+
+
+            <button
+                type="button"
+                class="circle transparent"
+                title="{{ _('Select all') }}"
+                onclick="toggleSelectAllListItems()">
+
+                <i>select_all</i>
+
+            </button>
+
+
+            <button
+                type="button"
+                id="list-selection-delete-button"
+                class="circle transparent error"
+                title="{{ _('Delete') }}"
+                disabled
+                onclick="deleteSelectedListItems(this)">
+
+                <i>delete_sweep</i>
+
+            </button>
+
+        </nav>
+
+    </footer>
+    {% endif %}
+
+
+    <!-- Snackbar -->
+    <div
+        class="snackbar"
+        id="list-snackbar">
+
+        <div
+            class="max"
+            id="list-snackbar-text"
+            onclick="
+                document
+                    .getElementById(
+                        'list-snackbar'
+                    )
+                    .classList
+                    .remove('active');
+            ">
+        </div>
+
+        <a id="list-snackbar-more-link"></a>
     </div>
- 
+
+
+    <div
+        class="overlay"
+        id="div-overlay-list-error">
+    </div>
+
+
     <dialog id="list-error-more-details">
-    <h5>{{ _('Error details') }}</h5>
-    <div id="list-error-more-details-text"></div>
-    <nav class="right-align no-space">
-       <button class="transparent link" onclick="showMoreInfo('list', null,'close')">{{ _('OK') }}</button>
-    </nav>
+
+        <h5>
+            {{ _('Error details') }}
+        </h5>
+
+        <div id="list-error-more-details-text">
+        </div>
+
+        <nav class="right-align no-space">
+            <button
+                class="transparent link"
+                onclick="
+                    showMoreInfo(
+                        'list',
+                        null,
+                        'close'
+                    )
+                ">
+                {{ _('OK') }}
+            </button>
+        </nav>
+
     </dialog>
+
+
+    <script>
+        window.listType =
+            '{{ list_type }}';
+
+        window.currentEdition =
+            '{{ sm_edition }}';
+    </script>
 
 
     <script src="{{ static_versioned('js/main.js') }}"></script>
     <script src="{{ static_versioned('js/list.js') }}"></script>
-
-<script>
-    window.listType = '{{ list_type }}';
-    window.currentEdition = '{{ sm_edition }}';
-</script>
 
 </body>
 

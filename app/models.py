@@ -157,6 +157,25 @@ class ItemShare(Base):
     item = relationship('Item', backref='shares')
     creator = relationship('User', foreign_keys=[createdByUser])
 
+class HeartMoment(Base):
+    __tablename__ = 'heartMoments'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    authorUserID = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    momentDate = Column(Date, nullable=False, index=True)
+    description = Column(Text, nullable=False)
+    feeling = Column(String(32), nullable=False, index=True)
+    visibility = Column(String(16), nullable=False, default='shared', index=True)
+    mediaFilename = Column(String(255), nullable=True)
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    author = relationship('User', foreign_keys=[authorUserID])
+
 class ListType(Base):
     __tablename__ = 'listTypes'
     id = Column(Integer, primary_key=True, autoincrement=True)

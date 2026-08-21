@@ -848,16 +848,62 @@ def item():
                 list_type_obj = get_list_type_by_id(list_type)
                 list_type_title = list_type_obj.title if list_type_obj else ''
 
-                if list_type == 2:
-                    items = get_items_by_type(list_type, sort_by='asc', edition=sm_edition)
-                    rendered_items = render_template('layouts/timeline-card.html', moments=items, moments_title=list_type_title)
+                if list_type == 1:
+                    items = get_items_by_type(
+                        list_type,
+                        edition=sm_edition
+                    )
+
+                    shared_item_ids = (
+                        get_shared_item_ids()
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/home-items.html',
+                        items=items,
+                        list_type_title=list_type_title,
+                        shared_item_ids=shared_item_ids
+                    )
+
+                elif list_type == 2:
+                    items = get_items_by_type(
+                        list_type,
+                        sort_by='asc',
+                        edition=sm_edition
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/timeline-card.html',
+                        moments=items,
+                        moments_title=list_type_title
+                    )
+
                 elif list_type_title == 'Countdown':
-                    items = get_items_by_type(list_type, sort_by='asc', edition=sm_edition)
-                    rendered_items = render_template('layouts/countdown-card.html', countdowns=items, countdown_title='Countdown')
+                    items = get_items_by_type(
+                        list_type,
+                        sort_by='asc',
+                        edition=sm_edition
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/countdown-card.html',
+                        countdowns=items,
+                        countdown_title='Countdown'
+                    )
+
                 else:
-                    items = get_items_by_type(list_type, edition=sm_edition)
-                    shared_item_ids = get_shared_item_ids()
-                    rendered_items = render_template('layouts/home-items.html', items=items, list_type_title=list_type_title, shared_item_ids=shared_item_ids)
+                    items = get_items_by_type(
+                        list_type,
+                        edition=sm_edition,
+                        checked_last=True
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/list-items.html',
+                        items=items,
+                        mainTitle=list_type_obj.mainTitle,
+                        list_type_title=list_type_title
+                    )
 
                 return jsonify({
                     'status': 'success',
@@ -929,29 +975,95 @@ def item_by_id(id):
             perm_check = require_list_permission('Update', list_type)
             if perm_check is not None:
                 return perm_check
-            content_url = request.form.get('contentURL', '')
-            dateCreated = request.form.get('dateCreated', '')
+            # contentURL muss zwischen
+            # "nicht gesendet" und "explizit leer"
+            # unterscheiden.
+            #
+            # Ein leerer Wert bedeutet:
+            # Alle Medien aus dem Beitrag entfernen.
+            content_url_present = (
+                'contentURL'
+                in request.form
+            )
+
+            content_url = (
+                request.form.get(
+                    'contentURL',
+                    ''
+                )
+                if content_url_present
+                else None
+            )
+
+            dateCreated = request.form.get(
+                'dateCreated',
+                ''
+            )
 
             if dateCreated:
-                dateCreated = datetime.strptime(request.form['dateCreated'], "%Y-%m-%d")
+                dateCreated = datetime.strptime(
+                    request.form[
+                        'dateCreated'
+                    ],
+                    "%Y-%m-%d"
+                )
 
-            if not title or content is None or not content_type or not list_type or not content_url:
+            if (
+                not title
+                or content is None
+                or not content_type
+                or not list_type
+                or not content_url_present
+                or not dateCreated
+            ):
                 item = get_item_by_id(id)
+
                 if not title:
                     title = item.title
-                if content is None or (content == '' and 'content' not in request.form):
-                    content = item.content
-                if not content_type:
-                    content_type = item.contentType
-                if not list_type:
-                    list_type = item.listType
-                if not content_url:
-                    content_url = item.contentURL
-                if not dateCreated:
-                    dateCreated = item.dateCreated
 
-                if dateCreated.date() == item.dateCreated.date():
-                    dateCreated = item.dateCreated
+                if (
+                    content is None
+                    or (
+                        content == ''
+                        and 'content'
+                        not in request.form
+                    )
+                ):
+                    content = item.content
+
+                if not content_type:
+                    content_type = (
+                        item.contentType
+                    )
+
+                if not list_type:
+                    list_type = (
+                        item.listType
+                    )
+
+                # Nur übernehmen, wenn das Feld
+                # wirklich NICHT gesendet wurde.
+                # contentURL="" bleibt leer.
+                if not content_url_present:
+                    content_url = (
+                        item.contentURL
+                    )
+
+                if not dateCreated:
+                    dateCreated = (
+                        item.dateCreated
+                    )
+
+                if (
+                    dateCreated.date()
+                    == item.dateCreated.date()
+                ):
+                    dateCreated = (
+                        item.dateCreated
+                    )
+
+            if content_url is None:
+                content_url = ''
 
             edition = request.form.get('edition')
 
@@ -2682,3 +2794,574 @@ def _run_export(export_id, user_id, app_ref):
             log('error', f'Data export failed: {e}')
             job['status'] = 'error'
             job['error'] = str(e)
+
+
+# ============================================================
+# HEART MOMENTS API START
+# ============================================================
+
+from app.heart_moments import (
+    list_heart_moments,
+    get_visible_heart_moment,
+    create_heart_moment,
+    update_heart_moment,
+    delete_heart_moment,
+)
+
+
+def _heart_moment_request_data():
+    if request.is_json:
+        return request.get_json(silent=True) or {}
+
+    return request.form.to_dict()
+
+
+@api_bp.route('/api/v2/heart-moments', methods=['GET', 'POST'])
+@jwt_required
+def heart_moments_api():
+    try:
+        if request.method == 'GET':
+            filter_name = request.args.get('filter', 'all')
+            feeling = request.args.get('feeling')
+
+            moments = list_heart_moments(
+                user_id=g.user_id,
+                filter_name=filter_name,
+                feeling=feeling,
+            )
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Heart Moments loaded successfully',
+                'data': {
+                    'items': moments,
+                    'filter': filter_name,
+                }
+            }), 200
+
+        data = _heart_moment_request_data()
+
+        moment = create_heart_moment(
+            user_id=g.user_id,
+            description=data.get('description'),
+            feeling=data.get('feeling'),
+            moment_date=data.get('momentDate'),
+            visibility=data.get('visibility', 'shared'),
+        )
+
+        log(
+            'info',
+            f'Heart Moment created: '
+            f'ID={moment["id"]}, '
+            f'User={g.user_id}, '
+            f'Visibility={moment["visibility"]}'
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Heart Moment created successfully',
+            'data': {
+                'item': moment
+            }
+        }), 201
+
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'data': {
+                'error_code': 400
+            }
+        }), 400
+
+    except Exception as e:
+        log(
+            'error',
+            f'Error while processing Heart Moments: {e}'
+        )
+
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while processing Heart Moments.',
+            'data': {
+                'error_code': 500,
+                'error_message': str(e) if app.debug else None
+            }
+        }), 500
+
+
+@api_bp.route(
+    '/api/v2/heart-moments/<int:moment_id>',
+    methods=['GET', 'PUT', 'DELETE']
+)
+@jwt_required
+def heart_moment_by_id_api(moment_id):
+    try:
+        if request.method == 'GET':
+            moment = get_visible_heart_moment(
+                moment_id=moment_id,
+                user_id=g.user_id,
+            )
+
+            # Deliberately return 404 for inaccessible private moments.
+            # This avoids disclosing whether such a moment exists.
+            if not moment:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Heart Moment not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Heart Moment loaded successfully',
+                'data': {
+                    'item': moment
+                }
+            }), 200
+
+        if request.method == 'PUT':
+            data = _heart_moment_request_data()
+
+            moment = update_heart_moment(
+                moment_id=moment_id,
+                user_id=g.user_id,
+                changes=data,
+            )
+
+            # Update is author-only. Use 404 so foreign/private
+            # object existence is not disclosed.
+            if not moment:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Heart Moment not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            log(
+                'info',
+                f'Heart Moment updated: '
+                f'ID={moment_id}, User={g.user_id}'
+            )
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Heart Moment updated successfully',
+                'data': {
+                    'item': moment
+                }
+            }), 200
+
+        deleted = delete_heart_moment(
+            moment_id=moment_id,
+            user_id=g.user_id,
+        )
+
+        if not deleted:
+            return jsonify({
+                'status': 'error',
+                'message': 'Heart Moment not found',
+                'data': {
+                    'error_code': 404
+                }
+            }), 404
+
+        log(
+            'info',
+            f'Heart Moment deleted: '
+            f'ID={moment_id}, User={g.user_id}'
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Heart Moment deleted successfully',
+            'data': {
+                'id': moment_id
+            }
+        }), 200
+
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'data': {
+                'error_code': 400
+            }
+        }), 400
+
+    except Exception as e:
+        log(
+            'error',
+            f'Error while processing Heart Moment '
+            f'ID={moment_id}: {e}'
+        )
+
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while processing the Heart Moment.',
+            'data': {
+                'error_code': 500,
+                'error_message': str(e) if app.debug else None
+            }
+        }), 500
+
+
+# ============================================================
+# HEART MOMENTS API END
+# ============================================================
+
+
+# ============================================================
+# HEART MOMENT IMAGE API START
+# ============================================================
+
+from flask import send_file
+
+from app.heart_moments import (
+    get_owned_heart_moment,
+    set_heart_moment_media,
+)
+
+from app.heart_moment_media import (
+    save_heart_moment_image,
+    delete_heart_moment_image,
+    heart_moment_image_path,
+    heart_moment_image_mimetype,
+)
+
+
+@api_bp.route(
+    '/api/v2/heart-moments/<int:moment_id>/image',
+    methods=['GET', 'POST', 'DELETE']
+)
+@jwt_required
+def heart_moment_image_api(moment_id):
+    try:
+
+        # ----------------------------------------------------
+        # GET
+        # ----------------------------------------------------
+        if request.method == 'GET':
+            moment = get_visible_heart_moment(
+                moment_id=moment_id,
+                user_id=g.user_id,
+            )
+
+            if (
+                not moment
+                or not moment.get(
+                    'mediaFilename'
+                )
+            ):
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Image not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            filename = moment[
+                'mediaFilename'
+            ]
+
+            path = (
+                heart_moment_image_path(
+                    filename
+                )
+            )
+
+            if (
+                not path
+                or not path.is_file()
+            ):
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Image not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            response = send_file(
+                path,
+                mimetype=(
+                    heart_moment_image_mimetype(
+                        filename
+                    )
+                ),
+                conditional=True,
+            )
+
+            # Never allow a shared/public proxy
+            # cache to treat private couple media
+            # as public content.
+            response.headers[
+                'Cache-Control'
+            ] = 'private, max-age=3600'
+
+            return response
+
+
+        # POST and DELETE are author-only.
+        moment = get_owned_heart_moment(
+            moment_id=moment_id,
+            user_id=g.user_id,
+        )
+
+        if not moment:
+            return jsonify({
+                'status': 'error',
+                'message': 'Heart Moment not found',
+                'data': {
+                    'error_code': 404
+                }
+            }), 404
+
+
+        # ----------------------------------------------------
+        # POST / replace image
+        # ----------------------------------------------------
+        if request.method == 'POST':
+            image = request.files.get(
+                'image'
+            )
+
+            if not image:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'No image provided',
+                    'data': {
+                        'error_code': 400
+                    }
+                }), 400
+
+            old_filename = moment.get(
+                'mediaFilename'
+            )
+
+            new_filename = (
+                save_heart_moment_image(
+                    image
+                )
+            )
+
+            try:
+                updated = (
+                    set_heart_moment_media(
+                        moment_id=moment_id,
+                        user_id=g.user_id,
+                        media_filename=(
+                            new_filename
+                        ),
+                    )
+                )
+
+                if not updated:
+                    delete_heart_moment_image(
+                        new_filename
+                    )
+
+                    return jsonify({
+                        'status': 'error',
+                        'message': (
+                            'Heart Moment '
+                            'not found'
+                        ),
+                        'data': {
+                            'error_code': 404
+                        }
+                    }), 404
+
+            except Exception:
+                delete_heart_moment_image(
+                    new_filename
+                )
+                raise
+
+            if (
+                old_filename
+                and old_filename
+                != new_filename
+            ):
+                try:
+                    delete_heart_moment_image(
+                        old_filename
+                    )
+                except Exception:
+                    pass
+
+            return jsonify({
+                'status': 'success',
+                'message': (
+                    'Heart Moment image '
+                    'uploaded successfully'
+                ),
+                'data': {
+                    'item': updated
+                }
+            }), 200
+
+
+        # ----------------------------------------------------
+        # DELETE image
+        # ----------------------------------------------------
+        old_filename = moment.get(
+            'mediaFilename'
+        )
+
+        if not old_filename:
+            return jsonify({
+                'status': 'success',
+                'message': (
+                    'Heart Moment has no image'
+                ),
+                'data': {
+                    'item': moment
+                }
+            }), 200
+
+        updated = set_heart_moment_media(
+            moment_id=moment_id,
+            user_id=g.user_id,
+            media_filename=None,
+        )
+
+        try:
+            delete_heart_moment_image(
+                old_filename
+            )
+        except Exception:
+            pass
+
+        return jsonify({
+            'status': 'success',
+            'message': (
+                'Heart Moment image removed'
+            ),
+            'data': {
+                'item': updated
+            }
+        }), 200
+
+
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'data': {
+                'error_code': 400
+            }
+        }), 400
+
+    except Exception as e:
+        log(
+            'error',
+            f'Heart Moment image error: '
+            f'ID={moment_id}, '
+            f'User={g.user_id}, '
+            f'Error={e}'
+        )
+
+        return jsonify({
+            'status': 'error',
+            'message': (
+                'An error occurred while '
+                'processing the image.'
+            ),
+            'data': {
+                'error_code': 500,
+                'error_message': (
+                    str(e)
+                    if app.debug
+                    else None
+                )
+            }
+        }), 500
+
+
+# ============================================================
+# HEART MOMENT IMAGE API END
+# ============================================================
+
+
+# ============================================================
+# USER PROFILE PICTURE API
+# ============================================================
+
+@api_bp.route(
+    '/api/v2/users/<int:user_id>/profile-picture',
+    methods=['GET']
+)
+@jwt_required
+def user_profile_picture(user_id):
+    from pathlib import Path
+    from app.models import SessionLocal, User
+
+    db = SessionLocal()
+
+    try:
+        user = (
+            db.query(User)
+            .filter(User.id == user_id)
+            .first()
+        )
+
+        if not user:
+            return '', 404
+
+        app_dir = (
+            Path(__file__)
+            .resolve()
+            .parent
+            .parent
+        )
+
+        placeholder = (
+            app_dir
+            / 'static'
+            / 'images'
+            / 'profile-placeholder.jpg'
+        )
+
+        filename = str(
+            user.profilePicture or ''
+        ).strip()
+
+        # Kein eigenes Profilbild:
+        # offiziellen SharedMoments-Placeholder verwenden.
+        if (
+            not filename
+            or filename == 'profile-placeholder.jpg'
+        ):
+            return send_file(
+                placeholder
+            )
+
+        # Nur Dateinamen erlauben,
+        # niemals Pfade aus der DB übernehmen.
+        safe_filename = Path(filename).name
+
+        profile_file = (
+            app_dir
+            / 'uploads'
+            / 'profiles'
+            / safe_filename
+        )
+
+        if not profile_file.is_file():
+            return send_file(
+                placeholder
+            )
+
+        return send_file(
+            profile_file,
+            conditional=True,
+        )
+
+    finally:
+        db.close()

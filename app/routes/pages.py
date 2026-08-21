@@ -183,7 +183,19 @@ def home():
         countdowns = get_items_by_type(countdown_list_type.id, 'asc', edition=sm_edition) if countdown_list_type else []
         countdown_list_type_id = countdown_list_type.id if countdown_list_type else ''
 
-        return render_template('pages/home.html', items=items, list_types=list_types, list_type=list_type, title=title, darkmode=darkmode, user_data=user_data, moments=moments, settings=settings, banner_text=banner_text, sm_edition=sm_edition, list_type_title='Home', moments_title='Moments', shared_item_ids=shared_item_ids, countdowns=countdowns, countdown_title='Countdown', countdown_list_type_id=countdown_list_type_id)
+        # HEART MOMENT DAILY MEMORY
+        heart_moment_memory = None
+
+        if sm_edition == 'couples':
+            from app.heart_moments import (
+                get_daily_shared_heart_moment_memory,
+            )
+
+            heart_moment_memory = (
+                get_daily_shared_heart_moment_memory()
+            )
+
+        return render_template('pages/home.html', items=items, list_types=list_types, list_type=list_type, title=title, darkmode=darkmode, user_data=user_data, moments=moments, settings=settings, banner_text=banner_text, sm_edition=sm_edition, list_type_title='Home', moments_title='Moments', shared_item_ids=shared_item_ids, countdowns=countdowns, countdown_title='Countdown', countdown_list_type_id=countdown_list_type_id, heart_moment_memory=heart_moment_memory)
     except Exception as e:
         log('error', f'Error while rendering the pages/home.html-Template: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
@@ -494,3 +506,48 @@ def list_view(content_url):
     except Exception as e:
         log('error', f'Error while processing the list view: {e}')
         return "An error occurred while processing your request. Page not found.", 500
+
+
+# ============================================================
+# HEART MOMENTS PAGE START
+# ============================================================
+
+@pages_bp.route('/heart-moments')
+@jwt_required
+def heart_moments_page():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        list_types = get_all_list_types()
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+
+        return render_template(
+            'pages/heart-moments.html',
+            list_types=list_types,
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            current_user_id=g.user_id,
+            sm_edition=sm_edition,
+        )
+
+    except Exception as e:
+        log(
+            'error',
+            f'Error while rendering Heart Moments page: {e}'
+        )
+
+        return (
+            'An error occurred while rendering the Heart Moments page.',
+            500
+        )
+
+
+# ============================================================
+# HEART MOMENTS PAGE END
+# ============================================================

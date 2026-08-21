@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{{ title.value }}</title>
+    {% include 'layouts/head.html' %}
+
+    <style>
+        .heart-moments-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .heart-moments-filters {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 0.5rem;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .heart-moments-filters button {
+            width: 100% !important;
+            min-width: 0;
+            max-width: none;
+            margin: 0;
+            white-space: nowrap;
+            justify-content: center;
+        }
+
+        /* Mobile: 3 Filter oben, 2 Filter unten */
+        .heart-moments-filters button:nth-child(-n+3) {
+            grid-column: span 2;
+        }
+
+        .heart-moments-filters button:nth-child(n+4) {
+            grid-column: span 3;
+        }
+
+        /* Auf größeren Displays alle Filter in einer Reihe */
+        @media (min-width: 700px) {
+            .heart-moments-filters {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+
+            .heart-moments-filters button:nth-child(n) {
+                grid-column: span 1;
+            }
+        }
+
+        .heart-moment-highlight {
+            box-shadow:
+                0 0 0 2px var(--primary),
+                0 3px 6px rgba(0, 0, 0, 0.18);
+        }
+
+        .heart-moment-card {
+            margin-bottom: 1rem;
+        }
+
+        .heart-moment-description {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            margin-top: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .heart-moment-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .heart-moment-author {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .heart-moment-author-avatar {
+            object-fit: cover;
+        }
+
+        /*
+         * Der eingebaute Placeholder hat innerhalb seiner
+         * Bilddatei etwas Leerraum. Eigene Profilbilder
+         * daher optisch auf dieselbe sichtbare Größe bringen.
+         */
+        .heart-moment-author-avatar-custom {
+            transform: none;
+        }
+
+        .heart-moment-author-fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            border-radius: 50%;
+            background: var(--surface-container-high);
+        }
+
+        .heart-moment-author-fallback i {
+            font-size: 18px;
+        }
+
+        .heart-moment-actions {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .heart-moment-empty {
+            padding: 2rem 0;
+        }
+
+        .heart-moment-image {
+            display: block;
+            width: 100%;
+            max-height: 480px;
+            object-fit: cover;
+            border-radius: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .heart-image-picker {
+            margin-top: 0.5rem;
+        }
+
+        .heart-image-picker-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .heart-image-preview {
+            display: block;
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            border-radius: 1rem;
+            margin-top: 0.75rem;
+        }
+
+
+        /* HEART MOMENT DASHBOARD CARD START */
+
+        .heart-moment-card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /*
+         * Aufbau wie normale Dashboard-Posts:
+         * Medium zuerst, Inhalt darunter.
+         */
+        .heart-moment-card > .heart-moment-image {
+            order: 0;
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: none;
+            object-fit: cover;
+            border-radius: 0;
+            margin: 0;
+        }
+
+        .heart-moment-card > .row {
+            order: 1;
+            margin: 0;
+            padding: 1rem 1rem 0;
+        }
+
+        .heart-moment-card > .heart-moment-description {
+            order: 2;
+            margin: 1rem 1rem 0;
+            padding: 0;
+        }
+
+        .heart-moment-card > .heart-moment-footer {
+            order: 3;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.55rem;
+
+            margin-top: 0.85rem;
+            padding: 0 1rem 1rem;
+
+            opacity: 1;
+        }
+
+        .heart-moment-visibility {
+            order: 1;
+            opacity: 0.8;
+        }
+
+        .heart-moment-date-chip {
+            order: 2;
+            margin-left: auto;
+        }
+
+        /*
+         * Name + Avatar rechts wie beim Dashboard.
+         * DOM ist Avatar -> Name, daher visuell umdrehen.
+         */
+        .heart-moment-footer .heart-moment-author {
+            order: 3;
+            flex-direction: row-reverse;
+        }
+
+        .heart-moment-card .heart-moment-actions {
+            margin-left: auto;
+        }
+
+        @media (max-width: 600px) {
+            .heart-moment-card > .heart-moment-footer {
+                gap: 0.45rem;
+            }
+        }
+
+        /* HEART MOMENT DASHBOARD CARD END */
+
+
+        /* HEART MOMENT DASHBOARD AUTHOR */
+
+        /*
+         * Dashboard-Karten zeigen unten rechts
+         * nur Datum + Profilbild.
+         * Den ausgeschriebenen Autorennamen
+         * deshalb in Herzmomenten ebenfalls
+         * nicht anzeigen.
+         */
+        .heart-moment-footer
+        .heart-moment-author > span {
+            display: none;
+        }
+
+        .heart-moment-footer
+        .heart-moment-author {
+            gap: 0;
+        }
+
+</style>
+</head>
+
+<body class="{% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
+
+    {% include 'layouts/header.html' %}
+
+    <div
+        class="overlay"
+        id="div-overlay-nav-drawer"
+        onclick="callUi('#dialog-nav-drawer')">
+    </div>
+
+    <div id="div-render-nav-drawer">
+        {% include 'layouts/nav-drawer.html' %}
+    </div>
+
+    <main class="responsive">
+
+        <article class="primary-container">
+
+            <div class="heart-moments-header">
+                <h4>
+                    <i>favorite</i>
+                    {{ _('Heart Moments') }}
+                </h4>
+
+                <p>
+                    {{ _('Keep the little moments that made you feel loved, seen, appreciated or grateful.') }}
+                </p>
+            </div>
+
+            <div class="heart-moments-filters">
+                <button
+                    class="chip fill heart-filter"
+                    data-filter="all"
+                    onclick="setHeartMomentFilter('all', this)">
+                    {{ _('All Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="shared"
+                    onclick="setHeartMomentFilter('shared', this)">
+                    {{ _('Shared Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="mine"
+                    onclick="setHeartMomentFilter('mine', this)">
+                    {{ _('My Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="private"
+                    onclick="setHeartMomentFilter('private', this)">
+                    {{ _('My private Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="partner"
+                    onclick="setHeartMomentFilter('partner', this)">
+                    {{ _("Partner's Heart Moments") }}
+                </button>
+            </div>
+
+            <div id="heart-moments-loading" class="center-align">
+                <progress class="circle"></progress>
+            </div>
+
+            <div
+                id="heart-moments-empty"
+                class="center-align heart-moment-empty"
+                style="display:none;">
+
+                <i class="extra">favorite_border</i>
+
+                <h5>{{ _('No Heart Moments yet') }}</h5>
+
+                <p>
+                    {{ _('Create your first Heart Moment') }}
+                </p>
+            </div>
+
+            <div id="heart-moments-list"></div>
+
+        </article>
+
+        {% include 'layouts/footer.html' %}
+
+    </main>
+
+
+    <!-- Create Heart Moment -->
+    <dialog class="bottom" id="dialog-create-heart-moment">
+
+        <nav>
+            <button
+                class="circle transparent"
+                onclick="callUi('#dialog-create-heart-moment')">
+                <i>close</i>
+            </button>
+
+            <h5 class="max">
+                {{ _('Create Heart Moment') }}
+            </h5>
+
+            <a onclick="saveHeartMoment()">
+                {{ _('Save') }}
+            </a>
+        </nav>
+
+        <div class="grid">
+
+            <div class="s12">
+                <div class="field label border">
+                    <input
+                        type="date"
+                        id="heart-create-date">
+
+                    <label>
+                        {{ _('Moment date') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12">
+                <div class="field label border">
+                    <textarea
+                        id="heart-create-description"
+                        rows="5"></textarea>
+
+                    <label>
+                        {{ _('Heart Moment description') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-create-feeling">
+                        <option value="seen">
+                            {{ _('Heart feeling seen') }}
+                        </option>
+
+                        <option value="loved">
+                            {{ _('Heart feeling loved') }}
+                        </option>
+
+                        <option value="appreciated">
+                            {{ _('Heart feeling appreciated') }}
+                        </option>
+
+                        <option value="supported">
+                            {{ _('Heart feeling supported') }}
+                        </option>
+
+                        <option value="grateful">
+                            {{ _('Heart feeling grateful') }}
+                        </option>
+
+                        <option value="happy">
+                            {{ _('Heart feeling happy') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('How did you feel?') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-create-visibility">
+                        <option value="shared">
+                            {{ _('Shared with partner') }}
+                        </option>
+
+                        <option value="private">
+                            {{ _('Only visible to me') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('Heart Moment visibility') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+            <div class="s12 heart-image-picker">
+
+                <input
+                    type="file"
+                    id="heart-create-image"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    hidden
+                    onchange="previewCreateHeartImage()">
+
+                <div class="heart-image-picker-actions">
+
+                    <button
+                        type="button"
+                        class="border"
+                        onclick="document.getElementById('heart-create-image').click()">
+
+                        <i>add_photo_alternate</i>
+                        <span>{{ _('Choose photo') }}</span>
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="border"
+                        id="heart-create-remove-image"
+                        style="display:none;"
+                        onclick="clearCreateHeartImage()">
+
+                        <i>delete</i>
+                        <span>{{ _('Remove photo') }}</span>
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="heart-create-image-preview-wrap"
+                    style="display:none;">
+
+                    <img
+                        id="heart-create-image-preview"
+                        class="heart-image-preview"
+                        alt="{{ _('Photo preview') }}">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- Edit Heart Moment -->
+    <dialog class="bottom" id="dialog-edit-heart-moment">
+
+        <nav>
+            <button
+                class="circle transparent"
+                onclick="callUi('#dialog-edit-heart-moment')">
+                <i>close</i>
+            </button>
+
+            <h5 class="max">
+                {{ _('Edit Heart Moment') }}
+            </h5>
+
+            <a onclick="saveEditedHeartMoment()">
+                {{ _('Save') }}
+            </a>
+        </nav>
+
+        <input
+            type="hidden"
+            id="heart-edit-id">
+
+        <div class="grid">
+
+            <div class="s12">
+                <div class="field label border">
+                    <input
+                        type="date"
+                        id="heart-edit-date">
+
+                    <label>
+                        {{ _('Moment date') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12">
+                <div class="field label border">
+                    <textarea
+                        id="heart-edit-description"
+                        rows="5"></textarea>
+
+                    <label>
+                        {{ _('Heart Moment description') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-edit-feeling">
+                        <option value="seen">
+                            {{ _('Heart feeling seen') }}
+                        </option>
+
+                        <option value="loved">
+                            {{ _('Heart feeling loved') }}
+                        </option>
+
+                        <option value="appreciated">
+                            {{ _('Heart feeling appreciated') }}
+                        </option>
+
+                        <option value="supported">
+                            {{ _('Heart feeling supported') }}
+                        </option>
+
+                        <option value="grateful">
+                            {{ _('Heart feeling grateful') }}
+                        </option>
+
+                        <option value="happy">
+                            {{ _('Heart feeling happy') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('How did you feel?') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-edit-visibility">
+                        <option value="shared">
+                            {{ _('Shared with partner') }}
+                        </option>
+
+                        <option value="private">
+                            {{ _('Only visible to me') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('Heart Moment visibility') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+            <div class="s12 heart-image-picker">
+
+                <input
+                    type="file"
+                    id="heart-edit-image"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    hidden
+                    onchange="previewEditHeartImage()">
+
+                <div class="heart-image-picker-actions">
+
+                    <button
+                        type="button"
+                        class="border"
+                        onclick="document.getElementById('heart-edit-image').click()">
+
+                        <i>add_photo_alternate</i>
+                        <span>{{ _('Choose photo') }}</span>
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="border"
+                        id="heart-edit-remove-image"
+                        style="display:none;"
+                        onclick="clearEditHeartImage()">
+
+                        <i>delete</i>
+                        <span>{{ _('Remove photo') }}</span>
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="heart-edit-image-preview-wrap"
+                    style="display:none;">
+
+                    <img
+                        id="heart-edit-image-preview"
+                        class="heart-image-preview"
+                        alt="{{ _('Photo preview') }}">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- FAB -->
+    <div
+        class="fixed bottom right"
+        style="margin-right:8px;margin-bottom:16px;z-index:90;">
+
+        <button
+            class="square round extra"
+            onclick="openCreateHeartMoment()"
+            style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+
+            <i>add</i>
+
+        </button>
+
+    </div>
+
+
+    <div
+        class="snackbar"
+        id="heart-moments-snackbar">
+
+        <div
+            class="max"
+            id="heart-moments-snackbar-text">
+        </div>
+
+    </div>
+
+
+    <script src="{{ static_versioned('js/main.js') }}"></script>
+
+    <script>
+        window.currentHeartMomentUserId = {{ current_user_id|int }};
+
+        window.heartMomentText = {
+            created: {{ _('Heart Moment created successfully')|tojson }},
+            updated: {{ _('Heart Moment updated successfully')|tojson }},
+            deleted: {{ _('Heart Moment deleted successfully')|tojson }},
+            loadError: {{ _('Unable to load Heart Moments')|tojson }},
+            saveError: {{ _('An error occurred while saving the Heart Moment.')|tojson }},
+            deleteError: {{ _('An error occurred while deleting the Heart Moment.')|tojson }},
+            descriptionRequired: {{ _('Please describe the Heart Moment')|tojson }},
+            deleteConfirm: {{ _('Delete this Heart Moment?')|tojson }},
+            imageUploadError: {{ _('Heart Moment saved, but the photo could not be uploaded.')|tojson }},
+            imageRemoveError: {{ _('The photo could not be removed.')|tojson }},
+
+            shared: {{ _('Heart Moment shared')|tojson }},
+            private: {{ _('Heart Moment private')|tojson }},
+
+            feelings: {
+                loved: {{ _('Heart feeling loved')|tojson }},
+                seen: {{ _('Heart feeling seen')|tojson }},
+                appreciated: {{ _('Heart feeling appreciated')|tojson }},
+                supported: {{ _('Heart feeling supported')|tojson }},
+                grateful: {{ _('Heart feeling grateful')|tojson }},
+                happy: {{ _('Heart feeling happy')|tojson }}
+            }
+        };
+    </script>
+
+    <script src="{{ static_versioned('js/heart-moments.js') }}"></script>
+
+</body>
+</html>

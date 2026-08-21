@@ -782,7 +782,14 @@ async function generatePreviewForFileInput(event, mode) {
    for (let i = 0; i < files.length; i++) {
       const newIndex = existingImagesCount + i;
       if (mode === "create" && event) {
-         renderPromises.push(renderFile(files[i], newIndex, containerDiv));
+         renderPromises.push(
+            renderFile(
+                files[i],
+                newIndex,
+                containerDiv,
+                'create'
+            )
+         );
          // File sofort lesen damit die Referenz nicht verloren geht (Mobile)
          try {
             const buffer = await files[i].arrayBuffer();
@@ -794,7 +801,14 @@ async function generatePreviewForFileInput(event, mode) {
          document.getElementById('span-progress-file-new-home-item').textContent = i + 1;
          document.getElementById('span-progress-file-new-home-item-count').textContent = files.length;
       } else if (mode === "edit" && event) {
-         renderPromises.push(renderFile(files[i], newIndex, containerDiv));
+         renderPromises.push(
+            renderFile(
+                files[i],
+                newIndex,
+                containerDiv,
+                'edit-new'
+            )
+         );
          document.getElementById('progress-edit-home-item').value = i / files.length * 100;
          document.getElementById('span-progress-file-edit-home-item').textContent = i + 1;
          document.getElementById('span-progress-file-edit-home-item-count').textContent = files.length;
@@ -858,9 +872,22 @@ async function generatePreviewForFileInput(event, mode) {
 
 
 // Funktion zum Rendern eines Bildes aus einer Datei
-function renderFile(file, index, containerDiv) {
-   const url = URL.createObjectURL(file);
-   return createPreview(url, index, containerDiv, 'create', file.name);
+function renderFile(
+   file,
+   index,
+   containerDiv,
+   mode = 'create'
+) {
+   const url =
+      URL.createObjectURL(file);
+
+   return createPreview(
+      url,
+      index,
+      containerDiv,
+      mode,
+      file.name
+   );
 }
 
 // Funktion zum Rendern eines Bildes aus einer URL
@@ -870,6 +897,183 @@ function renderImageFromURL(fileObj, containerDiv) {
 }
 
 // Funktion zum Erstellen der Bildvorschau (gibt Promise zurück)
+
+
+function refreshEditMediaSelection(previewGrid) {
+   if (!previewGrid) {
+      return;
+   }
+
+   previewGrid
+      .querySelectorAll(
+         '.preview-image-container'
+      )
+      .forEach(container => {
+
+         const index =
+            Number(
+               container.dataset.index
+            );
+
+         const chip =
+            container.querySelector(
+               '.image-chip'
+            );
+
+         const image =
+            container.querySelector(
+               '.preview-image'
+            );
+
+         const removed =
+            container.classList.contains(
+               'edit-media-removed'
+            );
+
+         const position =
+            selectedImages.indexOf(
+               index
+            );
+
+
+         if (chip) {
+            if (
+               !removed
+               && position !== -1
+            ) {
+               chip.textContent =
+                  position + 1;
+
+               chip.style.display =
+                  '';
+            } else {
+               chip.textContent =
+                  '';
+
+               chip.style.display =
+                  'none';
+            }
+         }
+
+
+         if (image) {
+            image.style.border =
+               !removed
+               && position !== -1
+                  ? '2px solid var(--primary)'
+                  : '1px solid var(--outline)';
+         }
+      });
+}
+
+
+function toggleEditMediaRemoval(
+   index,
+   container,
+   button
+) {
+   const selectedPosition =
+      selectedImages.indexOf(
+         index
+      );
+
+   const icon =
+      button.querySelector('i');
+
+
+   if (selectedPosition !== -1) {
+
+      container.dataset
+         .previousSelectionPosition =
+            String(
+               selectedPosition
+            );
+
+      selectedImages.splice(
+         selectedPosition,
+         1
+      );
+
+      container.classList.add(
+         'edit-media-removed'
+      );
+
+      container.style.opacity =
+         '0.35';
+
+      container.style.filter =
+         'grayscale(0.7)';
+
+      if (icon) {
+         icon.textContent =
+            'undo';
+      }
+
+      button.classList.remove(
+         'error'
+      );
+
+   } else {
+
+      let restorePosition =
+         Number(
+            container.dataset
+               .previousSelectionPosition
+         );
+
+      if (
+         !Number.isInteger(
+            restorePosition
+         )
+      ) {
+         restorePosition =
+            selectedImages.length;
+      }
+
+      restorePosition =
+         Math.max(
+            0,
+            Math.min(
+               restorePosition,
+               selectedImages.length
+            )
+         );
+
+      selectedImages.splice(
+         restorePosition,
+         0,
+         index
+      );
+
+      container.classList.remove(
+         'edit-media-removed'
+      );
+
+      container.style.opacity =
+         '';
+
+      container.style.filter =
+         '';
+
+      if (icon) {
+         icon.textContent =
+            'delete';
+      }
+
+      button.classList.add(
+         'error'
+      );
+   }
+
+
+   refreshEditMediaSelection(
+      container.closest(
+         '[id$="preview-grid"]'
+      )
+   );
+}
+
+
 function createPreview(src, index, containerDiv, mode, filename) {
    // Erstelle einen Container für das Bild/Video-Thumbnail und den Chip
    const container = document.createElement("div");
@@ -882,10 +1086,27 @@ function createPreview(src, index, containerDiv, mode, filename) {
    chip.textContent = "";
    chip.style.display = "none";
 
-   if (mode === "create") {
-      var fileType = filename ? getFileContentType(null, filename) : getFileContentType(src, null);
-   } else if (mode === "edit") {
-      var fileType = getFileContentType(null, src);
+   if (
+       mode === "create"
+       || mode === "edit-new"
+    ) {
+       var fileType =
+          filename
+             ? getFileContentType(
+                  null,
+                  filename
+               )
+             : getFileContentType(
+                  src,
+                  null
+               );
+
+    } else if (mode === "edit") {
+       var fileType =
+          getFileContentType(
+             null,
+             src
+          );
    }
 
    let readyPromise;
@@ -956,7 +1177,55 @@ function createPreview(src, index, containerDiv, mode, filename) {
    }
 
    // Füge den Container dem div hinzu
-   containerDiv.appendChild(container);
+   if (
+       mode === "edit"
+       || mode === "edit-new"
+    ) {
+       const removeButton =
+          document.createElement(
+             'button'
+          );
+
+       removeButton.type =
+          'button';
+
+       removeButton.className =
+          'circle small error';
+
+       removeButton.title =
+          _('Delete');
+
+       removeButton.style.cssText =
+          'position:absolute;'
+          + 'top:6px;'
+          + 'right:6px;'
+          + 'z-index:10;'
+          + 'box-shadow:0 2px 6px '
+          + 'rgba(0,0,0,.3);';
+
+       removeButton.innerHTML =
+          '<i>delete</i>';
+
+       removeButton.addEventListener(
+          'click',
+          event => {
+             event.preventDefault();
+             event.stopPropagation();
+
+             toggleEditMediaRemoval(
+                index,
+                container,
+                removeButton
+             );
+          }
+       );
+
+       container.appendChild(
+          removeButton
+       );
+    }
+
+    containerDiv.appendChild(container);
    return readyPromise;
 }
 

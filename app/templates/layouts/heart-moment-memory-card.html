@@ -1,0 +1,109 @@
+<article class="primary-container heart-memory-card">
+    <div class="padding">
+
+        <div class="heart-memory-header">
+            <i>favorite_border</i>
+
+            <h5 class="heart-memory-title">
+                {{ _('Do you remember?') }}
+            </h5>
+        </div>
+
+
+        {% if heart_moment_memory.mediaFilename %}
+        <img
+            class="heart-memory-image"
+            src="/api/v2/heart-moments/{{ heart_moment_memory.id }}/image?v={{ heart_moment_memory.dateModified }}"
+            alt=""
+            loading="lazy">
+        {% endif %}
+
+
+        <p class="heart-memory-description">
+            {{ heart_moment_memory.description }}
+        </p>
+
+
+        <nav class="heart-memory-meta">
+
+            {% if heart_moment_memory.author %}
+            <span class="heart-memory-author-label">
+                {{ _('Heart Moment from') }}
+                <strong>
+                    {{ heart_moment_memory.author.firstName }}
+                </strong>
+            </span>
+            {% endif %}
+
+            <div class="max"></div>
+
+            <!-- Gleiche Datums-Pille wie normale Home-Karten -->
+            <a class="chip no-border secondary small round">
+                <span
+                    class="heart-memory-date"
+                    data-date="{{ heart_moment_memory.momentDate }}">
+                    {{ heart_moment_memory.momentDate }}
+                </span>
+            </a>
+
+            <!-- Exakt dieselbe BeerCSS-Avatar-Klasse wie Home-Items -->
+            {% if heart_moment_memory.author %}
+            <img
+                class="circle"
+                src="/api/v2/media/static/{{ heart_moment_memory.author.profilePicture or 'profile-placeholder.jpg' }}"
+                alt=""
+                loading="lazy">
+            {% endif %}
+
+        </nav>
+
+
+        <nav class="right-align heart-memory-open">
+            <a
+                class="button border"
+                href="/heart-moments?highlight={{ heart_moment_memory.id }}">
+
+                <i>favorite_border</i>
+
+                <span>
+                    {{ _('Open Heart Moment') }}
+                </span>
+            </a>
+        </nav>
+
+    </div>
+</article>
+
+
+<script>
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+        document
+            .querySelectorAll('.heart-memory-date')
+            .forEach(element => {
+                const value =
+                    element.dataset.date;
+
+                if (!value) {
+                    return;
+                }
+
+                /*
+                 * Heart Moments liefert YYYY-MM-DD.
+                 * Dashboard-Darstellung: DD.MM.YY
+                 */
+                const parts =
+                    value.split('-');
+
+                if (parts.length === 3) {
+                    const year =
+                        parts[0].slice(-2);
+
+                    element.textContent =
+                        `${parts[2]}.${parts[1]}.${year}`;
+                }
+            });
+    }
+);
+</script>

@@ -4214,5 +4214,333 @@
         "languageCode": "it-IT",
         "entityType": "ui",
         "translatedText": "Scuro"
-    }
+    },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moments",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Momenti del cuore"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Keep the little moments that made you feel loved, seen, appreciated or grateful.",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Conserva i piccoli momenti in cui ti sei sentito amato, visto, apprezzato o grato."
+  },
+  {
+    "entityID": 0,
+    "fieldName": "All Heart Moments",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Tutti"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Shared Heart Moments",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Condivisi"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "My Heart Moments",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Da me"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "My private Heart Moments",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Solo per me"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Partner's Heart Moments",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Dal partner"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Create Heart Moment",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Crea momento del cuore"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Edit Heart Moment",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Modifica momento del cuore"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Moment date",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Data"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment description",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Descrizione"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "How did you feel?",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Come ti sei sentito?"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment visibility",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Visibilità"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Shared with partner",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Condiviso con il partner"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Only visible to me",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Visibile solo a me"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart feeling loved",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Amato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart feeling seen",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Visto"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart feeling appreciated",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Apprezzato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart feeling supported",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Supportato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart feeling grateful",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Grato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart feeling happy",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Felice"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "No Heart Moments yet",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Nessun momento del cuore"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Create your first Heart Moment",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Crea il tuo primo momento del cuore"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment created successfully",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Momento del cuore creato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment updated successfully",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Momento del cuore aggiornato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment deleted successfully",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Momento del cuore eliminato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Unable to load Heart Moments",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Impossibile caricare i momenti del cuore"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "An error occurred while saving the Heart Moment.",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Si è verificato un errore durante il salvataggio."
+  },
+  {
+    "entityID": 0,
+    "fieldName": "An error occurred while deleting the Heart Moment.",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Si è verificato un errore durante l'eliminazione."
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Please describe the Heart Moment",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Descrivi il momento del cuore"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Delete this Heart Moment?",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Eliminare questo momento del cuore?"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment shared",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Condiviso"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment private",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Privato"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Choose photo",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Scegli foto"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Remove photo",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Rimuovi foto"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Photo preview",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Anteprima foto"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment saved, but the photo could not be uploaded.",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Il momento del cuore è stato salvato, ma non è stato possibile caricare la foto."
+  },
+  {
+    "entityID": 0,
+    "fieldName": "The photo could not be removed.",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Non è stato possibile rimuovere la foto."
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Do you remember?",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Ti ricordi?"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment from",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Da"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Open Heart Moment",
+    "helpText": null,
+    "languageCode": "it-IT",
+    "entityType": "ui",
+    "translatedText": "Apri momento del cuore"
+  }
 ]
