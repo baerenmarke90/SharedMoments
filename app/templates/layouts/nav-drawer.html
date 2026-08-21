@@ -13,7 +13,7 @@
        {% if list_type.navbar == 1 and has_list_permission('View', list_type.title) and (list_type.edition == 'all' or list_type.edition == nav_edition) %}
        <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}">
        <i>{{ list_type.icon }}</i>
-       <span>{{ _(list_type.title) }}</span>
+       <span>{% if nav_edition == 'couples' and list_type.title == 'Home' %}Wir{% else %}{{ _(list_type.title) }}{% endif %}</span>
        </a>
        {% endif %}
        {% endfor %}
