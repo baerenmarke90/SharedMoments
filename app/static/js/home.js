@@ -748,7 +748,12 @@ function openCreateDialog() {
    if (contentInput) contentInput.value = "";
    if (dateInput) dateInput.value = "";
    if (previewGrid) previewGrid.innerHTML = "";
-   if (fileInput) fileInput.value = "";
+   if (fileInput) {
+      fileInput.value = "";
+      delete fileInput.dataset.smPreviewSignature;
+      delete fileInput.dataset.smPreviewTime;
+      removeMobileMediaSelection(fileInput);
+   }
    if (toggleSelect) toggleSelect.style.display = "none";
 
    window.uploadedUrls = "";
@@ -768,6 +773,240 @@ function openMemoryCreateFromCoupleHome() {
    window.setTimeout(() => {
       openCreateDialog();
    }, 180);
+}
+
+function getHomeMediaSelectionSignature(fileInput) {
+   if (!fileInput || !fileInput.files) {
+      return '';
+   }
+
+   return Array.from(fileInput.files)
+      .map(file => [
+         file.name || '',
+         file.size || 0,
+         file.lastModified || 0,
+         file.type || ''
+      ].join(':'))
+      .join('|');
+}
+
+function shouldProcessHomeMediaSelection(fileInput) {
+   const signature = getHomeMediaSelectionSignature(fileInput);
+   const now = Date.now();
+   const previousSignature = fileInput.dataset.smPreviewSignature || '';
+   const previousTime = Number(fileInput.dataset.smPreviewTime || 0);
+
+   // Android's Photo Picker may emit both input and change. The original
+   // template can additionally have an inline onchange handler. Process one
+   // physical selection only once, but allow choosing the same file again
+   // later.
+   if (
+      signature
+      && signature === previousSignature
+      && now - previousTime < 750
+   ) {
+      return false;
+   }
+
+   fileInput.dataset.smPreviewSignature = signature;
+   fileInput.dataset.smPreviewTime = String(now);
+   return true;
+}
+
+function ensureMobileMediaSelectionStyles() {
+   if (document.getElementById('sm-mobile-media-selection-styles')) {
+      return;
+   }
+
+   const style = document.createElement('style');
+   style.id = 'sm-mobile-media-selection-styles';
+   style.textContent = `
+      .sm-mobile-media-selection {
+         display: none;
+      }
+
+      @media (max-width: 900px), (pointer: coarse) {
+         .sm-mobile-media-selection {
+            display: block;
+            margin: .65rem 0 1rem;
+         }
+
+         .sm-mobile-media-selection-head {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            margin-bottom: .5rem;
+            font-size: .9rem;
+            opacity: .78;
+         }
+
+         .sm-mobile-media-selection-items {
+            display: flex;
+            gap: .55rem;
+            overflow-x: auto;
+            padding: .1rem .05rem .35rem;
+            scrollbar-width: thin;
+         }
+
+         .sm-mobile-media-selection-item {
+            width: 76px;
+            height: 76px;
+            flex: 0 0 76px;
+            border: 1px solid var(--outline-variant);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface-container);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+         }
+
+         .sm-mobile-media-selection-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+         }
+
+         .sm-mobile-media-selection-file {
+            padding: 6px;
+            text-align: center;
+            min-width: 0;
+         }
+
+         .sm-mobile-media-selection-file i {
+            display: block;
+            font-size: 28px;
+            margin-bottom: 2px;
+         }
+
+         .sm-mobile-media-selection-file span {
+            display: block;
+            max-width: 64px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 10px;
+         }
+      }
+   `;
+   document.head.appendChild(style);
+}
+
+function removeMobileMediaSelection(fileInput) {
+   const id = fileInput && fileInput.id === 'file-input-edit-home-item'
+      ? 'sm-mobile-edit-media-selection'
+      : 'sm-mobile-create-media-selection';
+   document.getElementById(id)?.remove();
+}
+
+function renderMobileMediaSelection(fileInput) {
+   if (!fileInput) {
+      return;
+   }
+
+   ensureMobileMediaSelectionStyles();
+   removeMobileMediaSelection(fileInput);
+
+   const files = Array.from(fileInput.files || []);
+   if (files.length === 0) {
+      return;
+   }
+
+   const host = fileInput.closest('.field') || fileInput.parentElement;
+   if (!host) {
+      return;
+   }
+
+   const container = document.createElement('div');
+   container.id = fileInput.id === 'file-input-edit-home-item'
+      ? 'sm-mobile-edit-media-selection'
+      : 'sm-mobile-create-media-selection';
+   container.className = 'sm-mobile-media-selection';
+
+   const head = document.createElement('div');
+   head.className = 'sm-mobile-media-selection-head';
+   head.innerHTML = '<i>check_circle</i><span></span>';
+   head.querySelector('span').textContent = files.length === 1
+      ? '1 Datei ausgewählt'
+      : `${files.length} Dateien ausgewählt`;
+   container.appendChild(head);
+
+   const items = document.createElement('div');
+   items.className = 'sm-mobile-media-selection-items';
+   container.appendChild(items);
+
+   files.forEach(file => {
+      const item = document.createElement('div');
+      item.className = 'sm-mobile-media-selection-item';
+      item.title = file.name || '';
+      items.appendChild(item);
+
+      const fileType = getFileObjectContentType(file);
+
+      if (fileType === 'image' && typeof FileReader !== 'undefined') {
+         const img = document.createElement('img');
+         img.alt = file.name || '';
+         item.appendChild(img);
+
+         const fallback = () => {
+            item.innerHTML = '';
+            const label = document.createElement('div');
+            label.className = 'sm-mobile-media-selection-file';
+            label.innerHTML = '<i>image</i><span></span>';
+            label.querySelector('span').textContent = file.name || 'Bild';
+            item.appendChild(label);
+         };
+
+         img.addEventListener('error', fallback, { once: true });
+
+         try {
+            const reader = new FileReader();
+            reader.addEventListener('load', () => {
+               img.src = reader.result;
+            }, { once: true });
+            reader.addEventListener('error', fallback, { once: true });
+            reader.readAsDataURL(file);
+         } catch (error) {
+            console.warn('[Memories] Mobile media preview failed', error);
+            fallback();
+         }
+      } else {
+         const label = document.createElement('div');
+         label.className = 'sm-mobile-media-selection-file';
+         label.innerHTML = `<i>${fileType.startsWith('video') ? 'movie' : 'attach_file'}</i><span></span>`;
+         label.querySelector('span').textContent = file.name || 'Datei';
+         item.appendChild(label);
+      }
+   });
+
+   host.insertAdjacentElement('afterend', container);
+}
+
+function handleHomeMediaSelectionEvent(event) {
+   const fileInput = event.target;
+   if (
+      !fileInput
+      || !fileInput.matches(
+         '#file-input-create-home-item, #file-input-edit-home-item'
+      )
+   ) {
+      return;
+   }
+
+   // Show an immediate, mobile-safe summary independent of the legacy preview
+   // grid. This also gives visual confirmation when Android's image decoder
+   // cannot render the selected format.
+   renderMobileMediaSelection(fileInput);
+
+   const mode = fileInput.id === 'file-input-edit-home-item'
+      ? 'edit'
+      : 'create';
+
+   generatePreviewForFileInput(event, mode).catch(error => {
+      console.error('[Memories] Could not render selected media', error);
+   });
 }
 
 function initHomeMediaPickerDelegation() {
@@ -802,6 +1041,11 @@ function initHomeMediaPickerDelegation() {
       event.stopPropagation();
       fileInput.click();
    });
+
+   // Use delegated listeners because the edit dialog is injected dynamically.
+   // Listening to both events covers Android Photo Picker/WebView variants.
+   document.addEventListener('input', handleHomeMediaSelectionEvent, true);
+   document.addEventListener('change', handleHomeMediaSelectionEvent, true);
 }
 
 if (document.readyState === 'loading') {
@@ -819,15 +1063,19 @@ async function generatePreviewForFileInput(event, mode) {
    let previewGrid;
    let files = [];
 
+   if (event && event.target && !shouldProcessHomeMediaSelection(event.target)) {
+      return;
+   }
+
    if (mode === "create" && event) {
-      files = event.target.files;
+      files = Array.from(event.target.files || []);
       document.getElementById('dialog-create-new-home-item').style.overflow = "hidden"; // Verhindere das Scrollen im Modal
       previewGrid = document.getElementById("div-create-home-item-preview-grid");
       document.getElementById('div-overlay-new-home-item').classList.add('active');
       document.getElementById('progress-new-home-item').style.display = "";
       document.getElementById('headline-article-new-home-item').textContent = _('Render preview images...');
    } else if (mode === "edit" && event) {
-      files = event.target.files;
+      files = Array.from(event.target.files || []);
       document.getElementById('dialog-edit-home-item').style.overflow = "hidden"; // Verhindere das Scrollen im Modal
       previewGrid = document.getElementById("div-edit-home-item-preview-grid");
       document.getElementById('div-overlay-edit-home-item').classList.add('active');
@@ -1005,8 +1253,69 @@ function renderFile(
    containerDiv,
    mode = 'create'
 ) {
-   const url = URL.createObjectURL(file);
    const fileType = getFileObjectContentType(file);
+   const useDataUrlPreview = (
+      fileType === 'image'
+      && typeof FileReader !== 'undefined'
+      && (
+         window.matchMedia('(pointer: coarse)').matches
+         || window.innerWidth <= 900
+      )
+   );
+
+   // Android Photo Picker content can be backed by a transient content URI.
+   // Reading it immediately into a data URL is more reliable for the preview
+   // than keeping only a blob URL to that provider-backed File object.
+   if (useDataUrlPreview) {
+      return new Promise((resolve) => {
+         const reader = new FileReader();
+
+         const fallbackToBlob = () => {
+            try {
+               const url = URL.createObjectURL(file);
+               Promise.resolve(
+                  createPreview(
+                     url,
+                     index,
+                     containerDiv,
+                     mode,
+                     file.name,
+                     fileType,
+                     file
+                  )
+               ).then(resolve).catch(resolve);
+            } catch (error) {
+               console.warn('[Memories] Blob preview fallback failed', error);
+               resolve();
+            }
+         };
+
+         reader.addEventListener('load', () => {
+            Promise.resolve(
+               createPreview(
+                  reader.result,
+                  index,
+                  containerDiv,
+                  mode,
+                  file.name,
+                  fileType,
+                  file
+               )
+            ).then(resolve).catch(resolve);
+         }, { once: true });
+
+         reader.addEventListener('error', fallbackToBlob, { once: true });
+
+         try {
+            reader.readAsDataURL(file);
+         } catch (error) {
+            console.warn('[Memories] Data URL preview failed', error);
+            fallbackToBlob();
+         }
+      });
+   }
+
+   const url = URL.createObjectURL(file);
 
    return createPreview(
       url,
