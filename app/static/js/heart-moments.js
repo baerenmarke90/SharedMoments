@@ -1336,5 +1336,25 @@ document.addEventListener(
         }
 
         loadHeartMoments();
+
+        const params = new URLSearchParams(
+            window.location.search
+        );
+
+        if (params.get('create') === '1') {
+            openCreateHeartMoment();
+            params.delete('create');
+
+            const query = params.toString();
+            const cleanUrl =
+                window.location.pathname
+                + (query ? `?${query}` : '');
+
+            window.history.replaceState(
+                {},
+                '',
+                cleanUrl
+            );
+        }
     }
 );

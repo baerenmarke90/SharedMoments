@@ -1,4 +1,5 @@
 import json
+from datetime import date, datetime
 from flask import Blueprint, g, make_response, render_template, send_file, request, redirect, url_for, session
 from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_relationship_statuses_with_names, get_items_by_type,
@@ -7,13 +8,13 @@ from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_item_by_id, get_user_settings, get_list_type_by_content_url, get_all_settings,
     get_shared_item_ids, get_list_type_by_title, ensure_countdown_list_type,
     ensure_banner_song_setting, get_all_reminders, get_user_muted_reminder_ids,
-    ensure_notification_settings, get_passkeys_by_user)
+    ensure_notification_settings, get_passkeys_by_user, get_all_users)
 from app.logger import log
 import os
 from app.utils import generate_banner_text
 from app.translation import _, set_locale
 from app.routes.auth import jwt_required, login_jwt
-from app.permissions import require_permission, has_list_permission
+from app.permissions import require_permission, has_list_permission, has_permission
 
 pages_bp = Blueprint('pages', __name__)
 
@@ -160,6 +161,214 @@ def setup():
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
 
 
+
+def _as_datetime(value):
+    """Normalize Date/DateTime values for couple-home sorting."""
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime.combine(value, datetime.min.time())
+    return None
+
+
+def _next_annual_occurrence(month, day, today):
+    """Return the next valid annual occurrence on or after today."""
+    if not month or not day:
+        return None
+
+    # Search far enough ahead to cover leap-day reminders safely.
+    for year in range(today.year, today.year + 9):
+        try:
+            candidate = date(year, int(month), int(day))
+        except (TypeError, ValueError):
+            continue
+        if candidate >= today:
+            return candidate
+    return None
+
+
+def _relative_day_label(target_date, today):
+    days = (target_date - today).days
+    if days == 0:
+        return 'Heute'
+    if days == 1:
+        return 'Morgen'
+    return f'in {days} Tagen'
+
+
+def _build_couple_home_upcoming(
+    countdowns,
+    reminders,
+    muted_ids,
+    can_view_countdowns,
+    can_view_reminders,
+):
+    """Build a small, permission-aware list for the couple dashboard."""
+    today = date.today()
+    upcoming = []
+
+    if can_view_countdowns:
+        for item, _user in countdowns:
+            target_dt = _as_datetime(item.dateCreated)
+            if not target_dt:
+                continue
+
+            target_date = target_dt.date()
+            if target_date < today:
+                continue
+
+            upcoming.append({
+                'type': 'countdown',
+                'icon': 'timer',
+                'title': item.title or 'Countdown',
+                'date': target_date,
+                'date_label': target_date.strftime('%d.%m.%Y'),
+                'relative_label': _relative_day_label(target_date, today),
+            })
+
+    if can_view_reminders:
+        for reminder in reminders:
+            if reminder.id in muted_ids:
+                continue
+
+            # Countdowns already appear from their Item, so never duplicate them.
+            if reminder.reminder_type == 'countdown':
+                continue
+
+            target_date = None
+
+            if reminder.reminder_type == 'annual':
+                target_date = _next_annual_occurrence(
+                    reminder.month,
+                    reminder.day,
+                    today,
+                )
+            elif reminder.reminder_type == 'one_time' and reminder.target_date:
+                target_date = reminder.target_date
+            elif reminder.reminder_type == 'milestone' and reminder.target_date:
+                # Only use milestone reminders when a concrete target date exists.
+                # We deliberately do not guess dates from auto_source here.
+                target_date = reminder.target_date
+
+            if not target_date or target_date < today:
+                continue
+
+            upcoming.append({
+                'type': 'reminder',
+                'icon': 'event',
+                'title': _translate_reminder_title(reminder),
+                'date': target_date,
+                'date_label': target_date.strftime('%d.%m.%Y'),
+                'relative_label': _relative_day_label(target_date, today),
+            })
+
+    upcoming.sort(key=lambda entry: entry['date'])
+    return upcoming[:3]
+
+
+def _build_couple_home_recent(
+    items,
+    moments,
+    shared_heart_moments,
+    can_view_items,
+    can_view_moments,
+):
+    """Aggregate existing content without introducing a new persistence model."""
+    recent = []
+
+    if can_view_items:
+        for item, user in items[:8]:
+            event_dt = _as_datetime(item.dateCreated)
+            if not event_dt:
+                continue
+
+            image_url = None
+            url = None
+
+            if item.contentURL:
+                first_media = item.contentURL.split(';')[0].strip()
+                if first_media:
+                    if item.contentType in ('image', 'galleryStartWithImage'):
+                        image_url = f'/api/v2/media/{first_media}'
+                    elif item.contentType in (
+                        'video',
+                        'video-mov',
+                        'galleryStartWithVideo',
+                    ):
+                        image_url = f'/api/v2/media/thumb/{first_media}'
+
+            if item.contentType in (
+                'galleryStartWithImage',
+                'galleryStartWithVideo',
+                'video',
+                'video-mov',
+            ):
+                url = f'/gallery/{item.id}'
+
+            recent.append({
+                'type': 'memory',
+                'icon': 'photo',
+                'title': item.title or 'Erinnerung',
+                'text': item.content or '',
+                'sort_date': event_dt,
+                'date_label': event_dt.strftime('%d.%m.%Y'),
+                'author_name': user.firstName if user else '',
+                'author_picture': user.profilePicture if user else None,
+                'image_url': image_url,
+                'url': url,
+            })
+
+    if can_view_moments:
+        for item, user in moments[-8:]:
+            event_dt = _as_datetime(item.dateCreated)
+            if not event_dt:
+                continue
+
+            recent.append({
+                'type': 'milestone',
+                'icon': 'star',
+                'title': item.title or 'Meilenstein',
+                'text': item.content or '',
+                'sort_date': event_dt,
+                'date_label': event_dt.strftime('%d.%m.%Y'),
+                'author_name': user.firstName if user else '',
+                'author_picture': user.profilePicture if user else None,
+                'image_url': None,
+                'url': None,
+                'timeline_id': item.id,
+                'timeline_date_ymd': event_dt.strftime('%Y-%m-%d'),
+            })
+
+    for heart_moment in shared_heart_moments[:8]:
+        try:
+            event_dt = datetime.fromisoformat(heart_moment['momentDate'])
+        except (TypeError, ValueError, KeyError):
+            continue
+
+        author = heart_moment.get('author') or {}
+        media_filename = heart_moment.get('mediaFilename')
+
+        recent.append({
+            'type': 'heart',
+            'icon': 'favorite',
+            'title': 'Herzmoment',
+            'text': heart_moment.get('description') or '',
+            'sort_date': event_dt,
+            'date_label': event_dt.strftime('%d.%m.%Y'),
+            'author_name': author.get('firstName', ''),
+            'author_picture': author.get('profilePicture'),
+            'image_url': (
+                f"/api/v2/heart-moments/{heart_moment['id']}/image"
+                f"?v={heart_moment.get('dateModified', '')}"
+                if media_filename else None
+            ),
+            'url': f"/heart-moments?highlight={heart_moment['id']}",
+        })
+
+    recent.sort(key=lambda entry: entry['sort_date'], reverse=True)
+    return recent[:5]
+
+
 @pages_bp.route('/home')
 @jwt_required
 def home():
@@ -180,22 +389,92 @@ def home():
         ensure_countdown_list_type()
         ensure_banner_song_setting()
         countdown_list_type = get_list_type_by_title('Countdown')
-        countdowns = get_items_by_type(countdown_list_type.id, 'asc', edition=sm_edition) if countdown_list_type else []
+        countdowns = get_items_by_type(
+            countdown_list_type.id,
+            'asc',
+            edition=sm_edition,
+        ) if countdown_list_type else []
         countdown_list_type_id = countdown_list_type.id if countdown_list_type else ''
 
-        # HEART MOMENT DAILY MEMORY
         heart_moment_memory = None
+        couple_users = []
+        couple_home_upcoming = []
+        couple_home_recent = []
 
         if sm_edition == 'couples':
             from app.heart_moments import (
                 get_daily_shared_heart_moment_memory,
+                list_heart_moments,
             )
 
-            heart_moment_memory = (
-                get_daily_shared_heart_moment_memory()
+            heart_moment_memory = get_daily_shared_heart_moment_memory()
+
+            # Stable ordering for both partners; system user is already excluded.
+            couple_users = sorted(
+                get_all_users(),
+                key=lambda user: user.id,
+            )[:2]
+
+            can_view_countdowns = has_list_permission('View', 'Countdown')
+            can_view_reminders = has_permission('View Reminders')
+
+            reminder_list = (
+                get_all_reminders()
+                if can_view_reminders
+                else []
+            )
+            muted_ids = (
+                get_user_muted_reminder_ids(g.user_id)
+                if can_view_reminders
+                else set()
             )
 
-        return render_template('pages/home.html', items=items, list_types=list_types, list_type=list_type, title=title, darkmode=darkmode, user_data=user_data, moments=moments, settings=settings, banner_text=banner_text, sm_edition=sm_edition, list_type_title='Home', moments_title='Moments', shared_item_ids=shared_item_ids, countdowns=countdowns, countdown_title='Countdown', countdown_list_type_id=countdown_list_type_id, heart_moment_memory=heart_moment_memory)
+            couple_home_upcoming = _build_couple_home_upcoming(
+                countdowns,
+                reminder_list,
+                muted_ids,
+                can_view_countdowns,
+                can_view_reminders,
+            )
+
+            shared_heart_moments = list_heart_moments(
+                g.user_id,
+                filter_name='shared',
+            )
+
+            couple_home_recent = _build_couple_home_recent(
+                items,
+                moments,
+                shared_heart_moments,
+                has_list_permission('View', 'Home'),
+                has_list_permission('View', 'Moments'),
+            )
+
+        return render_template(
+            'pages/home.html',
+            items=items,
+            list_types=list_types,
+            list_type=list_type,
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            moments=moments,
+            settings=settings,
+            banner_text=banner_text,
+            sm_edition=sm_edition,
+            list_type_title='Home',
+            moments_title='Moments',
+            shared_item_ids=shared_item_ids,
+            countdowns=countdowns,
+            countdown_title='Countdown',
+            countdown_list_type_id=countdown_list_type_id,
+            heart_moment_memory=heart_moment_memory,
+            couple_users=couple_users,
+            couple_home_upcoming=couple_home_upcoming,
+            couple_home_recent=couple_home_recent,
+            page_title='Wir' if sm_edition == 'couples' else None,
+        )
+
     except Exception as e:
         log('error', f'Error while rendering the pages/home.html-Template: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500

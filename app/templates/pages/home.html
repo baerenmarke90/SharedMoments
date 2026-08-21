@@ -245,21 +245,43 @@
       <input type="hidden" id="input-edit-countdown-id">
    </dialog>
 
-   <!-- Feed-Karten -->
+   <!-- Startseiten-Inhalt -->
    <main class="responsive">
 
+      {% if sm_edition == 'couples' %}
+      <div id="div-render-couple-home-dashboard">
+         {% include 'layouts/couple-home-dashboard.html' %}
+      </div>
+
+      <!--
+         Technische Kompatibilitätsschicht:
+         bestehende JS-Funktionen ersetzen diese Container nach Create/Edit.
+         Unsichtbar halten, damit die neue Couples-UI nicht doppelt rendert.
+      -->
+      <div style="display:none;" aria-hidden="true">
+         {% if has_list_permission('View', moments_title) %}
+         <div id="div-render-timeline-card">
+            {% include 'layouts/timeline-card.html' %}
+         </div>
+         {% endif %}
+
+         {% if has_list_permission('View', countdown_title) %}
+         <div id="div-render-countdown-card">
+            {% include 'layouts/countdown-card.html' %}
+         </div>
+         {% endif %}
+
+         {% if has_list_permission('View', list_type_title) %}
+         <div id="div-render-home-items">
+            {% include 'layouts/home-items.html' %}
+         </div>
+         {% endif %}
+      </div>
+
+      {% else %}
       <div id="div-render-banner-card">
          {% include 'layouts/banner-card.html' %}
       </div>
-
-      <br>
-
-       {% if sm_edition == 'couples' and heart_moment_memory %}
-       <div id="div-render-heart-moment-memory">
-          {% include 'layouts/heart-moment-memory-card.html' %}
-       </div>
-      <br>
-       {% endif %}
 
       <br>
 
@@ -281,6 +303,7 @@
       <div id="div-render-home-items">
          {% include 'layouts/home-items.html' %}
       </div>
+      {% endif %}
       {% endif %}
 
       <!-- Dialog zum Erstellen eines neuen Eintrags -->
@@ -334,15 +357,81 @@
       </div>
       {% endif %}
 
+      {% if sm_edition == 'couples' %}
+      <div class="overlay"
+           id="div-overlay-couple-create"
+           onclick="callUi('#dialog-couple-create')"></div>
+
+      <dialog class="bottom" id="dialog-couple-create">
+         <nav>
+            <button class="circle transparent"
+                    onclick="callUi('#dialog-couple-create')">
+               <i>close</i>
+            </button>
+            <h5 class="max">Was möchtest du festhalten?</h5>
+         </nav>
+
+         <div class="space"></div>
+
+         {% if has_list_permission('Create', list_type_title) %}
+         <a class="row padding"
+            onclick="callUi('#dialog-couple-create'); openCreateDialog();">
+            <i>photo_camera</i>
+            <div class="max">
+               <strong>Erinnerung</strong>
+               <div class="small">Foto, Video oder gemeinsamer Moment</div>
+            </div>
+            <i>chevron_right</i>
+         </a>
+         {% endif %}
+
+         <a class="row padding" href="/heart-moments?create=1">
+            <i>favorite</i>
+            <div class="max">
+               <strong>Herzmoment</strong>
+               <div class="small">Etwas, das sich besonders angefühlt hat</div>
+            </div>
+            <i>chevron_right</i>
+         </a>
+
+         {% if has_list_permission('Create', moments_title) %}
+         <a class="row padding"
+            onclick="callUi('#dialog-couple-create'); callUi('#dialog-create-new-timeline-item');">
+            <i>star</i>
+            <div class="max">
+               <strong>Meilenstein</strong>
+               <div class="small">Ein wichtiger Punkt in eurer Geschichte</div>
+            </div>
+            <i>chevron_right</i>
+         </a>
+         {% endif %}
+      </dialog>
+      {% endif %}
+
       <!-- Footer -->
       {% include 'layouts/footer.html' %}
    </main>
 
-   <!-- FAB um neuen Eintrag zu erstellen -->
-   {% if has_list_permission('Create', list_type_title) %}
-   <div id="div-fab-create-new-home-item" class="fixed bottom right" style="margin-right: 8px;margin-bottom: 16px;z-index: 90;" onclick="openCreateDialog()">
-      <button class="square round extra" style="box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16), 0px 3px 6px rgba(0, 0, 0, 0.23);">
-      <i>add</i>
+   <!-- Zentrale Erstellen-Aktion -->
+   {% if sm_edition == 'couples' %}
+   <div id="div-fab-couple-create"
+        class="fixed bottom right"
+        style="margin-right: 8px;margin-bottom: 16px;z-index: 90;"
+        onclick="callUi('#dialog-couple-create')">
+      <button class="square round extra"
+              aria-label="Inhalt hinzufügen"
+              style="box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16), 0px 3px 6px rgba(0, 0, 0, 0.23);">
+         <i>add</i>
+      </button>
+   </div>
+   {% elif has_list_permission('Create', list_type_title) %}
+   <div id="div-fab-create-new-home-item"
+        class="fixed bottom right"
+        style="margin-right: 8px;margin-bottom: 16px;z-index: 90;"
+        onclick="openCreateDialog()">
+      <button class="square round extra"
+              style="box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16), 0px 3px 6px rgba(0, 0, 0, 0.23);">
+         <i>add</i>
       </button>
    </div>
    {% endif %}
@@ -407,6 +496,23 @@
       window.countdownListTypeId = '{{ countdown_list_type_id }}';
       window.listType = '{{ list_type }}';
       window.uploadedUrls = '';
+
+      {% if sm_edition == 'couples' %}
+      document.addEventListener('DOMContentLoaded', () => {
+         ['div-render-home-items', 'div-render-timeline-card'].forEach((id) => {
+            const target = document.getElementById(id);
+            if (!target) return;
+
+            const observer = new MutationObserver(() => {
+               window.location.reload();
+            });
+
+            observer.observe(target, {
+               childList: true
+            });
+         });
+      });
+      {% endif %}
    </script>
    <script src="{{ static_versioned('js/main.js') }}"></script>
    <script src="{{ static_versioned('js/home.js') }}"></script>
