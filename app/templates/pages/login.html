@@ -28,6 +28,45 @@
         <article class="no-padding primary-container">
             <div class="padding">
                 <h6>{{ _('Login') }}</h6>
+
+                {% if oidc_error %}
+                <div class="padding error-container" style="margin-bottom:1rem;">
+                    <i>error</i>
+
+                    {% if oidc_error == 'not_linked' %}
+                    <span>
+                        {{ _('This Pocket ID account is not linked to a SharedMoments account yet. Please sign in with your existing account and link Pocket ID in the user settings.') }}
+                    </span>
+
+                    {% elif oidc_error == 'not_configured' %}
+                    <span>
+                        {{ _('Pocket ID is not configured correctly.') }}
+                    </span>
+
+                    {% elif oidc_error == 'already_linked' %}
+                    <span>
+                        {{ _('This Pocket ID account is already linked to another SharedMoments account.') }}
+                    </span>
+
+                    {% elif oidc_error == 'user_missing' %}
+                    <span>
+                        {{ _('The SharedMoments account linked to this Pocket ID account no longer exists.') }}
+                    </span>
+
+                    {% elif oidc_error == 'link_session' %}
+                    <span>
+                        {{ _('The Pocket ID linking session is no longer valid. Please try again.') }}
+                    </span>
+
+                    {% else %}
+                    <span>
+                        {{ _('Pocket ID login failed.') }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if local_login_enabled %}
                 <form id="loginForm">
                     <div class="field label border">
                         <input type="email" name="email" id="email" onchange="emailVerification()">
@@ -46,12 +85,44 @@
                     <div class="space"></div>
                     <button type="submit" class="btn">{{ _('Login') }}</button>
                 </form>
-                <br>
-                <button onclick="authenticatePasskey()">
+                {% endif %}
+
+                {% if local_login_enabled and (oidc_login_enabled or passkey_login_enabled) %}
+                <div
+                    class="row"
+                    style="margin:1.25rem 0; opacity:0.65;">
+                    <hr class="max">
+                    <span>{{ _('or') }}</span>
+                    <hr class="max">
+                </div>
+                {% endif %}
+
+                {% if oidc_login_enabled %}
+                <a
+                    class="button"
+                    href="/oidc/login"
+                    style="display:flex; width:100%; max-width:100%; box-sizing:border-box; justify-content:center; margin:0;">
+                    <i>shield_person</i>
+                    <span>
+                        {{ _('Login with Pocket ID') }}
+                    </span>
+                </a>
+                {% endif %}
+
+                {% if oidc_login_enabled and passkey_login_enabled %}
+                <div class="space"></div>
+                {% endif %}
+
+                {% if passkey_login_enabled %}
+                <button
+                    onclick="authenticatePasskey()"
+                    style="display:flex; width:100%; max-width:100%; box-sizing:border-box; justify-content:center; margin:0;">
                     <i>home</i>
                     <span>{{ _('Login with passkey') }}</span>
                 </button>
-                {% if smtp_configured %}
+                {% endif %}
+
+                {% if local_login_enabled and smtp_configured %}
                 <div class="space"></div>
                 <a class="link" style="cursor:pointer;" onclick="var s=document.getElementById('forgot-password-section').style; s.display=s.display==='none'?'block':'none';">{{ _('Forgot password?') }}</a>
                 <div id="forgot-password-section" style="display:none; margin-top:1rem;">
@@ -91,7 +162,13 @@
     </main>
 
     <script>
-        document.getElementById("loginForm").addEventListener("submit", async function (event) {
+        const loginForm =
+            document.getElementById("loginForm");
+
+        if (loginForm) {
+            loginForm.addEventListener(
+                "submit",
+                async function (event) {
             event.preventDefault();
             const formData = new FormData();
             formData.append('email', document.getElementById('email').value);
@@ -114,6 +191,7 @@
                 showSnackbar('setup', true, 'error', error, null, false);
             }
         });
+        }
 
         async function requestPasswordReset() {
             const email = document.getElementById('forgot-email').value;
@@ -165,7 +243,16 @@
             }
 
             const formData = new FormData();
-            formData.append("email", document.getElementById("email").value);
+
+            const emailInput =
+                document.getElementById("email");
+
+            if (emailInput) {
+                formData.append(
+                    "email",
+                    emailInput.value
+                );
+            }
 
             try {
                 const response = await fetch("/webauthn/authenticate", {

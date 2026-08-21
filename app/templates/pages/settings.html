@@ -227,7 +227,223 @@
               </div>
               {% endif %}
 
+              <!-- AUTHENTICATION ADMIN SETTINGS -->
+              {% if has_permission('Update Setting') %}
+
+              <legend>{{ _('Authentication') }}</legend>
+
+              <div
+                  class="padding primary-container"
+                  style="border-radius:0.75rem; margin-bottom:1rem;">
+
+                  <div class="row">
+                      <i>password</i>
+
+                      <div class="max">
+                          <h6 class="small">
+                              {{ _('Password login') }}
+                          </h6>
+                          <div>
+                              {{ _('Allow login with e-mail and password') }}
+                          </div>
+                      </div>
+
+                      <label class="checkbox">
+                          <input
+                              type="checkbox"
+                              id="auth-local-login-enabled"
+                              {% if auth_settings.local_login_enabled %}
+                              checked
+                              {% endif %}>
+                          <span></span>
+                      </label>
+                  </div>
+
+                  <hr>
+
+                  <div class="row">
+                      <i>passkey</i>
+
+                      <div class="max">
+                          <h6 class="small">
+                              {{ _('Passkey login') }}
+                          </h6>
+                          <div>
+                              {{ _('Allow login with Passkeys') }}
+                          </div>
+                      </div>
+
+                      <label class="checkbox">
+                          <input
+                              type="checkbox"
+                              id="auth-passkey-login-enabled"
+                              {% if auth_settings.passkey_login_enabled %}
+                              checked
+                              {% endif %}>
+                          <span></span>
+                      </label>
+                  </div>
+
+                  <hr>
+
+                  <div class="row">
+                      <i>shield_person</i>
+
+                      <div class="max">
+                          <h6 class="small">
+                              {{ _('Pocket ID') }}
+                          </h6>
+
+                          <div>
+                              {% if auth_oidc_enabled %}
+                                  {{ _('Configured') }}
+
+                                  {% if auth_current_user_oidc_linked %}
+                                  · {{ _('Your account is linked') }}
+                                  {% else %}
+                                  · {{ _('Your account is not linked') }}
+                                  {% endif %}
+                              {% else %}
+                                  {{ _('Not configured') }}
+                              {% endif %}
+                          </div>
+                      </div>
+
+                      {% if auth_oidc_enabled %}
+                          {% if auth_current_user_oidc_linked %}
+                          <button
+                              type="button"
+                              class="transparent circle"
+                              title="{{ _('Unlink Pocket ID') }}"
+                              onclick="unlinkPocketId(this)">
+                              <i>link_off</i>
+                          </button>
+                          {% else %}
+                          <a
+                              class="button border"
+                              href="/oidc/link">
+                              <i>link</i>
+                              <span>
+                                  {{ _('Link Pocket ID') }}
+                              </span>
+                          </a>
+                          {% endif %}
+                      {% endif %}
+                  </div>
+
+                  {% if auth_force_local_login %}
+                  <div
+                      class="padding secondary-container"
+                      style="margin-top:1rem; border-radius:0.75rem;">
+                      <i>emergency</i>
+                      {{ _('Emergency local login override is active.') }}
+                  </div>
+                  {% endif %}
+
+                  <nav class="right-align" style="margin-top:1rem;">
+                      <button
+                          type="button"
+                          id="save-auth-settings"
+                          onclick="saveAuthenticationSettings(this)">
+                          <i>save</i>
+                          <span>{{ _('Save') }}</span>
+                      </button>
+                  </nav>
+
+              </div>
+
+              {% endif %}
+
               {% elif settings_type == 'user-settings' %}
+
+              <!-- POCKET ID ACCOUNT LINKING -->
+              <legend>{{ _('Authentication') }}</legend>
+
+              {% if oidc_result == 'linked' %}
+              <div
+                  class="padding secondary-container"
+                  style="margin-bottom:1rem; border-radius:0.75rem;">
+                  <i>check_circle</i>
+                  {{ _('Pocket ID was successfully linked to your account.') }}
+              </div>
+              {% elif oidc_result == 'unlinked' %}
+              <div
+                  class="padding secondary-container"
+                  style="margin-bottom:1rem; border-radius:0.75rem;">
+                  <i>check_circle</i>
+                  {{ _('Pocket ID was successfully unlinked from your account.') }}
+              </div>
+              {% endif %}
+
+              {% if oidc_error %}
+              <div
+                  class="padding error-container"
+                  style="margin-bottom:1rem; border-radius:0.75rem;">
+                  <i>error</i>
+
+                  {% if oidc_error == 'already_linked' %}
+                  {{ _('This Pocket ID account is already linked to another SharedMoments account.') }}
+                  {% elif oidc_error == 'link_session' %}
+                  {{ _('The Pocket ID linking session is no longer valid. Please try again.') }}
+                  {% else %}
+                  {{ _('Pocket ID linking failed.') }}
+                  {% endif %}
+              </div>
+              {% endif %}
+
+              {% if oidc_enabled %}
+              <div
+                  class="row padding primary-container"
+                  style="margin-bottom:1rem;">
+
+                  <i>shield_person</i>
+
+                  <div class="max">
+                      <h6 class="small">
+                          {{ oidc_provider_name }}
+                      </h6>
+
+                      {% if oidc_identity %}
+                      <div>
+                          {{ _('Linked') }}
+
+                          {% if oidc_identity.email %}
+                          · {{ oidc_identity.email }}
+                          {% elif oidc_identity.preferredUsername %}
+                          · {{ oidc_identity.preferredUsername }}
+                          {% endif %}
+                      </div>
+
+                      {% else %}
+                      <div>
+                          {{ _('Not linked') }}
+                      </div>
+                      {% endif %}
+                  </div>
+
+                  {% if oidc_identity %}
+                  <button
+                      type="button"
+                      class="transparent circle"
+                      title="{{ _('Unlink Pocket ID') }}"
+                      onclick="unlinkPocketId(this)">
+                      <i>link_off</i>
+                  </button>
+
+                  {% else %}
+                  <a
+                      class="button border"
+                      href="/oidc/link">
+                      <i>link</i>
+                      <span>
+                          {{ _('Link Pocket ID') }}
+                      </span>
+                  </a>
+                  {% endif %}
+
+              </div>
+              {% endif %}
+
               <!-- Profile picture -->
               <a class="row padding primary-container wave" onclick="document.getElementById('profile-picture-input').click()">
                 <img class="circle" src="/api/v2/media/static/{{ user_data.profilePicture or 'profile-placeholder.jpg' }}" id="profile-picture-preview" style="width:40px;height:40px;object-fit:cover;">

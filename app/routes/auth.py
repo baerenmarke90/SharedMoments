@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import Blueprint, abort, g, make_response, request, jsonify, redirect, url_for, session
 from app.db_queries import get_user_by_credential_id, get_user_by_email, get_setting_by_name, get_user_by_id, update_passkey_sign_count, ensure_pwa_settings, ensure_notification_settings
-from app.permissions import load_user_permissions
+from app.permissions import load_user_permissions, require_permission
 from datetime import datetime, timedelta
 from app.logger import log
 import json, jwt
@@ -44,6 +44,32 @@ def _get_webauthn_origin():
 def get_secret_key():
     from app import app
     return app.config['SECRET_KEY']
+
+
+def local_login_enabled():
+    from app.auth_settings import (
+        get_effective_auth_settings,
+    )
+
+    return get_effective_auth_settings()[
+        'local_login_enabled'
+    ]
+
+
+def passkey_login_enabled():
+    from app.auth_settings import (
+        get_effective_auth_settings,
+    )
+
+    return get_effective_auth_settings()[
+        'passkey_login_enabled'
+    ]
+
+
+def oidc_login_enabled():
+    """Return whether Pocket ID is completely configured."""
+    from app.oidc import oidc_configured
+    return bool(oidc_configured())
 
 
 def jwt_required(f):
@@ -106,6 +132,86 @@ def login_jwt(user, remember_me=False):
         expires=expiration
     )
     return response
+
+
+def login_jwt_redirect(
+    user,
+    target=None,
+    remember_me=True
+):
+    """
+    Create the normal SharedMoments JWT cookie and
+    return an HTTP redirect.
+
+    Used after successful external OIDC authentication.
+    """
+
+    if remember_me:
+        expiration = (
+            datetime.utcnow()
+            + timedelta(days=30)
+        )
+    else:
+        expiration = (
+            datetime.utcnow()
+            + timedelta(hours=24)
+        )
+
+    token = jwt.encode(
+        {
+            'user_id': user.id,
+            'exp': expiration
+        },
+        get_secret_key(),
+        algorithm='HS256'
+    )
+
+    response = make_response(
+        redirect(
+            target
+            or url_for('pages.home')
+        )
+    )
+
+    response.set_cookie(
+        'jwt_token',
+        token,
+        httponly=True,
+        secure=request.is_secure,
+        samesite='Lax',
+        expires=expiration
+    )
+
+    return response
+
+
+def _jwt_user_id_from_cookie():
+    """
+    Return the currently logged-in SharedMoments user
+    without causing a redirect.
+
+    This is used to verify OIDC account-link callbacks.
+    """
+
+    token = request.cookies.get('jwt_token')
+
+    if not token:
+        return None
+
+    try:
+        decoded = jwt.decode(
+            token,
+            get_secret_key(),
+            algorithms=['HS256']
+        )
+
+        return decoded.get('user_id')
+
+    except (
+        jwt.ExpiredSignatureError,
+        jwt.InvalidTokenError
+    ):
+        return None
 
 
 @auth_bp.before_app_request
@@ -183,6 +289,542 @@ def before_request():
             return response
 
 
+# ============================================================
+# AUTHENTICATION SETTINGS
+# ============================================================
+
+@auth_bp.route(
+    '/api/v2/auth/settings',
+    methods=['PUT']
+)
+@jwt_required
+@require_permission('Update Setting')
+def update_authentication_settings():
+    from app.auth_settings import (
+        set_auth_settings,
+    )
+    from app.db_queries import (
+        get_passkeys_by_user,
+    )
+    from app.oidc_identity import (
+        get_oidc_identity_for_user,
+    )
+
+    data = request.get_json(silent=True) or {}
+
+    local_enabled = data.get(
+        'local_login_enabled'
+    )
+
+    passkey_enabled = data.get(
+        'passkey_login_enabled'
+    )
+
+    if (
+        not isinstance(local_enabled, bool)
+        or not isinstance(passkey_enabled, bool)
+    ):
+        return jsonify({
+            'status': 'error',
+            'message': _(
+                'Invalid authentication settings.'
+            ),
+            'data': {
+                'error_code': 400
+            }
+        }), 400
+
+    future_local_effective = bool(
+        Config.AUTH_FORCE_LOCAL_LOGIN
+        or (
+            Config.AUTH_LOCAL_LOGIN_ENABLED
+            and local_enabled
+        )
+    )
+
+    future_passkey_effective = bool(
+        Config.AUTH_PASSKEY_LOGIN_ENABLED
+        and passkey_enabled
+    )
+
+    # Lockout protection:
+    # If password login will no longer exist,
+    # the user making this change must personally
+    # have another working authentication method.
+    if not future_local_effective:
+
+        has_passkey = bool(
+            future_passkey_effective
+            and get_passkeys_by_user(g.user_id)
+        )
+
+        has_oidc = bool(
+            oidc_login_enabled()
+            and get_oidc_identity_for_user(
+                g.user_id
+            )
+        )
+
+        if not has_passkey and not has_oidc:
+            return jsonify({
+                'status': 'error',
+                'message': _(
+                    'Password login cannot be disabled '
+                    'until your account has a working '
+                    'Passkey or Pocket ID connection.'
+                ),
+                'data': {
+                    'error_code': 409
+                }
+            }), 409
+
+    settings = set_auth_settings(
+        local_login_enabled=local_enabled,
+        passkey_login_enabled=passkey_enabled
+    )
+
+    log(
+        'info',
+        'Authentication settings updated by '
+        f'user {g.user_id}: '
+        f'local={local_enabled}, '
+        f'passkey={passkey_enabled}'
+    )
+
+    return jsonify({
+        'status': 'success',
+        'message': _(
+            'Authentication settings updated.'
+        ),
+        'data': settings
+    }), 200
+
+
+# ============================================================
+# OPENID CONNECT / POCKET ID
+# ============================================================
+
+@auth_bp.route('/oidc/login')
+def oidc_login():
+    """Start normal Pocket ID authentication."""
+
+    from app.oidc import get_pocketid_client
+
+    if not oidc_login_enabled():
+        return redirect(
+            url_for(
+                'auth.login',
+                oidc_error='not_configured'
+            )
+        )
+
+    client = get_pocketid_client()
+
+    if client is None:
+        return redirect(
+            url_for(
+                'auth.login',
+                oidc_error='not_configured'
+            )
+        )
+
+    session['oidc_action'] = 'login'
+    session.pop('oidc_link_user_id', None)
+
+    return client.authorize_redirect(
+        Config.OIDC_REDIRECT_URI
+    )
+
+
+@auth_bp.route('/oidc/link')
+@jwt_required
+def oidc_link():
+    """
+    Link the currently logged-in SharedMoments account
+    to a Pocket ID identity.
+    """
+
+    from app.oidc import get_pocketid_client
+
+    if not oidc_login_enabled():
+        return redirect(
+            url_for(
+                'pages.user_settings',
+                oidc_error='not_configured'
+            )
+        )
+
+    client = get_pocketid_client()
+
+    if client is None:
+        return redirect(
+            url_for(
+                'pages.user_settings',
+                oidc_error='not_configured'
+            )
+        )
+
+    session['oidc_action'] = 'link'
+    session['oidc_link_user_id'] = g.user_id
+
+    return client.authorize_redirect(
+        Config.OIDC_REDIRECT_URI
+    )
+
+
+@auth_bp.route('/oidc/callback')
+def oidc_callback():
+    """
+    Handle both:
+      - normal Pocket ID login
+      - linking Pocket ID to an existing account
+    """
+
+    from app.oidc import get_pocketid_client
+    from app.oidc_identity import (
+        get_oidc_identity_by_subject,
+        get_unique_user_by_oidc_email,
+        link_oidc_identity,
+    )
+
+    action = session.pop(
+        'oidc_action',
+        'login'
+    )
+
+    link_user_id = session.pop(
+        'oidc_link_user_id',
+        None
+    )
+
+    if not oidc_login_enabled():
+        return redirect(
+            url_for(
+                'auth.login',
+                oidc_error='not_configured'
+            )
+        )
+
+    client = get_pocketid_client()
+
+    if client is None:
+        return redirect(
+            url_for(
+                'auth.login',
+                oidc_error='not_configured'
+            )
+        )
+
+    try:
+        token = client.authorize_access_token()
+
+        userinfo = token.get('userinfo')
+
+        if not userinfo:
+            userinfo = client.userinfo(
+                token=token
+            )
+
+        subject = userinfo.get('sub')
+
+        if not subject:
+            raise ValueError(
+                'OIDC response contains no subject.'
+            )
+
+        issuer = Config.OIDC_ISSUER
+
+        email = userinfo.get('email')
+
+        preferred_username = (
+            userinfo.get('preferred_username')
+            or userinfo.get('name')
+        )
+
+        # -------------------------------------------------
+        # Existing SharedMoments account -> Pocket ID link
+        # -------------------------------------------------
+
+        if action == 'link':
+            current_user_id = (
+                _jwt_user_id_from_cookie()
+            )
+
+            if (
+                not current_user_id
+                or not link_user_id
+                or int(current_user_id)
+                != int(link_user_id)
+            ):
+                log(
+                    'warning',
+                    'OIDC account-link callback without '
+                    'matching SharedMoments session'
+                )
+
+                return redirect(
+                    url_for(
+                        'auth.login',
+                        oidc_error='link_session'
+                    )
+                )
+
+            link_oidc_identity(
+                user_id=int(link_user_id),
+                issuer=issuer,
+                subject=subject,
+                email=email,
+                preferred_username=(
+                    preferred_username
+                )
+            )
+
+            log(
+                'info',
+                'Pocket ID linked to '
+                f'SharedMoments user {link_user_id}'
+            )
+
+            return redirect(
+                url_for(
+                    'pages.user_settings',
+                    oidc='linked'
+                )
+            )
+
+        # -------------------------------------------------
+        # Normal Pocket ID login
+        # -------------------------------------------------
+
+        identity = (
+            get_oidc_identity_by_subject(
+                issuer=issuer,
+                subject=subject
+            )
+        )
+
+        if identity:
+            user = get_user_by_id(
+                identity.userID
+            )
+
+        else:
+            # -------------------------------------------------
+            # Safe first-login auto-link
+            # -------------------------------------------------
+            #
+            # Only trust the e-mail for automatic account
+            # linking when the OIDC provider explicitly marks
+            # it as verified.
+            #
+            # issuer + sub remain the permanent identity key.
+            #
+
+            email_verified = (
+                userinfo.get('email_verified')
+                is True
+            )
+
+            user = None
+
+            if email and email_verified:
+                user = (
+                    get_unique_user_by_oidc_email(
+                        email
+                    )
+                )
+
+            if user:
+                link_oidc_identity(
+                    user_id=user.id,
+                    issuer=issuer,
+                    subject=subject,
+                    email=email,
+                    preferred_username=(
+                        preferred_username
+                    )
+                )
+
+                log(
+                    'info',
+                    'Pocket ID automatically linked '
+                    f'to SharedMoments user {user.id} '
+                    'using verified e-mail'
+                )
+
+            else:
+                if email and not email_verified:
+                    log(
+                        'warning',
+                        'Pocket ID identity is not linked '
+                        'and supplied e-mail is not verified'
+                    )
+                else:
+                    log(
+                        'warning',
+                        'Pocket ID authentication succeeded '
+                        'but no unique existing account '
+                        'could be auto-linked'
+                    )
+
+                return redirect(
+                    url_for(
+                        'auth.login',
+                        oidc_error='not_linked'
+                    )
+                )
+
+        if not user:
+            log(
+                'error',
+                'OIDC identity references missing '
+                f'user {identity.userID}'
+            )
+
+            return redirect(
+                url_for(
+                    'auth.login',
+                    oidc_error='user_missing'
+                )
+            )
+
+        # Refresh non-authoritative metadata.
+        # issuer + sub remain the real identity key.
+        link_oidc_identity(
+            user_id=user.id,
+            issuer=issuer,
+            subject=subject,
+            email=email,
+            preferred_username=(
+                preferred_username
+            )
+        )
+
+        log(
+            'info',
+            f'User {user.id} authenticated via Pocket ID'
+        )
+
+        return login_jwt_redirect(
+            user,
+            remember_me=True
+        )
+
+    except ValueError as exc:
+        log(
+            'warning',
+            f'OIDC linking rejected: {exc}'
+        )
+
+        destination = (
+            'pages.user_settings'
+            if action == 'link'
+            else 'auth.login'
+        )
+
+        return redirect(
+            url_for(
+                destination,
+                oidc_error='already_linked'
+            )
+        )
+
+    except Exception as exc:
+        log(
+            'error',
+            f'OIDC authentication failed: {exc}'
+        )
+
+        destination = (
+            'pages.user_settings'
+            if action == 'link'
+            else 'auth.login'
+        )
+
+        return redirect(
+            url_for(
+                destination,
+                oidc_error='failed'
+            )
+        )
+
+
+@auth_bp.route(
+    '/api/v2/user/oidc',
+    methods=['DELETE']
+)
+@jwt_required
+def oidc_unlink():
+    """Remove Pocket ID from the current account."""
+
+    from app.db_queries import (
+        get_passkeys_by_user,
+    )
+
+    from app.oidc_identity import (
+        get_oidc_identity_for_user,
+        unlink_oidc_identity,
+    )
+
+    identity = get_oidc_identity_for_user(
+        g.user_id
+    )
+
+    if not identity:
+        return jsonify({
+            'status': 'error',
+            'message': _(
+                'No Pocket ID account is linked.'
+            ),
+            'data': {
+                'error_code': 404
+            }
+        }), 404
+
+    # Never allow a user to remove their final
+    # usable authentication method.
+    has_local_login = local_login_enabled()
+
+    has_passkey_login = bool(
+        passkey_login_enabled()
+        and get_passkeys_by_user(g.user_id)
+    )
+
+    if (
+        not has_local_login
+        and not has_passkey_login
+    ):
+        return jsonify({
+            'status': 'error',
+            'message': _(
+                'Pocket ID cannot be unlinked '
+                'because no alternative login '
+                'method is available.'
+            ),
+            'data': {
+                'error_code': 409
+            }
+        }), 409
+
+    unlink_oidc_identity(
+        g.user_id
+    )
+
+    log(
+        'info',
+        'Pocket ID unlinked from '
+        f'SharedMoments user {g.user_id}'
+    )
+
+    return jsonify({
+        'status': 'success',
+        'message': _(
+            'Pocket ID account unlinked.'
+        ),
+        'data': {}
+    }), 200
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     from flask import render_template
@@ -190,6 +832,17 @@ def login():
         return redirect(url_for('pages.setup'))
     else:
         if request.method == 'POST':
+            if not local_login_enabled():
+                return jsonify({
+                    'status': 'error',
+                    'message': _(
+                        'Password login is disabled.'
+                    ),
+                    'data': {
+                        'error_code': 403
+                    }
+                }), 403
+
             email = request.form.get('email')
             password = request.form.get('password')
 
@@ -233,7 +886,26 @@ def login():
             try:
                 smtp_configured = bool(os.environ.get('SMTP_HOST') and os.environ.get('SMTP_USER'))
                 sm_edition = get_setting_by_name('sm_edition')
-                return render_template('pages/login.html', sm_edition=sm_edition, smtp_configured=smtp_configured)
+                return render_template(
+                    'pages/login.html',
+                    sm_edition=sm_edition,
+                    smtp_configured=smtp_configured,
+                    local_login_enabled=(
+                        local_login_enabled()
+                    ),
+                    passkey_login_enabled=(
+                        passkey_login_enabled()
+                    ),
+                    oidc_login_enabled=(
+                        oidc_login_enabled()
+                    ),
+                    oidc_provider_name=(
+                        Config.OIDC_PROVIDER_NAME
+                    ),
+                    oidc_error=request.args.get(
+                        'oidc_error'
+                    )
+                )
             except Exception as e:
                 log('error', f'Error while rendering the pages/login.html-Template: {e}')
                 return "An error occurred while rendering the page, please see the Server-Logs for more informations.", 500
@@ -433,6 +1105,18 @@ def webauthn_register_verify():
 @auth_bp.route('/webauthn/authenticate', methods=['POST'])
 def webauthn_authenticate():
     from app import app
+
+    if not passkey_login_enabled():
+        return jsonify({
+            'status': 'error',
+            'message': _(
+                'Passkey login is disabled.'
+            ),
+            'data': {
+                'error_code': 403
+            }
+        }), 403
+
     try:
         options = generate_authentication_options(
             rp_id=_get_webauthn_rp_id()
@@ -461,6 +1145,18 @@ def webauthn_authenticate():
 @auth_bp.route('/webauthn/authenticate/verify', methods=['POST'])
 def webauthn_authenticate_verify():
     from app import app
+
+    if not passkey_login_enabled():
+        return jsonify({
+            'status': 'error',
+            'message': _(
+                'Passkey login is disabled.'
+            ),
+            'data': {
+                'error_code': 403
+            }
+        }), 403
+
     try:
         data = json.loads(request.data)
         challenge = session.get('current_challenge')
