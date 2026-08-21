@@ -803,7 +803,7 @@ function openMilestoneCreateFromCoupleHome() {
 
 function initCoupleCreateMenuDismissal() {
    const dialog = document.getElementById('dialog-couple-create');
-   const handle = document.getElementById('couple-create-drag-handle');
+   const dragZone = document.getElementById('couple-create-drag-zone');
    if (!dialog || dialog.dataset.dismissReady === '1') return;
 
    dialog.dataset.dismissReady = '1';
@@ -815,43 +815,57 @@ function initCoupleCreateMenuDismissal() {
       }
    });
 
-   if (!handle) return;
+   if (!dragZone) return;
 
    let startY = null;
    let currentY = null;
+   let pointerId = null;
 
-   handle.addEventListener('pointerdown', (event) => {
+   dragZone.addEventListener('pointerdown', (event) => {
+      // The close button must remain a normal tap target.
+      if (event.target.closest('button, a, input, textarea, select')) return;
+
       startY = event.clientY;
       currentY = event.clientY;
+      pointerId = event.pointerId;
       dialog.classList.add('couple-create-dragging');
-      if (handle.setPointerCapture) {
-         handle.setPointerCapture(event.pointerId);
+
+      if (dragZone.setPointerCapture) {
+         dragZone.setPointerCapture(event.pointerId);
       }
    });
 
-   handle.addEventListener('pointermove', (event) => {
-      if (startY === null) return;
+   dragZone.addEventListener('pointermove', (event) => {
+      if (startY === null || event.pointerId !== pointerId) return;
+
       currentY = event.clientY;
       const distance = Math.max(0, currentY - startY);
-      dialog.style.transform = `translateY(${Math.min(distance, 180)}px)`;
+      dialog.style.transform = `translateY(${distance}px)`;
    });
 
-   const finishDrag = () => {
+   const finishDrag = (event) => {
       if (startY === null) return;
+      if (event && pointerId !== null && event.pointerId !== pointerId) return;
+
       const distance = Math.max(0, (currentY ?? startY) - startY);
       startY = null;
       currentY = null;
+      pointerId = null;
       dialog.classList.remove('couple-create-dragging');
 
-      if (distance >= 70) {
-         closeCoupleCreateMenu();
+      // A short downward pull is enough to dismiss the sheet.
+      if (distance >= 44) {
+         dialog.style.transform = 'translateY(110%)';
+         window.setTimeout(() => {
+            closeCoupleCreateMenu();
+         }, 120);
       } else {
          dialog.style.transform = '';
       }
    };
 
-   handle.addEventListener('pointerup', finishDrag);
-   handle.addEventListener('pointercancel', finishDrag);
+   dragZone.addEventListener('pointerup', finishDrag);
+   dragZone.addEventListener('pointercancel', finishDrag);
 }
 
 if (document.readyState === 'loading') {

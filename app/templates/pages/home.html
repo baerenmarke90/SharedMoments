@@ -67,18 +67,29 @@
             border: 2px solid var(--primary);
          }
 
+         .couple-create-drag-zone {
+            touch-action: none;
+            user-select: none;
+            cursor: grab;
+            padding-top: 0.15rem;
+         }
+
+         .couple-create-drag-zone:active {
+            cursor: grabbing;
+         }
+
          .couple-create-drag-handle {
             width: 46px;
             height: 5px;
             border-radius: 999px;
-            margin: 0.15rem auto 0.5rem;
+            margin: 0 auto 0.35rem;
             background: var(--outline-variant);
-            touch-action: none;
-            cursor: grab;
+            pointer-events: none;
          }
 
          #dialog-couple-create {
             transition: transform 160ms ease-out;
+            will-change: transform;
          }
 
          #dialog-couple-create.couple-create-dragging {
@@ -464,16 +475,19 @@
            onclick="callUi('#dialog-couple-create')"></div>
 
       <dialog class="bottom" id="dialog-couple-create">
-         <div class="couple-create-drag-handle"
-              id="couple-create-drag-handle"
-              aria-hidden="true"></div>
-         <nav>
-            <button class="circle transparent"
-                    onclick="callUi('#dialog-couple-create')">
-               <i>close</i>
-            </button>
-            <h6 class="max" style="margin:0;line-height:1.3;white-space:normal;">Was möchtest du hinzufügen?</h6>
-         </nav>
+         <div class="couple-create-drag-zone"
+              id="couple-create-drag-zone"
+              aria-label="Zum Schließen nach unten ziehen">
+            <div class="couple-create-drag-handle"
+                 aria-hidden="true"></div>
+            <nav>
+               <button class="circle transparent"
+                       onclick="callUi('#dialog-couple-create')">
+                  <i>close</i>
+               </button>
+               <h6 class="max" style="margin:0;line-height:1.3;white-space:normal;">Was möchtest du hinzufügen?</h6>
+            </nav>
+         </div>
 
          <div class="space"></div>
 
