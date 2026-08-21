@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Unser {{ selected_year }} · {{ title.value }}</title>
+      {% include 'layouts/head.html' %}
+      <style>
+         .year-page {
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 5.5rem;
+         }
+
+         .year-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin: 0.3rem 0 0.85rem;
+         }
+
+         .year-select {
+            width: 150px;
+            margin: 0;
+         }
+
+         .year-hero {
+            overflow: hidden;
+            border-radius: 1.2rem;
+            margin-bottom: 1rem;
+         }
+
+         .year-hero-main {
+            text-align: center;
+            padding: 1.3rem 1rem 1.1rem;
+         }
+
+         .year-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            opacity: 0.78;
+         }
+
+         .year-kicker > i {
+            position: static !important;
+            color: #e56aa6;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+
+         .year-hero h2 {
+            margin: 0.25rem 0 0;
+            line-height: 1.05;
+         }
+
+         .year-hero-subtitle {
+            margin: 0.45rem auto 0;
+            max-width: 620px;
+            opacity: 0.76;
+         }
+
+         .year-collage {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 3px;
+            height: 220px;
+            background: var(--surface-container-high);
+         }
+
+         .year-collage[data-count="1"] {
+            grid-template-columns: 1fr;
+         }
+
+         .year-collage[data-count="2"] {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+         }
+
+         .year-collage img {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            object-fit: cover;
+            display: block;
+         }
+
+         .year-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.65rem;
+            margin: 1rem 0 1.35rem;
+         }
+
+         .year-stat {
+            min-width: 0;
+            text-align: center;
+            border-radius: 1rem;
+            padding: 0.9rem 0.45rem 0.75rem;
+         }
+
+         .year-stat > i {
+            position: static !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-bottom: 0.2rem;
+            background: var(--primary-container);
+            color: var(--on-primary-container);
+         }
+
+         .year-stat-heart > i {
+            color: #e56aa6;
+            background: rgba(229, 106, 166, 0.12);
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+
+         .year-stat-number {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1.15;
+         }
+
+         .year-stat-label {
+            display: block;
+            margin-top: 0.15rem;
+            font-size: 0.8rem;
+            opacity: 0.72;
+            overflow-wrap: anywhere;
+         }
+
+         .year-section {
+            margin-top: 1.35rem;
+         }
+
+         .year-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 0 0.65rem 0.2rem;
+         }
+
+         .year-section-title > i {
+            position: static !important;
+         }
+
+         .year-month {
+            margin-top: 1.25rem;
+         }
+
+         .year-month-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin: 0 0 0.55rem 0.15rem;
+         }
+
+         .year-month-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--outline-variant);
+         }
+
+         .year-highlight-list {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 1rem;
+         }
+
+         .year-highlight {
+            display: grid;
+            grid-template-columns: 72px minmax(0, 1fr) auto;
+            gap: 0.8rem;
+            align-items: center;
+            color: inherit;
+            text-decoration: none;
+            padding: 0.7rem;
+            min-width: 0;
+         }
+
+         .year-highlight + .year-highlight {
+            border-top: 1px solid var(--outline-variant);
+         }
+
+         .year-highlight-media,
+         .year-highlight-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 0.85rem;
+         }
+
+         .year-highlight-media {
+            object-fit: cover;
+            display: block;
+         }
+
+         .year-highlight-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-container-high);
+            font-size: 1.8rem;
+         }
+
+         .year-highlight-heart .year-highlight-icon {
+            color: #e56aa6;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+
+         .year-highlight-body {
+            min-width: 0;
+         }
+
+         .year-highlight-type {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            opacity: 0.72;
+         }
+
+         .year-highlight-type > i {
+            position: static !important;
+            font-size: 1rem;
+         }
+
+         .year-highlight-title {
+            margin-top: 0.12rem;
+            font-weight: 650;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+         }
+
+         .year-highlight-text {
+            margin-top: 0.2rem;
+            font-size: 0.88rem;
+            opacity: 0.78;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+         }
+
+         .year-highlight-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem 0.55rem;
+            margin-top: 0.25rem;
+            font-size: 0.78rem;
+            opacity: 0.68;
+         }
+
+         .year-highlight-meta > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.18rem;
+         }
+
+         .year-highlight-meta i {
+            position: static !important;
+            font-size: 0.95rem;
+         }
+
+         .year-highlight-arrow {
+            opacity: 0.52;
+         }
+
+         .year-more-note {
+            margin: 0.4rem 0.2rem 0;
+            font-size: 0.8rem;
+            opacity: 0.62;
+         }
+
+         .year-place-card,
+         .year-achievement-card {
+            border-radius: 1rem;
+         }
+
+         .year-place-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+         }
+
+         .year-place-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            min-height: 38px;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            background: var(--tertiary-container);
+            color: var(--on-tertiary-container);
+            text-decoration: none;
+         }
+
+         .year-place-chip > i {
+            position: static !important;
+            font-size: 1.05rem;
+         }
+
+         .year-achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem;
+         }
+
+         .year-achievement {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            color: inherit;
+            text-decoration: none;
+            padding: 0.8rem;
+            border-radius: 0.9rem;
+            background: var(--surface-container-high);
+         }
+
+         .year-achievement > i {
+            position: static !important;
+            flex: 0 0 auto;
+         }
+
+         .year-achievement-title {
+            font-weight: 600;
+            line-height: 1.3;
+         }
+
+         .year-achievement-label {
+            margin-top: 0.12rem;
+            font-size: 0.78rem;
+            opacity: 0.68;
+         }
+
+         .year-empty {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            border-radius: 1rem;
+         }
+
+         .year-empty > i {
+            position: static !important;
+            font-size: 2.6rem;
+            color: #e56aa6;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+
+         @media (max-width: 700px) {
+            .year-stats {
+               grid-template-columns: repeat(2, minmax(0, 1fr));
+               gap: 0.5rem;
+            }
+
+            .year-collage {
+               height: 160px;
+            }
+
+            .year-highlight {
+               grid-template-columns: 58px minmax(0, 1fr);
+               gap: 0.65rem;
+            }
+
+            .year-highlight-media,
+            .year-highlight-icon {
+               width: 58px;
+               height: 58px;
+               border-radius: 0.75rem;
+            }
+
+            .year-highlight-arrow {
+               display: none;
+            }
+
+            .year-achievement-grid {
+               grid-template-columns: 1fr;
+            }
+         }
+      </style>
+   </head>
+
+   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive year-page">
+         <div class="year-toolbar">
+            <div class="field border round suffix year-select">
+               <select onchange="window.location.href='/year/' + this.value">
+                  {% for year in available_years %}
+                  <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
+                     {{ year }}
+                  </option>
+                  {% endfor %}
+               </select>
+               <i>calendar_month</i>
+            </div>
+         </div>
+
+         <article class="primary-container year-hero">
+            <div class="year-hero-main">
+               <div class="year-kicker">
+                  <i>favorite</i>
+                  <span>Unser Jahr</span>
+               </div>
+               <h2>{{ selected_year }}</h2>
+               <p class="year-hero-subtitle">
+                  Eure Erinnerungen, besonderen Momente, gemeinsamen Orte und erfüllten Wünsche in einem Rückblick.
+               </p>
+            </div>
+
+            {% if year_snapshot.cover_images %}
+            <div class="year-collage" data-count="{{ year_snapshot.cover_images|length }}">
+               {% for image_url in year_snapshot.cover_images %}
+               <img src="{{ image_url }}" alt="" loading="lazy">
+               {% endfor %}
+            </div>
+            {% endif %}
+         </article>
+
+         <section class="year-stats">
+            <div class="surface-container year-stat">
+               <i>photo_library</i>
+               <span class="year-stat-number">{{ year_snapshot.stats.memories }}</span>
+               <span class="year-stat-label">Erinnerungen</span>
+            </div>
+            <div class="surface-container year-stat year-stat-heart">
+               <i>favorite</i>
+               <span class="year-stat-number">{{ year_snapshot.stats.hearts }}</span>
+               <span class="year-stat-label">Herzmomente</span>
+            </div>
+            <div class="surface-container year-stat">
+               <i>star</i>
+               <span class="year-stat-number">{{ year_snapshot.stats.milestones }}</span>
+               <span class="year-stat-label">Meilensteine</span>
+            </div>
+            <div class="surface-container year-stat">
+               <i>auto_stories</i>
+               <span class="year-stat-number">{{ year_snapshot.stats.chapters }}</span>
+               <span class="year-stat-label">Kapitel</span>
+            </div>
+            <div class="surface-container year-stat">
+               <i>location_on</i>
+               <span class="year-stat-number">{{ year_snapshot.stats.places }}</span>
+               <span class="year-stat-label">Orte</span>
+            </div>
+            <div class="surface-container year-stat">
+               <i>checklist</i>
+               <span class="year-stat-number">{{ year_snapshot.stats.bucket }}</span>
+               <span class="year-stat-label">Wünsche erfüllt</span>
+            </div>
+            <div class="surface-container year-stat">
+               <i>done_all</i>
+               <span class="year-stat-number">{{ year_snapshot.stats.plans }}</span>
+               <span class="year-stat-label">Pläne erlebt</span>
+            </div>
+         </section>
+
+         {% if year_snapshot.has_content %}
+         <section class="year-section">
+            <h5 class="year-section-title">
+               <i>auto_awesome</i>
+               <span>Unsere Highlights</span>
+            </h5>
+
+            {% for group in year_snapshot.month_groups %}
+            <section class="year-month">
+               <h6 class="year-month-title">{{ group.label }}</h6>
+               <article class="surface-container year-highlight-list">
+                  {% for entry in group.entries %}
+                  <a class="year-highlight year-highlight-{{ entry.type }}"
+                     href="{{ entry.href }}">
+                     {% if entry.image_url %}
+                     <img class="year-highlight-media"
+                          src="{{ entry.image_url }}"
+                          alt=""
+                          loading="lazy">
+                     {% else %}
+                     <i class="year-highlight-icon">{{ entry.icon }}</i>
+                     {% endif %}
+
+                     <div class="year-highlight-body">
+                        <div class="year-highlight-type">
+                           <i>{{ entry.icon }}</i>
+                           <span>{{ entry.type_label }}</span>
+                        </div>
+                        <div class="year-highlight-title">{{ entry.title }}</div>
+                        {% if entry.text %}
+                        <div class="year-highlight-text">{{ entry.text }}</div>
+                        {% endif %}
+                        <div class="year-highlight-meta">
+                           {% if entry.date_label %}
+                           <span><i>calendar_month</i>{{ entry.date_label }}</span>
+                           {% endif %}
+                           {% if entry.places %}
+                           <span><i>location_on</i>{{ entry.places[0].name }}</span>
+                           {% endif %}
+                        </div>
+                     </div>
+                     <i class="year-highlight-arrow">chevron_right</i>
+                  </a>
+                  {% endfor %}
+               </article>
+               {% if group.total > group.entries|length %}
+               <div class="year-more-note">
+                  {{ group.total - group.entries|length }} weitere Momente in diesem Monat ·
+                  <a href="/story?year={{ selected_year }}">Unsere Geschichte öffnen</a>
+               </div>
+               {% endif %}
+            </section>
+            {% endfor %}
+         </section>
+
+         {% if year_snapshot.places %}
+         <section class="year-section">
+            <h5 class="year-section-title">
+               <i>map</i>
+               <span>Unsere Orte {{ selected_year }}</span>
+            </h5>
+            <article class="surface-container year-place-card">
+               <div class="padding">
+                  <div class="year-place-chips">
+                     {% for place in year_snapshot.places[:10] %}
+                     <a class="year-place-chip" href="/places/{{ place.id }}">
+                        <i>location_on</i>
+                        <span>{{ place.name }}</span>
+                     </a>
+                     {% endfor %}
+                  </div>
+                  <nav class="right-align">
+                     <a href="/places">Alle gemeinsamen Orte</a>
+                  </nav>
+               </div>
+            </article>
+         </section>
+         {% endif %}
+
+         {% if year_snapshot.bucket_completed or year_snapshot.plans_for_achievements %}
+         <section class="year-section">
+            <h5 class="year-section-title">
+               <i>done_all</i>
+               <span>Was wir geschafft haben</span>
+            </h5>
+            <article class="surface-container year-achievement-card">
+               <div class="padding year-achievement-grid">
+                  {% for item in year_snapshot.bucket_completed[:6] %}
+                  <a class="year-achievement"
+                     href="/bucketlist?status=done#bucket-{{ item.id }}">
+                     <i>check_circle</i>
+                     <div>
+                        <div class="year-achievement-title">{{ item.title }}</div>
+                        <div class="year-achievement-label">Bucketlist erfüllt</div>
+                     </div>
+                  </a>
+                  {% endfor %}
+
+                  {% for plan in year_snapshot.plans_for_achievements[:6] %}
+                  <a class="year-achievement" href="/plans#plan-{{ plan.id }}">
+                     <i>done_all</i>
+                     <div>
+                        <div class="year-achievement-title">{{ plan.title }}</div>
+                        <div class="year-achievement-label">Gemeinsamer Plan erlebt</div>
+                     </div>
+                  </a>
+                  {% endfor %}
+               </div>
+            </article>
+         </section>
+         {% endif %}
+
+         <nav class="right-align" style="margin-top:1rem;gap:.75rem;flex-wrap:wrap;">
+            <a href="/story?year={{ selected_year }}">Unsere Geschichte {{ selected_year }}</a>
+            <a href="/chapters">Kapitel ansehen</a>
+         </nav>
+         {% else %}
+         <article class="surface-container year-empty">
+            <i>favorite</i>
+            <h5>Noch keine gemeinsamen Momente in {{ selected_year }}</h5>
+            <p>
+               Sobald Erinnerungen, Herzmomente, Kapitel oder erfüllte Pläne dazukommen, entsteht euer Jahresrückblick automatisch.
+            </p>
+            <a class="button round" href="/home">Zurück zu Wir</a>
+         </article>
+         {% endif %}
+      </main>
+
+      {% include 'layouts/footer.html' %}
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+   </body>
+</html>

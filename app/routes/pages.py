@@ -636,6 +636,471 @@ def _group_story_entries(entries):
     return groups
 
 
+
+
+def _relationship_date(value):
+    """Normalize relationship feature dates to a plain date."""
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    return None
+
+
+def _chapter_year_date(chapter):
+    return (
+        _relationship_date(chapter.get('startDate'))
+        or _relationship_date(chapter.get('endDate'))
+        or _relationship_date(chapter.get('dateCreated'))
+    )
+
+
+def _plan_year_date(plan, chapter_by_id):
+    chapter_id = plan.get('chapterID')
+    if chapter_id:
+        chapter = chapter_by_id.get(chapter_id)
+        chapter_date = _chapter_year_date(chapter) if chapter else None
+        if chapter_date:
+            return chapter_date
+
+    return (
+        _relationship_date(plan.get('targetStartDate'))
+        or _relationship_date(plan.get('targetEndDate'))
+        or _relationship_date(plan.get('dateModified'))
+        or _relationship_date(plan.get('dateCreated'))
+    )
+
+
+def _enrich_story_entries_with_relationship_context(
+    entries,
+    chapter_link_map=None,
+    place_link_map=None,
+):
+    """Attach chapters and canonical places to existing story entries."""
+    chapter_link_map = chapter_link_map or get_couple_chapter_link_map()
+    place_link_map = place_link_map or get_couple_place_link_map()
+
+    for entry in entries:
+        if entry['type'] == 'heart':
+            entry['chapters'] = chapter_link_map['heart_chapters'].get(
+                entry['id'],
+                [],
+            )
+        else:
+            entry['chapters'] = chapter_link_map['item_chapters'].get(
+                entry['id'],
+                [],
+            )
+
+        collected_places = []
+        seen_place_ids = set()
+
+        for place in place_link_map['source_places'].get(
+            (entry['type'], entry['id']),
+            [],
+        ):
+            if place['id'] not in seen_place_ids:
+                collected_places.append(place)
+                seen_place_ids.add(place['id'])
+
+        # Story content inside a chapter inherits the chapter's place without
+        # duplicating persisted links for every individual item.
+        for chapter in entry['chapters']:
+            for place in place_link_map['source_places'].get(
+                ('chapter', chapter['id']),
+                [],
+            ):
+                if place['id'] not in seen_place_ids:
+                    collected_places.append(place)
+                    seen_place_ids.add(place['id'])
+
+        entry['places'] = collected_places
+
+    return chapter_link_map, place_link_map
+
+
+def _build_couple_year_snapshot(
+    selected_year,
+    sm_edition,
+    user_id,
+    items=None,
+    moments=None,
+    shared_heart_moments=None,
+):
+    """Build the automatic relationship recap without creating new data.
+
+    Dates come from the source feature itself wherever possible. Legacy
+    Bucketlist rows do not have a dedicated completion timestamp, so their
+    existing dateModified value is used as the best available completion date.
+    """
+    can_view_items = has_list_permission('View', 'Home')
+    can_view_moments = has_list_permission('View', 'Moments')
+
+    if items is None:
+        home_list_type = get_list_type_by_title('Home')
+        items = (
+            get_items_by_type(
+                home_list_type.id,
+                'desc',
+                edition=sm_edition,
+            )
+            if can_view_items and home_list_type
+            else []
+        )
+
+    if moments is None:
+        moments_list_type = get_list_type_by_title('Moments')
+        moments = (
+            get_items_by_type(
+                moments_list_type.id,
+                'desc',
+                edition=sm_edition,
+            )
+            if can_view_moments and moments_list_type
+            else []
+        )
+
+    if shared_heart_moments is None:
+        from app.heart_moments import list_heart_moments
+        shared_heart_moments = list_heart_moments(
+            user_id,
+            filter_name='shared',
+        )
+
+    story_entries = _build_story_entries(
+        items,
+        moments,
+        shared_heart_moments,
+        can_view_items,
+        can_view_moments,
+    )
+
+    # 4E intentionally promotes location strings to canonical places. Doing
+    # this here keeps the yearly place count correct even when /places has not
+    # been opened yet.
+    bootstrap_couple_places_from_existing_locations()
+    chapter_link_map = get_couple_chapter_link_map()
+    place_link_map = get_couple_place_link_map()
+    _enrich_story_entries_with_relationship_context(
+        story_entries,
+        chapter_link_map=chapter_link_map,
+        place_link_map=place_link_map,
+    )
+
+    content = {
+        'entries': story_entries,
+        'memories': items,
+        'moments': moments,
+        'heart_moments': shared_heart_moments,
+        'can_view_items': can_view_items,
+        'can_view_moments': can_view_moments,
+    }
+
+    chapters = get_couple_chapters()
+    chapter_by_id = {chapter['id']: chapter for chapter in chapters}
+    chapter_summaries = []
+    for chapter in chapters:
+        summary = _chapter_summary(
+            chapter,
+            chapter_link_map['by_chapter'].get(
+                chapter['id'],
+                {'item_ids': set(), 'heart_ids': set()},
+            ),
+            content,
+        )
+        summary['year_date'] = _chapter_year_date(chapter)
+        chapter_summaries.append(summary)
+
+    plans = get_couple_plans()
+    plan_by_id = {plan['id']: plan for plan in plans}
+    for plan in plans:
+        plan['year_date'] = _plan_year_date(plan, chapter_by_id)
+
+    plan_map = get_couple_bucket_plan_map()
+    bucket_list_type = _get_bucket_list_type()
+    bucket_rows = []
+    if (
+        bucket_list_type
+        and has_list_permission('View', bucket_list_type.title)
+    ):
+        bucket_rows = get_items_by_type(
+            bucket_list_type.id,
+            'desc',
+            edition=sm_edition,
+            checked_last=True,
+        )
+
+    bucket_completed = []
+    for item, creator in bucket_rows:
+        if str(item.content or '').strip() != '1':
+            continue
+
+        linked_plan_meta = plan_map.get(item.id)
+        linked_plan = (
+            plan_by_id.get(linked_plan_meta['id'])
+            if linked_plan_meta else None
+        )
+        completion_date = (
+            linked_plan.get('year_date')
+            if linked_plan
+            and linked_plan.get('status') == 'experienced'
+            else None
+        )
+        completion_date = (
+            completion_date
+            or _relationship_date(item.dateModified)
+            or _relationship_date(item.dateCreated)
+        )
+
+        bucket_completed.append({
+            'id': item.id,
+            'title': item.title or 'Bucketlist-Wunsch',
+            'creator': creator,
+            'plan': linked_plan,
+            'year_date': completion_date,
+        })
+
+    years = {date.today().year, selected_year}
+    years.update(entry['year'] for entry in story_entries)
+    years.update(
+        chapter['year_date'].year
+        for chapter in chapter_summaries
+        if chapter.get('year_date')
+    )
+    years.update(
+        plan['year_date'].year
+        for plan in plans
+        if plan.get('status') == 'experienced'
+        and plan.get('year_date')
+    )
+    years.update(
+        item['year_date'].year
+        for item in bucket_completed
+        if item.get('year_date')
+    )
+    available_years = sorted(years, reverse=True)
+
+    year_story = [
+        entry for entry in story_entries
+        if entry['year'] == selected_year
+    ]
+    year_chapters = [
+        chapter for chapter in chapter_summaries
+        if chapter.get('year_date')
+        and chapter['year_date'].year == selected_year
+    ]
+    year_plans = [
+        plan for plan in plans
+        if plan.get('status') == 'experienced'
+        and plan.get('year_date')
+        and plan['year_date'].year == selected_year
+    ]
+    year_bucket = [
+        item for item in bucket_completed
+        if item.get('year_date')
+        and item['year_date'].year == selected_year
+    ]
+
+    # A Bucketlist wish promoted into a Plan represents the same achievement.
+    # Keep the Bucketlist card in the highlights and avoid a duplicate plan
+    # highlight for that exact relationship.
+    bucket_plan_ids = {
+        item['plan']['id']
+        for item in year_bucket
+        if item.get('plan')
+    }
+
+    highlights = [dict(entry) for entry in year_story]
+
+    for chapter in year_chapters:
+        event_date = chapter['year_date']
+        highlights.append({
+            'type': 'chapter',
+            'type_label': 'Kapitel',
+            'icon': 'auto_stories',
+            'id': chapter['id'],
+            'title': chapter['title'],
+            'text': chapter.get('description') or '',
+            'event_date': datetime.combine(event_date, datetime.min.time()),
+            'date_label': event_date.strftime('%d.%m.%Y'),
+            'image_url': chapter.get('cover_url'),
+            'href': f"/chapters/{chapter['id']}",
+            'places': place_link_map['source_places'].get(
+                ('chapter', chapter['id']),
+                [],
+            ),
+        })
+
+    for plan in year_plans:
+        if plan['id'] in bucket_plan_ids or plan.get('chapterID'):
+            continue
+        event_date = plan['year_date']
+        highlights.append({
+            'type': 'plan',
+            'type_label': 'Plan erlebt',
+            'icon': 'done_all',
+            'id': plan['id'],
+            'title': plan['title'],
+            'text': plan.get('description') or '',
+            'event_date': datetime.combine(event_date, datetime.min.time()),
+            'date_label': event_date.strftime('%d.%m.%Y'),
+            'image_url': None,
+            'href': f"/plans#plan-{plan['id']}",
+            'places': place_link_map['source_places'].get(
+                ('plan', plan['id']),
+                [],
+            ),
+        })
+
+    for item in year_bucket:
+        event_date = item['year_date']
+        linked_plan = item.get('plan')
+        inherited_places = (
+            place_link_map['source_places'].get(
+                ('plan', linked_plan['id']),
+                [],
+            )
+            if linked_plan else []
+        )
+        highlights.append({
+            'type': 'bucket',
+            'type_label': 'Bucketlist erfüllt',
+            'icon': 'checklist',
+            'id': item['id'],
+            'title': item['title'],
+            'text': '',
+            'event_date': datetime.combine(event_date, datetime.min.time()),
+            'date_label': event_date.strftime('%d.%m.%Y'),
+            'image_url': None,
+            'href': f"/bucketlist?status=done#bucket-{item['id']}",
+            'places': inherited_places,
+        })
+
+    priority = {
+        'chapter': 0,
+        'heart': 1,
+        'milestone': 2,
+        'bucket': 3,
+        'plan': 4,
+        'memory': 5,
+    }
+
+    monthly = {}
+    for highlight in highlights:
+        event_dt = _as_datetime(highlight.get('event_date'))
+        if not event_dt:
+            continue
+        monthly.setdefault(event_dt.month, []).append(highlight)
+
+    month_groups = []
+    for month in sorted(monthly):
+        candidates = monthly[month]
+        candidates.sort(
+            key=lambda entry: (
+                priority.get(entry.get('type'), 99),
+                -_as_datetime(entry['event_date']).timestamp(),
+            )
+        )
+        selected = candidates[:4]
+        selected.sort(key=lambda entry: _as_datetime(entry['event_date']))
+        month_groups.append({
+            'month': month,
+            'label': _STORY_MONTH_NAMES[month],
+            'entries': selected,
+            'total': len(candidates),
+        })
+
+    # Collect unique places touched by any relationship content in the year.
+    place_usage = {}
+    seen_place_sources = set()
+
+    def add_places(places, source_key):
+        for place in places or []:
+            key = (place['id'], source_key)
+            if key in seen_place_sources:
+                continue
+            seen_place_sources.add(key)
+            bucket = place_usage.setdefault(place['id'], {
+                'id': place['id'],
+                'name': place['name'],
+                'count': 0,
+            })
+            bucket['count'] += 1
+
+    for entry in year_story:
+        add_places(
+            entry.get('places'),
+            f"story:{entry['type']}:{entry['id']}",
+        )
+    for chapter in year_chapters:
+        add_places(
+            place_link_map['source_places'].get(
+                ('chapter', chapter['id']),
+                [],
+            ),
+            f"chapter:{chapter['id']}",
+        )
+    for plan in year_plans:
+        add_places(
+            place_link_map['source_places'].get(
+                ('plan', plan['id']),
+                [],
+            ),
+            f"plan:{plan['id']}",
+        )
+
+    year_places = sorted(
+        place_usage.values(),
+        key=lambda place: (-place['count'], place['name'].casefold()),
+    )
+
+    # A few real photos make the recap feel like a relationship page rather
+    # than a dashboard. Reuse existing private media URLs; no copies are made.
+    cover_images = []
+    seen_images = set()
+    for entry in sorted(
+        year_story,
+        key=lambda entry: entry['event_date'],
+        reverse=True,
+    ):
+        image_url = entry.get('image_url')
+        if image_url and image_url not in seen_images:
+            cover_images.append(image_url)
+            seen_images.add(image_url)
+        if len(cover_images) >= 3:
+            break
+
+    stats = {
+        'memories': sum(1 for entry in year_story if entry['type'] == 'memory'),
+        'hearts': sum(1 for entry in year_story if entry['type'] == 'heart'),
+        'milestones': sum(1 for entry in year_story if entry['type'] == 'milestone'),
+        'chapters': len(year_chapters),
+        'places': len(year_places),
+        'bucket': len(year_bucket),
+        'plans': len(year_plans),
+    }
+
+    return {
+        'year': selected_year,
+        'available_years': available_years,
+        'story_entries': year_story,
+        'chapters': year_chapters,
+        'plans': year_plans,
+        'plans_for_achievements': [
+            plan for plan in year_plans
+            if plan['id'] not in bucket_plan_ids
+        ],
+        'bucket_completed': year_bucket,
+        'month_groups': month_groups,
+        'places': year_places,
+        'cover_images': cover_images,
+        'stats': stats,
+        'has_content': bool(
+            year_story or year_chapters or year_plans or year_bucket
+        ),
+    }
+
+
 def _parse_optional_form_date(value):
     value = str(value or '').strip()
     if not value:
@@ -1193,6 +1658,7 @@ def home():
         couple_home_upcoming = []
         couple_home_recent = []
         couple_home_plans = []
+        couple_home_year = None
 
         if sm_edition == 'couples':
             from app.heart_moments import (
@@ -1247,6 +1713,15 @@ def home():
                 get_couple_plans()
             )
 
+            couple_home_year = _build_couple_year_snapshot(
+                date.today().year,
+                sm_edition,
+                g.user_id,
+                items=items,
+                moments=moments,
+                shared_heart_moments=shared_heart_moments,
+            )
+
         return render_template(
             'pages/home.html',
             items=items,
@@ -1270,6 +1745,7 @@ def home():
             couple_home_upcoming=couple_home_upcoming,
             couple_home_recent=couple_home_recent,
             couple_home_plans=couple_home_plans,
+            couple_home_year=couple_home_year,
             page_title='Wir' if sm_edition == 'couples' else None,
             memories_page=False,
             milestones_page=False,
@@ -2541,6 +3017,49 @@ def delete_chapter_page(chapter_id):
         ))
 
     return redirect(url_for('pages.chapters'))
+
+
+@pages_bp.route('/year')
+@pages_bp.route('/year/<int:selected_year>')
+@jwt_required
+def couple_year(selected_year=None):
+    """Automatic yearly relationship recap for the Couples edition."""
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        if selected_year is None:
+            selected_year = date.today().year
+
+        # Avoid nonsensical URLs while still allowing old relationship years.
+        if selected_year < 1900 or selected_year > date.today().year + 2:
+            return redirect(url_for(
+                'pages.couple_year',
+                selected_year=date.today().year,
+            ))
+
+        snapshot = _build_couple_year_snapshot(
+            selected_year,
+            sm_edition,
+            g.user_id,
+        )
+
+        return render_template(
+            'pages/year.html',
+            title=get_display_title(),
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            sm_edition=sm_edition,
+            page_title=f'Unser {selected_year}',
+            year_snapshot=snapshot,
+            selected_year=selected_year,
+            available_years=snapshot['available_years'],
+        )
+    except Exception as e:
+        log('error', f'Error while rendering couple year recap: {e}')
+        return "An error occurred while rendering the yearly recap.", 500
 
 
 @pages_bp.route('/story')

@@ -179,6 +179,53 @@
 .couple-clickable {
    cursor: pointer;
 }
+.couple-year-card {
+   color: inherit;
+   text-decoration: none;
+   display: block;
+}
+.couple-year-card-inner {
+   display: flex;
+   align-items: center;
+   gap: 1rem;
+}
+.couple-year-badge {
+   width: 58px;
+   height: 58px;
+   flex: 0 0 58px;
+   border-radius: 1rem;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   background: var(--primary-container);
+   color: var(--on-primary-container);
+   font-size: 1.85rem;
+}
+.couple-year-main {
+   flex: 1;
+   min-width: 0;
+}
+.couple-year-title {
+   font-weight: 650;
+   font-size: 1.08rem;
+}
+.couple-year-stats {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.35rem 0.65rem;
+   margin-top: 0.25rem;
+   font-size: 0.84rem;
+   opacity: 0.75;
+}
+.couple-year-stats > span {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.2rem;
+}
+.couple-year-stats i {
+   position: static !important;
+   font-size: 1rem;
+}
 @media (max-width: 600px) {
    .couple-avatars {
       gap: 0.7rem;
@@ -237,6 +284,31 @@
    <div class="couple-section" id="div-render-heart-moment-memory">
       {% include 'layouts/heart-moment-memory-card.html' %}
    </div>
+   {% endif %}
+
+   {% if couple_home_year %}
+   <section class="couple-section">
+      <a class="couple-year-card"
+         href="/year/{{ couple_home_year.year }}">
+         <article class="surface-container">
+            <div class="padding couple-year-card-inner">
+               <i class="couple-year-badge">favorite</i>
+               <div class="couple-year-main">
+                  <div class="couple-year-title">
+                     Unser {{ couple_home_year.year }}
+                  </div>
+                  <div class="couple-year-stats">
+                     <span><i>photo_library</i>{{ couple_home_year.stats.memories }} Erinnerungen</span>
+                     <span><i>favorite</i>{{ couple_home_year.stats.hearts }} Herzmomente</span>
+                     <span><i>location_on</i>{{ couple_home_year.stats.places }} Orte</span>
+                     <span><i>checklist</i>{{ couple_home_year.stats.bucket }} Wünsche erfüllt</span>
+                  </div>
+               </div>
+               <i>chevron_right</i>
+            </div>
+         </article>
+      </a>
+   </section>
    {% endif %}
 
    <section class="couple-section">
