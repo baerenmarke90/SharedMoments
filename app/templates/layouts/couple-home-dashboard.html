@@ -216,7 +216,7 @@
                   class="couple-recent-row couple-clickable"
                   style="color:inherit;text-decoration:none;">
                {% else %}
-               <div class="couple-recent-row{% if entry.type == 'milestone' %} couple-clickable{% endif %}"
+               <div class="couple-recent-row{% if entry.type in ('milestone', 'memory') %} couple-clickable{% endif %}"
                     {% if entry.type == 'milestone' %}
                     data-id="{{ entry.timeline_id }}"
                     data-title="{{ entry.title }}"
@@ -224,6 +224,13 @@
                     data-date-ymd="{{ entry.timeline_date_ymd }}"
                     data-content="{{ entry.text }}"
                     onclick="showTimelineItemDetails(this)"
+                    {% elif entry.type == 'memory' %}
+                    data-title="{{ entry.title }}"
+                    data-date="{{ entry.date_label }}"
+                    data-author="{{ entry.author_name }}"
+                    data-content="{{ entry.text }}"
+                    data-image="{{ entry.image_url or '' }}"
+                    onclick="showCoupleMemoryDetails(this)"
                     {% endif %}>
                {% endif %}
 

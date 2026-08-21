@@ -359,6 +359,30 @@
 
       {% if sm_edition == 'couples' %}
       <div class="overlay"
+           id="div-overlay-couple-memory-detail"
+           onclick="callUi('#dialog-couple-memory-detail')"></div>
+
+      <dialog class="modal" id="dialog-couple-memory-detail">
+         <nav>
+            <h5 id="couple-memory-detail-title" class="max"></h5>
+            <button class="circle transparent"
+                    onclick="callUi('#dialog-couple-memory-detail')">
+               <i>close</i>
+            </button>
+         </nav>
+
+         <img id="couple-memory-detail-image"
+              class="responsive round"
+              alt=""
+              style="display:none;max-height:65vh;object-fit:contain;margin:0 auto 1rem;">
+
+         <p id="couple-memory-detail-text"
+            style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;"></p>
+
+         <p id="couple-memory-detail-meta" class="small"></p>
+      </dialog>
+
+      <div class="overlay"
            id="div-overlay-couple-create"
            onclick="callUi('#dialog-couple-create')"></div>
 
@@ -368,7 +392,7 @@
                     onclick="callUi('#dialog-couple-create')">
                <i>close</i>
             </button>
-            <h5 class="max">Was möchtest du festhalten?</h5>
+            <h6 class="max" style="margin:0;line-height:1.3;white-space:normal;">Was möchtest du festhalten?</h6>
          </nav>
 
          <div class="space"></div>

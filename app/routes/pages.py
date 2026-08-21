@@ -277,7 +277,7 @@ def _build_couple_home_recent(
     recent = []
 
     if can_view_items:
-        for item, user in items[:8]:
+        for item, user in items:
             event_dt = _as_datetime(item.dateCreated)
             if not event_dt:
                 continue
@@ -305,12 +305,14 @@ def _build_couple_home_recent(
             ):
                 url = f'/gallery/{item.id}'
 
+            activity_dt = _as_datetime(item.dateModified) or event_dt
+
             recent.append({
                 'type': 'memory',
-                'icon': 'photo',
+                'icon': 'notes' if item.contentType == 'text' else 'photo',
                 'title': item.title or 'Erinnerung',
                 'text': item.content or '',
-                'sort_date': event_dt,
+                'sort_date': activity_dt,
                 'date_label': event_dt.strftime('%d.%m.%Y'),
                 'author_name': user.firstName if user else '',
                 'author_picture': user.profilePicture if user else None,
@@ -319,17 +321,19 @@ def _build_couple_home_recent(
             })
 
     if can_view_moments:
-        for item, user in moments[-8:]:
+        for item, user in moments:
             event_dt = _as_datetime(item.dateCreated)
             if not event_dt:
                 continue
+
+            activity_dt = _as_datetime(item.dateModified) or event_dt
 
             recent.append({
                 'type': 'milestone',
                 'icon': 'star',
                 'title': item.title or 'Meilenstein',
                 'text': item.content or '',
-                'sort_date': event_dt,
+                'sort_date': activity_dt,
                 'date_label': event_dt.strftime('%d.%m.%Y'),
                 'author_name': user.firstName if user else '',
                 'author_picture': user.profilePicture if user else None,
@@ -339,7 +343,7 @@ def _build_couple_home_recent(
                 'timeline_date_ymd': event_dt.strftime('%Y-%m-%d'),
             })
 
-    for heart_moment in shared_heart_moments[:8]:
+    for heart_moment in shared_heart_moments:
         try:
             event_dt = datetime.fromisoformat(heart_moment['momentDate'])
         except (TypeError, ValueError, KeyError):
@@ -348,12 +352,23 @@ def _build_couple_home_recent(
         author = heart_moment.get('author') or {}
         media_filename = heart_moment.get('mediaFilename')
 
+        activity_dt = event_dt
+        for activity_field in ('dateModified', 'dateCreated'):
+            activity_value = heart_moment.get(activity_field)
+            if not activity_value:
+                continue
+            try:
+                activity_dt = datetime.fromisoformat(activity_value)
+                break
+            except (TypeError, ValueError):
+                continue
+
         recent.append({
             'type': 'heart',
             'icon': 'favorite',
             'title': 'Herzmoment',
             'text': heart_moment.get('description') or '',
-            'sort_date': event_dt,
+            'sort_date': activity_dt,
             'date_label': event_dt.strftime('%d.%m.%Y'),
             'author_name': author.get('firstName', ''),
             'author_picture': author.get('profilePicture'),
