@@ -9,6 +9,19 @@ from .db_queries import get_supported_languages
 app = Flask(__name__)
 app.config.from_object('config.Config')
 
+# HEART MOMENTS SCHEMA INITIALIZATION
+# Must run independently from init_db(), because existing installations
+# skip the initial database seeding routine.
+from app.heart_moments_schema import ensure_heart_moments_schema
+from app.logger import log
+
+try:
+    ensure_heart_moments_schema()
+    log('info', 'Heart Moments schema ready')
+except Exception as exc:
+    log('error', f'Heart Moments schema initialization failed: {exc}')
+    raise
+
 base_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Konfiguration der Sprache
