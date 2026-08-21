@@ -32,16 +32,37 @@
          }
 
          .plans-filters a {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
             flex: 0 0 auto;
             min-height: 36px;
-            padding-left: 0.7rem;
-            padding-right: 0.7rem;
-            gap: 0.28rem;
+            padding: 0 0.72rem !important;
+            gap: 0.42rem !important;
+            line-height: 1;
             text-decoration: none;
          }
 
          .plans-filters a > i {
-            font-size: 1.15rem;
+            position: static !important;
+            inset: auto !important;
+            transform: none !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 1.15rem;
+            width: 1.15rem;
+            height: 1.15rem;
+            margin: 0 !important;
+            font-size: 1.05rem;
+            line-height: 1;
+         }
+
+         .plans-filters a > span {
+            display: inline-block;
+            margin: 0;
+            line-height: 1.1;
+            white-space: nowrap;
          }
 
          .plan-card {
@@ -63,18 +84,34 @@
          }
 
          .plan-status {
-            display: inline-flex;
+            display: inline-flex !important;
             align-items: center;
-            gap: 0.28rem;
+            gap: 0.38rem !important;
             min-height: 32px;
             margin: 0;
-            padding-left: 0.6rem;
-            padding-right: 0.65rem;
+            padding: 0 0.62rem !important;
+            line-height: 1;
             background: var(--surface-container-high);
          }
 
          .plan-status > i {
-            font-size: 1.05rem;
+            position: static !important;
+            inset: auto !important;
+            transform: none !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 1.05rem;
+            width: 1.05rem;
+            height: 1.05rem;
+            margin: 0 !important;
+            font-size: 1rem;
+            line-height: 1;
+         }
+
+         .plan-status > span {
+            line-height: 1.1;
+            white-space: nowrap;
          }
 
          .plan-title {
@@ -256,13 +293,13 @@
             <a class="chip round{% if selected_status == 'all' %} fill{% endif %}"
                href="{{ url_for('pages.plans', status='all') }}">
                <i>apps</i>
-               Alle
+               <span>Alle</span>
             </a>
             {% for status_key, status_meta in plan_statuses.items() %}
             <a class="chip round{% if selected_status == status_key %} fill{% endif %}"
                href="{{ url_for('pages.plans', status=status_key) }}">
                <i>{{ status_meta.icon }}</i>
-               {{ status_meta.label }}
+               <span>{{ status_meta.label }}</span>
             </a>
             {% endfor %}
          </nav>
@@ -274,7 +311,7 @@
                   <div class="plan-card-top">
                      <span class="chip small round plan-status">
                         <i>{{ plan.status_icon }}</i>
-                        {{ plan.status_label }}
+                        <span>{{ plan.status_label }}</span>
                      </span>
 
                      {% if plan.creator %}
