@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Unsere Orte · {{ title.value }}</title>
+      {% include 'layouts/head.html' %}
+      <link rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            crossorigin="">
+      <style>
+         .places-page {
+            max-width: 920px;
+            margin: 0 auto;
+            padding-bottom: 6rem;
+         }
+
+         .places-intro {
+            margin: 0.55rem 0.2rem 1rem;
+            max-width: 760px;
+            line-height: 1.45;
+            opacity: 0.75;
+         }
+
+         .places-map-card {
+            overflow: hidden;
+            margin-bottom: 1rem;
+            border-radius: 1rem;
+         }
+
+         #couple-places-map {
+            width: 100%;
+            height: 360px;
+            background: var(--surface-container-high);
+         }
+
+         .places-map-caption {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.85rem;
+            opacity: 0.75;
+         }
+
+         .places-toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 0.65rem;
+            margin: 0.8rem 0 0.7rem;
+         }
+
+         .places-toolbar .field {
+            margin: 0;
+         }
+
+         .places-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+         }
+
+         .place-card {
+            overflow: hidden;
+            border-radius: 1rem;
+            min-width: 0;
+         }
+
+         .place-card-link {
+            display: grid;
+            grid-template-columns: 112px minmax(0, 1fr);
+            min-height: 132px;
+            color: inherit;
+            text-decoration: none;
+         }
+
+         .place-card-cover,
+         .place-card-placeholder {
+            width: 112px;
+            min-height: 132px;
+            height: 100%;
+         }
+
+         .place-card-cover {
+            object-fit: cover;
+            display: block;
+         }
+
+         .place-card-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-container);
+            color: var(--on-primary-container);
+         }
+
+         .place-card-placeholder > i {
+            position: static !important;
+            font-size: 2.3rem;
+         }
+
+         .place-card-body {
+            min-width: 0;
+            padding: 0.8rem 0.85rem;
+         }
+
+         .place-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+         }
+
+         .place-card-title {
+            margin: 0;
+            font-size: 1.1rem;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+         }
+
+         .place-card-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            flex: 0 0 auto;
+            font-size: 0.75rem;
+            opacity: 0.72;
+         }
+
+         .place-card-state > i {
+            position: static !important;
+            font-size: 1rem;
+         }
+
+         .place-card-address {
+            margin-top: 0.3rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.83rem;
+            line-height: 1.35;
+            opacity: 0.68;
+         }
+
+         .place-card-description {
+            margin: 0.4rem 0 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.88rem;
+            line-height: 1.4;
+         }
+
+         .place-card-counts {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            margin-top: 0.55rem;
+         }
+
+         .place-card-counts .chip {
+            min-height: 28px;
+            font-size: 0.75rem;
+         }
+
+         .place-card-counts .chip > i {
+            position: static !important;
+            font-size: 0.95rem;
+         }
+
+         .places-empty {
+            text-align: center;
+            padding: 2.6rem 1rem;
+            border-radius: 1rem;
+         }
+
+         .places-empty > i {
+            position: static !important;
+            font-size: 3rem;
+            opacity: 0.65;
+         }
+
+         .place-error {
+            margin-bottom: 1rem;
+         }
+
+         .place-editor-map {
+            width: 100%;
+            height: 260px;
+            margin-top: 0.65rem;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            background: var(--surface-container-high);
+         }
+
+         .place-editor-tools {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.4rem;
+            flex-wrap: wrap;
+         }
+
+         .place-editor-tools .field {
+            flex: 1 1 260px;
+            margin: 0;
+         }
+
+         .place-search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-top: 0.35rem;
+         }
+
+         .place-search-result {
+            display: grid;
+            grid-template-columns: 28px minmax(0, 1fr);
+            align-items: center;
+            gap: 0.45rem;
+            width: 100%;
+            min-height: 44px;
+            padding: 0.45rem 0.6rem;
+            border: 0;
+            border-radius: 0.7rem;
+            background: var(--surface-container-high);
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+         }
+
+         .place-search-result > i {
+            position: static !important;
+         }
+
+         .place-search-message {
+            padding: 0.4rem 0.2rem;
+            opacity: 0.72;
+         }
+
+         .place-coordinate-line {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.45rem;
+            font-size: 0.82rem;
+            opacity: 0.7;
+         }
+
+         .place-coordinate-line > i {
+            position: static !important;
+            font-size: 1rem;
+         }
+
+         .place-map-fallback {
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            text-align: center;
+            opacity: 0.7;
+         }
+
+         .leaflet-container {
+            font: inherit;
+         }
+
+         @media (max-width: 720px) {
+            .places-page {
+               padding-left: 0.15rem;
+               padding-right: 0.15rem;
+            }
+
+            #couple-places-map {
+               height: 285px;
+            }
+
+            .places-list {
+               grid-template-columns: 1fr;
+            }
+
+            .places-toolbar {
+               grid-template-columns: 1fr;
+            }
+
+            .places-toolbar > button {
+               display: none;
+            }
+         }
+
+         @media (max-width: 420px) {
+            .place-card-link {
+               grid-template-columns: 92px minmax(0, 1fr);
+               min-height: 122px;
+            }
+
+            .place-card-cover,
+            .place-card-placeholder {
+               width: 92px;
+               min-height: 122px;
+            }
+
+            .place-card-body {
+               padding: 0.7rem 0.75rem;
+            }
+         }
+      </style>
+   </head>
+
+   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive places-page">
+         <p class="places-intro">
+            Eure gemeinsamen Orte verbinden Pläne, Kapitel und besondere Momente auf einer Karte. Orte aus bestehenden Plänen und Kapiteln werden automatisch übernommen.
+         </p>
+
+         {% if place_error %}
+         <article class="error-container place-error">
+            <div class="padding">{{ place_error }}</div>
+         </article>
+         {% endif %}
+
+         <article class="surface-container places-map-card">
+            <div id="couple-places-map"></div>
+            <div class="places-map-caption">
+               <span>
+                  {% if map_places %}
+                  {{ map_places|length }} {% if map_places|length == 1 %}Ort{% else %}Orte{% endif %} auf der Karte
+                  {% else %}
+                  Noch kein Ort hat eine Kartenposition.
+                  {% endif %}
+               </span>
+               <a href="#places-list">Zur Ortsliste</a>
+            </div>
+         </article>
+
+         <div class="places-toolbar" id="places-list">
+            <div class="field border round prefix">
+               <i>search</i>
+               <input type="search"
+                      placeholder="Orte durchsuchen"
+                      oninput="filterPlaceCards(this.value)">
+            </div>
+            <button class="round" type="button" onclick="openPlaceCreateDialog()">
+               <i>add_location_alt</i>
+               Ort hinzufügen
+            </button>
+         </div>
+
+         {% if places %}
+         <section class="places-list">
+            {% for place in places %}
+            <article class="surface-container place-card"
+                     data-place-card
+                     data-search="{{ (place.name ~ ' ' ~ place.description ~ ' ' ~ place.addressLabel)|lower }}">
+               <a class="place-card-link"
+                  href="{{ url_for('pages.place', place_id=place.id) }}">
+                  {% if place.cover_url %}
+                  <img class="place-card-cover"
+                       src="{{ place.cover_url }}"
+                       alt=""
+                       loading="lazy">
+                  {% else %}
+                  <div class="place-card-placeholder">
+                     <i>{% if place.map_ready %}location_on{% else %}location_off{% endif %}</i>
+                  </div>
+                  {% endif %}
+
+                  <div class="place-card-body">
+                     <div class="place-card-top">
+                        <h6 class="place-card-title">{{ place.name }}</h6>
+                        <span class="place-card-state">
+                           <i>{% if place.map_ready %}map{% else %}location_off{% endif %}</i>
+                           {% if not place.map_ready %}<span>Position fehlt</span>{% endif %}
+                        </span>
+                     </div>
+
+                     {% if place.addressLabel %}
+                     <div class="place-card-address">{{ place.addressLabel }}</div>
+                     {% endif %}
+
+                     {% if place.description %}
+                     <p class="place-card-description">{{ place.description }}</p>
+                     {% endif %}
+
+                     <div class="place-card-counts">
+                        {% if place.chapter_count %}
+                        <span class="chip small round"><i>auto_stories</i>{{ place.chapter_count }}</span>
+                        {% endif %}
+                        {% if place.plan_count %}
+                        <span class="chip small round"><i>explore</i>{{ place.plan_count }}</span>
+                        {% endif %}
+                        {% if place.memory_count %}
+                        <span class="chip small round"><i>photo_library</i>{{ place.memory_count }}</span>
+                        {% endif %}
+                        {% if place.heart_count %}
+                        <span class="chip small round"><i>favorite</i>{{ place.heart_count }}</span>
+                        {% endif %}
+                        {% if place.milestone_count %}
+                        <span class="chip small round"><i>star</i>{{ place.milestone_count }}</span>
+                        {% endif %}
+                        {% if not place.entry_count %}
+                        <span class="chip small round">Noch ohne Inhalte</span>
+                        {% endif %}
+                     </div>
+                  </div>
+               </a>
+            </article>
+            {% endfor %}
+         </section>
+         {% else %}
+         <article class="surface-container places-empty">
+            <i>map</i>
+            <h5>Noch keine gemeinsamen Orte</h5>
+            <p>Legt einen Ort an oder ergänzt bei einem Plan oder Kapitel ein Ortsfeld.</p>
+            <button class="round" type="button" onclick="openPlaceCreateDialog()">
+               <i>add_location_alt</i>
+               Ersten Ort hinzufügen
+            </button>
+         </article>
+         {% endif %}
+
+         {% include 'layouts/footer.html' %}
+      </main>
+
+      <div class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index:90;">
+         <button class="square round extra"
+                 aria-label="Ort hinzufügen"
+                 onclick="openPlaceCreateDialog()"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
+
+      <div class="overlay"
+           id="div-overlay-create-place"
+           onclick="callUi('#dialog-create-place')"></div>
+      <dialog class="max" id="dialog-create-place">
+         <form method="post" action="{{ url_for('pages.create_place_page') }}">
+            <nav>
+               <button type="button"
+                       class="circle transparent"
+                       onclick="callUi('#dialog-create-place')">
+                  <i>close</i>
+               </button>
+               <h5 class="max">Gemeinsamen Ort hinzufügen</h5>
+               <button type="submit" class="transparent link">Speichern</button>
+            </nav>
+
+            <div class="field label border">
+               <input type="text" name="name" maxlength="255" required>
+               <label>Name des Ortes</label>
+            </div>
+
+            <div class="field label border extra">
+               <textarea name="description"></textarea>
+               <label>Was verbindet euch mit diesem Ort? (optional)</label>
+            </div>
+
+            <h6>Kartenposition</h6>
+            <div class="place-editor-tools">
+               <div class="field border round prefix">
+                  <i>search</i>
+                  <input id="create-place-search"
+                         type="search"
+                         placeholder="Ort, Adresse oder Sehenswürdigkeit"
+                         onkeydown="if(event.key === 'Enter'){event.preventDefault();searchPlaceLocation('create');}">
+               </div>
+               <button type="button" class="round" onclick="searchPlaceLocation('create')">
+                  Suchen
+               </button>
+               <button type="button" class="round border" onclick="useCurrentPlaceLocation('create')">
+                  <i>my_location</i>
+                  Hier
+               </button>
+            </div>
+            <div id="create-place-results" class="place-search-results"></div>
+            <div id="create-place-map" class="place-editor-map"></div>
+            <div class="place-coordinate-line">
+               <i>pin_drop</i>
+               <span id="create-place-coordinates">Noch keine Kartenposition gesetzt</span>
+            </div>
+
+            <input type="hidden" id="create-place-latitude" name="latitude">
+            <input type="hidden" id="create-place-longitude" name="longitude">
+            <input type="hidden" id="create-place-address" name="address_label">
+
+            <p class="small" style="opacity:.68;">
+               Du kannst auch direkt auf die Karte tippen. Eine Position ist optional – ein Ort kann zunächst nur als Name gespeichert werden.
+            </p>
+         </form>
+      </dialog>
+
+      <script>
+         window.sharedMomentsPlaces = {
+            tileUrl: {{ map_config.tile_url|tojson }},
+            attribution: {{ map_config.attribution|tojson }},
+            defaultLat: {{ map_config.default_lat|tojson }},
+            defaultLon: {{ map_config.default_lon|tojson }},
+            defaultZoom: {{ map_config.default_zoom|tojson }},
+            overviewPlaces: {{ map_places|tojson }},
+            detailPlace: null,
+            geocodeUrl: {{ url_for('pages.geocode_place')|tojson }},
+            autoOpenCreate: {{ open_create|tojson }}
+         };
+      </script>
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+      <script src="{{ static_versioned('js/places.js') }}"></script>
+   </body>
+</html>

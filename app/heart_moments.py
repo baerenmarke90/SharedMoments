@@ -4,7 +4,8 @@ import hashlib
 from sqlalchemy import or_
 
 from .models import (
-    HeartMoment, User, SessionLocal, CoupleChapterHeartMoment
+    HeartMoment, User, SessionLocal, CoupleChapterHeartMoment,
+    CouplePlaceLink
 )
 from .heart_moment_media import delete_heart_moment_image
 
@@ -491,6 +492,10 @@ def delete_heart_moment(
         session.query(CoupleChapterHeartMoment).filter(
             CoupleChapterHeartMoment.heartMomentID == moment_id
         ).delete()
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.sourceType == 'heart',
+            CouplePlaceLink.sourceID == moment_id,
+        ).delete(synchronize_session=False)
 
         session.delete(moment)
         session.commit()

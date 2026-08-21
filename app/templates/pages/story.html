@@ -192,6 +192,29 @@
             font-size: 0.95rem;
          }
 
+         .story-place-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.45rem;
+         }
+
+         .story-place-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.18rem 0.5rem;
+            border-radius: 999px;
+            background: var(--tertiary-container);
+            color: var(--on-tertiary-container);
+            font-size: 0.78rem;
+         }
+
+         .story-place-tag > i {
+            position: static !important;
+            font-size: 0.95rem;
+         }
+
          .story-card-text {
             margin: 0.55rem 0 0;
             white-space: pre-wrap;
@@ -280,7 +303,11 @@
             Erinnerungen, Herzmomente und Meilensteine – chronologisch als eure gemeinsame Geschichte. Kapitel verbinden zusammengehörige Erlebnisse miteinander.
          </p>
 
-         <nav class="right-align" style="margin:-0.45rem 0 1rem;">
+         <nav class="right-align" style="margin:-0.45rem 0 1rem;gap:.7rem;flex-wrap:wrap;">
+            <a href="{{ url_for('pages.places') }}">
+               <i>map</i>
+               Orte &amp; Karte
+            </a>
             <a href="{{ url_for('pages.chapters') }}">
                <i>auto_stories</i>
                Kapitel ansehen
@@ -405,6 +432,17 @@
                               <span class="story-chapter-tag">
                                  <i>auto_stories</i>
                                  {{ chapter.title }}
+                              </span>
+                              {% endfor %}
+                           </div>
+                           {% endif %}
+
+                           {% if entry.places %}
+                           <div class="story-place-tags">
+                              {% for place in entry.places %}
+                              <span class="story-place-tag">
+                                 <i>location_on</i>
+                                 {{ place.name }}
                               </span>
                               {% endfor %}
                            </div>

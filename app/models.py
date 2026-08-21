@@ -403,6 +403,52 @@ class CoupleBucketPlanLink(Base):
     dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
 
 
+class CouplePlace(Base):
+    __tablename__ = 'couplePlaces'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    normalizedName = Column(String(255), nullable=False, index=True)
+    description = Column(Text, default='')
+    addressLabel = Column(Text, default='')
+    latitude = Column(Float, nullable=True, index=True)
+    longitude = Column(Float, nullable=True, index=True)
+    createdByUser = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    creator = relationship('User', foreign_keys=[createdByUser])
+
+
+class CouplePlaceLink(Base):
+    __tablename__ = 'couplePlaceLinks'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    placeID = Column(
+        Integer,
+        ForeignKey('couplePlaces.id'),
+        nullable=False,
+        index=True,
+    )
+    sourceType = Column(String(24), nullable=False, index=True)
+    sourceID = Column(Integer, nullable=False, index=True)
+    relationKind = Column(String(20), nullable=False, default='manual', index=True)
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+
+    __table_args__ = (
+        UniqueConstraint(
+            'placeID',
+            'sourceType',
+            'sourceID',
+            name='uq_couple_place_source',
+        ),
+    )
+
+
 class ListType(Base):
     __tablename__ = 'listTypes'
     id = Column(Integer, primary_key=True, autoincrement=True)

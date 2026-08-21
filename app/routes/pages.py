@@ -1,6 +1,6 @@
 import json
 from datetime import date, datetime
-from flask import Blueprint, g, make_response, render_template, send_file, request, redirect, url_for, session
+from flask import Blueprint, g, jsonify, make_response, render_template, send_file, request, redirect, url_for, session
 from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_relationship_statuses_with_names, get_items_by_type,
     get_supported_languages, get_translation_for_entity, get_translation_progress,
@@ -16,9 +16,15 @@ from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_couple_plans, get_couple_plan, create_couple_plan,
     update_couple_plan, delete_couple_plan, set_couple_plan_chapter,
     get_couple_bucket_plan_map, link_couple_bucket_plan,
-    sync_bucket_item_to_plan)
+    sync_bucket_item_to_plan, get_couple_places, get_couple_place,
+    create_couple_place, update_couple_place, delete_couple_place,
+    sync_couple_source_location, bootstrap_couple_places_from_existing_locations,
+    get_couple_place_link_map, replace_couple_place_manual_links,
+    copy_couple_place_links)
 from app.logger import log
 import os
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 from app.utils import generate_banner_text
 from app.translation import _, set_locale
 from app.routes.auth import jwt_required, login_jwt
@@ -593,12 +599,17 @@ def _filter_story_entries(entries, entry_type, selected_year, search_query):
                 chapter.get('title') or ''
                 for chapter in entry.get('chapters', [])
             )
+            place_names = ' '.join(
+                place.get('name') or ''
+                for place in entry.get('places', [])
+            )
             haystack = ' '.join((
                 entry.get('type_label') or '',
                 entry.get('title') or '',
                 entry.get('text') or '',
                 entry.get('author_name') or '',
                 chapter_titles,
+                place_names,
             )).casefold()
             return needle in haystack
 
@@ -908,6 +919,248 @@ def _plan_form_values():
     }
 
 
+
+def _parse_optional_float(value):
+    value = str(value or '').strip()
+    if not value:
+        return None
+    return float(value.replace(',', '.'))
+
+
+def _place_form_values():
+    name = str(request.form.get('name', '')).strip()
+    description = str(request.form.get('description', '')).strip()
+    address_label = str(request.form.get('address_label', '')).strip()
+
+    if not name:
+        raise ValueError('Bitte gib dem Ort einen Namen.')
+    if len(name) > 255:
+        raise ValueError('Der Ortsname darf höchstens 255 Zeichen lang sein.')
+
+    try:
+        latitude = _parse_optional_float(request.form.get('latitude'))
+        longitude = _parse_optional_float(request.form.get('longitude'))
+    except ValueError as exc:
+        raise ValueError('Die Kartenposition ist ungültig.') from exc
+
+    if (latitude is None) != (longitude is None):
+        raise ValueError('Bitte wähle eine vollständige Kartenposition.')
+    if latitude is not None and not (-90 <= latitude <= 90):
+        raise ValueError('Der Breitengrad ist ungültig.')
+    if longitude is not None and not (-180 <= longitude <= 180):
+        raise ValueError('Der Längengrad ist ungültig.')
+
+    return {
+        'name': name,
+        'description': description,
+        'address_label': address_label,
+        'latitude': latitude,
+        'longitude': longitude,
+    }
+
+
+def _place_map_config():
+    return {
+        'tile_url': os.environ.get(
+            'MAP_TILE_URL',
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        ),
+        'attribution': os.environ.get(
+            'MAP_TILE_ATTRIBUTION',
+            '&copy; OpenStreetMap-Mitwirkende',
+        ),
+        'default_lat': float(os.environ.get('MAP_DEFAULT_LAT', '51.1657')),
+        'default_lon': float(os.environ.get('MAP_DEFAULT_LON', '10.4515')),
+        'default_zoom': int(os.environ.get('MAP_DEFAULT_ZOOM', '6')),
+    }
+
+
+def _couple_place_candidates(sm_edition, user_id):
+    """Return everything that can be connected to a shared place."""
+    content = _couple_content_for_chapters(sm_edition, user_id)
+    candidates = []
+
+    for entry in content['entries']:
+        candidate = dict(entry)
+        candidate.update({
+            'source_type': entry['type'],
+            'source_id': entry['id'],
+            'sort_date': (
+                entry['event_date'].date()
+                if isinstance(entry.get('event_date'), datetime)
+                else entry.get('event_date')
+            ),
+        })
+        candidates.append(candidate)
+
+    for raw_plan in get_couple_plans():
+        plan = _present_couple_plan(raw_plan, user_id)
+        creator = plan.get('creator') or {}
+        created = plan.get('dateCreated')
+        candidates.append({
+            'source_type': 'plan',
+            'source_id': plan['id'],
+            'type': 'plan',
+            'type_label': 'Plan',
+            'icon': plan['status_icon'],
+            'id': plan['id'],
+            'title': plan['title'],
+            'text': plan['description'],
+            'date_label': plan['date_label'],
+            'author_name': creator.get('firstName', ''),
+            'author_picture': creator.get('profilePicture'),
+            'image_url': None,
+            'href': f"/plans#plan-{plan['id']}",
+            'sort_date': (
+                plan.get('targetStartDate')
+                or (
+                    created.date()
+                    if created and hasattr(created, 'date')
+                    else date.min
+                )
+            ),
+        })
+
+    for chapter in get_couple_chapters():
+        creator = chapter.get('creator') or {}
+        created = chapter.get('dateCreated')
+        candidates.append({
+            'source_type': 'chapter',
+            'source_id': chapter['id'],
+            'type': 'chapter',
+            'type_label': 'Kapitel',
+            'icon': 'auto_stories',
+            'id': chapter['id'],
+            'title': chapter['title'],
+            'text': chapter['description'],
+            'date_label': _chapter_date_label(chapter),
+            'author_name': creator.get('firstName', ''),
+            'author_picture': creator.get('profilePicture'),
+            'image_url': None,
+            'href': f"/chapters/{chapter['id']}",
+            'sort_date': (
+                chapter.get('startDate')
+                or (
+                    created.date()
+                    if created and hasattr(created, 'date')
+                    else date.min
+                )
+            ),
+        })
+
+    candidates.sort(
+        key=lambda entry: (
+            entry.get('sort_date') or date.min,
+            entry.get('source_id') or 0,
+        ),
+        reverse=True,
+    )
+    return candidates
+
+
+def _couple_place_summary(
+    place,
+    link_map,
+    candidate_index,
+    chapter_link_map=None,
+):
+    linked = []
+    linked_keys = set()
+    linked_chapter_ids = set()
+
+    for source in link_map['by_place'].get(place['id'], []):
+        key = (source['source_type'], source['source_id'])
+        candidate = candidate_index.get(key)
+        if not candidate:
+            continue
+        entry = dict(candidate)
+        entry['relation_kind'] = source['relation_kind']
+        linked.append(entry)
+        linked_keys.add(key)
+        if source['source_type'] == 'chapter':
+            linked_chapter_ids.add(source['source_id'])
+
+    # Content inside a chapter inherits the chapter's place for display. The
+    # relationship stays virtual, so no duplicate database rows are created.
+    if chapter_link_map:
+        for chapter_id in linked_chapter_ids:
+            chapter_links = chapter_link_map['by_chapter'].get(
+                chapter_id,
+                {'item_ids': set(), 'heart_ids': set()},
+            )
+
+            inherited_keys = []
+            for item_id in chapter_links.get('item_ids', set()):
+                for source_type in ('memory', 'milestone'):
+                    key = (source_type, item_id)
+                    if key in candidate_index:
+                        inherited_keys.append(key)
+                        break
+            for heart_id in chapter_links.get('heart_ids', set()):
+                inherited_keys.append(('heart', heart_id))
+
+            for key in inherited_keys:
+                if key in linked_keys:
+                    continue
+                candidate = candidate_index.get(key)
+                if not candidate:
+                    continue
+                entry = dict(candidate)
+                entry['relation_kind'] = 'chapter'
+                linked.append(entry)
+                linked_keys.add(key)
+
+    linked.sort(
+        key=lambda entry: (
+            entry.get('sort_date') or date.min,
+            entry.get('source_id') or 0,
+        ),
+        reverse=True,
+    )
+
+    cover_url = next(
+        (
+            entry.get('image_url')
+            for entry in linked
+            if entry.get('image_url')
+        ),
+        None,
+    )
+
+    result = dict(place)
+    result.update({
+        'linked_entries': linked,
+        'entry_count': len(linked),
+        'memory_count': sum(1 for e in linked if e['type'] == 'memory'),
+        'heart_count': sum(1 for e in linked if e['type'] == 'heart'),
+        'milestone_count': sum(1 for e in linked if e['type'] == 'milestone'),
+        'plan_count': sum(1 for e in linked if e['type'] == 'plan'),
+        'chapter_count': sum(1 for e in linked if e['type'] == 'chapter'),
+        'cover_url': cover_url,
+        'map_ready': (
+            place.get('latitude') is not None
+            and place.get('longitude') is not None
+        ),
+    })
+    return result
+
+
+def _attach_source_places(entries, source_type, link_map):
+    for entry in entries:
+        places = list(link_map['source_places'].get(
+            (source_type, entry['id']),
+            [],
+        ))
+        places.sort(
+            key=lambda place: (
+                0 if place.get('relation_kind') == 'location' else 1,
+                place.get('name', '').casefold(),
+            )
+        )
+        entry['places'] = places
+    return entries
+
+
 @pages_bp.route('/home')
 @jwt_required
 def home():
@@ -1141,6 +1394,343 @@ def milestones():
     except Exception as e:
         log('error', f'Error while rendering milestones page: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/places')
+@jwt_required
+def places():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        # Existing text locations from 4C/4D are kept as-is and mirrored into
+        # the new place graph on first use. This is additive and idempotent.
+        bootstrap_couple_places_from_existing_locations()
+
+        candidates = _couple_place_candidates(sm_edition, g.user_id)
+        candidate_index = {
+            (entry['source_type'], entry['source_id']): entry
+            for entry in candidates
+        }
+        link_map = get_couple_place_link_map()
+        chapter_link_map = get_couple_chapter_link_map()
+
+        place_cards = [
+            _couple_place_summary(
+                place,
+                link_map,
+                candidate_index,
+                chapter_link_map,
+            )
+            for place in get_couple_places()
+        ]
+        place_cards.sort(
+            key=lambda place: (
+                0 if place['map_ready'] else 1,
+                -(place['entry_count']),
+                place['name'].casefold(),
+            )
+        )
+
+        map_places = [
+            {
+                'id': place['id'],
+                'name': place['name'],
+                'latitude': place['latitude'],
+                'longitude': place['longitude'],
+                'entry_count': place['entry_count'],
+                'url': url_for('pages.place', place_id=place['id']),
+            }
+            for place in place_cards
+            if place['map_ready']
+        ]
+
+        return render_template(
+            'pages/places.html',
+            title=get_display_title(),
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            sm_edition=sm_edition,
+            page_title='Unsere Orte',
+            places=place_cards,
+            map_places=map_places,
+            map_config=_place_map_config(),
+            place_error=request.args.get('error', ''),
+            open_create=request.args.get('create') == '1',
+        )
+    except Exception as e:
+        log('error', f'Error while rendering couple places: {e}')
+        return "An error occurred while rendering the places page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/places/create', methods=['POST'])
+@jwt_required
+def create_place_page():
+    if get_setting_by_name('sm_edition').value != 'couples':
+        return redirect(url_for('pages.home'))
+
+    try:
+        values = _place_form_values()
+        place_id = create_couple_place(
+            name=values['name'],
+            description=values['description'],
+            latitude=values['latitude'],
+            longitude=values['longitude'],
+            address_label=values['address_label'],
+            created_by_user=g.user_id,
+        )
+        return redirect(url_for('pages.place', place_id=place_id))
+    except ValueError as exc:
+        return redirect(url_for('pages.places', error=str(exc), create=1))
+    except Exception as e:
+        log('error', f'Error while creating couple place: {e}')
+        return redirect(url_for(
+            'pages.places',
+            error='Der Ort konnte nicht gespeichert werden.',
+            create=1,
+        ))
+
+
+@pages_bp.route('/places/<int:place_id>')
+@jwt_required
+def place(place_id):
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        bootstrap_couple_places_from_existing_locations()
+        place_data = get_couple_place(place_id)
+        if not place_data:
+            return redirect(url_for('pages.places'))
+
+        candidates = _couple_place_candidates(sm_edition, g.user_id)
+        candidate_index = {
+            (entry['source_type'], entry['source_id']): entry
+            for entry in candidates
+        }
+        link_map = get_couple_place_link_map()
+        chapter_link_map = get_couple_chapter_link_map()
+        place_data = _couple_place_summary(
+            place_data,
+            link_map,
+            candidate_index,
+            chapter_link_map,
+        )
+
+        links_for_place = {
+            (source['source_type'], source['source_id']): source['relation_kind']
+            for source in link_map['by_place'].get(place_id, [])
+        }
+
+        inherited_keys = set()
+        for source in link_map['by_place'].get(place_id, []):
+            if source['source_type'] != 'chapter':
+                continue
+            chapter_links = chapter_link_map['by_chapter'].get(
+                source['source_id'],
+                {'item_ids': set(), 'heart_ids': set()},
+            )
+            for item_id in chapter_links.get('item_ids', set()):
+                for source_type in ('memory', 'milestone'):
+                    key = (source_type, item_id)
+                    if key in candidate_index:
+                        inherited_keys.add(key)
+                        break
+            for heart_id in chapter_links.get('heart_ids', set()):
+                inherited_keys.add(('heart', heart_id))
+
+        candidate_groups = {
+            'memory': [],
+            'heart': [],
+            'milestone': [],
+            'plan': [],
+            'chapter': [],
+        }
+        for candidate in candidates:
+            item = dict(candidate)
+            key = (item['source_type'], item['source_id'])
+            relation_kind = links_for_place.get(key)
+            item['linked'] = relation_kind is not None
+            item['location_link'] = relation_kind == 'location'
+            item['inherited_link'] = (
+                key in inherited_keys and relation_kind is None
+            )
+            candidate_groups[item['source_type']].append(item)
+
+        return render_template(
+            'pages/place.html',
+            title=get_display_title(),
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            sm_edition=sm_edition,
+            page_title=place_data['name'],
+            place=place_data,
+            candidate_groups=candidate_groups,
+            map_config=_place_map_config(),
+            place_error=request.args.get('error', ''),
+        )
+    except Exception as e:
+        log('error', f'Error while rendering couple place {place_id}: {e}')
+        return "An error occurred while rendering the place. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/places/<int:place_id>/update', methods=['POST'])
+@jwt_required
+def update_place_page(place_id):
+    if get_setting_by_name('sm_edition').value != 'couples':
+        return redirect(url_for('pages.home'))
+    if not get_couple_place(place_id):
+        return redirect(url_for('pages.places'))
+
+    try:
+        values = _place_form_values()
+        update_couple_place(
+            place_id=place_id,
+            name=values['name'],
+            description=values['description'],
+            latitude=values['latitude'],
+            longitude=values['longitude'],
+            address_label=values['address_label'],
+        )
+        return redirect(url_for('pages.place', place_id=place_id))
+    except ValueError as exc:
+        return redirect(url_for(
+            'pages.place',
+            place_id=place_id,
+            error=str(exc),
+        ))
+    except Exception as e:
+        log('error', f'Error while updating couple place {place_id}: {e}')
+        return redirect(url_for(
+            'pages.place',
+            place_id=place_id,
+            error='Der Ort konnte nicht gespeichert werden.',
+        ))
+
+
+@pages_bp.route('/places/<int:place_id>/links', methods=['POST'])
+@jwt_required
+def update_place_links_page(place_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+    if not get_couple_place(place_id):
+        return redirect(url_for('pages.places'))
+
+    try:
+        valid_links = {
+            (entry['source_type'], entry['source_id'])
+            for entry in _couple_place_candidates(sm_edition, g.user_id)
+        }
+        requested = set()
+        for raw in request.form.getlist('source_links'):
+            try:
+                source_type, source_id_raw = str(raw).split(':', 1)
+                key = (source_type, int(source_id_raw))
+            except (TypeError, ValueError):
+                continue
+            if key in valid_links:
+                requested.add(key)
+
+        replace_couple_place_manual_links(place_id, requested)
+        return redirect(url_for('pages.place', place_id=place_id))
+    except Exception as e:
+        log('error', f'Error while linking couple place {place_id}: {e}')
+        return redirect(url_for(
+            'pages.place',
+            place_id=place_id,
+            error='Die Verknüpfungen konnten nicht gespeichert werden.',
+        ))
+
+
+@pages_bp.route('/places/<int:place_id>/delete', methods=['POST'])
+@jwt_required
+def delete_place_page(place_id):
+    if get_setting_by_name('sm_edition').value != 'couples':
+        return redirect(url_for('pages.home'))
+
+    try:
+        delete_couple_place(place_id)
+        return redirect(url_for('pages.places'))
+    except Exception as e:
+        log('error', f'Error while deleting couple place {place_id}: {e}')
+        return redirect(url_for(
+            'pages.place',
+            place_id=place_id,
+            error='Der Ort konnte nicht gelöscht werden.',
+        ))
+
+
+@pages_bp.route('/places/geocode')
+@jwt_required
+def geocode_place():
+    if get_setting_by_name('sm_edition').value != 'couples':
+        return jsonify({'status': 'error', 'results': []}), 403
+
+    if os.environ.get('MAP_GEOCODING_ENABLED', 'true').lower() not in {
+        '1', 'true', 'yes', 'on'
+    }:
+        return jsonify({
+            'status': 'error',
+            'message': 'Geocoding is disabled',
+            'results': [],
+        }), 503
+
+    query = str(request.args.get('q', '')).strip()
+    if len(query) < 2:
+        return jsonify({'status': 'success', 'results': []})
+    query = query[:200]
+
+    endpoint = os.environ.get(
+        'MAP_GEOCODER_URL',
+        'https://nominatim.openstreetmap.org/search',
+    )
+    params = urlencode({
+        'q': query,
+        'format': 'jsonv2',
+        'limit': 5,
+        'accept-language': 'de',
+    })
+    separator = '&' if '?' in endpoint else '?'
+    url = f'{endpoint}{separator}{params}'
+
+    try:
+        req = Request(
+            url,
+            headers={
+                'Accept': 'application/json',
+                'User-Agent': (
+                    'SharedMoments-CouplePlaces/1.0 '
+                    '(https://github.com/baerenmarke90/SharedMoments)'
+                ),
+            },
+        )
+        with urlopen(req, timeout=8) as response:
+            payload = json.loads(response.read().decode('utf-8'))
+
+        results = []
+        for item in payload[:5]:
+            try:
+                results.append({
+                    'label': str(item.get('display_name') or query),
+                    'lat': float(item['lat']),
+                    'lon': float(item['lon']),
+                })
+            except (KeyError, TypeError, ValueError):
+                continue
+
+        return jsonify({'status': 'success', 'results': results})
+    except Exception as e:
+        log('warning', f'Place geocoding failed for {query!r}: {e}')
+        return jsonify({
+            'status': 'error',
+            'message': 'Der Ort konnte nicht gesucht werden.',
+            'results': [],
+        }), 502
 
 
 def _get_bucket_list_type():
@@ -1452,10 +2042,14 @@ def plans():
         if selected_status not in allowed_statuses:
             selected_status = 'all'
 
+        bootstrap_couple_places_from_existing_locations()
+        place_link_map = get_couple_place_link_map()
+
         all_plans = [
             _present_couple_plan(plan, g.user_id)
             for plan in get_couple_plans()
         ]
+        _attach_source_places(all_plans, 'plan', place_link_map)
 
         status_rank = {
             'planned': 0,
@@ -1522,7 +2116,7 @@ def create_plan_page():
 
     try:
         values = _plan_form_values()
-        create_couple_plan(
+        plan_id = create_couple_plan(
             title=values['title'],
             description=values['description'],
             status=values['status'],
@@ -1531,7 +2125,13 @@ def create_plan_page():
             location_name=values['location_name'],
             created_by_user=g.user_id,
         )
-        return redirect(url_for('pages.plans'))
+        sync_couple_source_location(
+            'plan',
+            plan_id,
+            values['location_name'],
+            g.user_id,
+        )
+        return redirect(url_for('pages.plans') + f'#plan-{plan_id}')
     except ValueError as exc:
         return redirect(url_for('pages.plans', error=str(exc)))
     except Exception as e:
@@ -1568,6 +2168,12 @@ def update_plan_page(plan_id):
             target_start_date=values['target_start_date'],
             target_end_date=values['target_end_date'],
             location_name=values['location_name'],
+        )
+        sync_couple_source_location(
+            'plan',
+            plan_id,
+            values['location_name'],
+            plan['createdByUser'],
         )
         return redirect(url_for('pages.plans') + f'#plan-{plan_id}')
     except ValueError as exc:
@@ -1645,6 +2251,13 @@ def plan_to_chapter_page(plan_id):
             location_name=plan['locationName'],
             created_by_user=g.user_id,
         )
+        sync_couple_source_location(
+            'chapter',
+            chapter_id,
+            plan['locationName'],
+            g.user_id,
+        )
+        copy_couple_place_links('plan', plan_id, 'chapter', chapter_id)
         set_couple_plan_chapter(plan_id, chapter_id)
         return redirect(url_for('pages.chapter', chapter_id=chapter_id))
     except Exception as e:
@@ -1674,6 +2287,9 @@ def chapters():
         )
         link_map = get_couple_chapter_link_map()
 
+        bootstrap_couple_places_from_existing_locations()
+        place_link_map = get_couple_place_link_map()
+
         chapter_cards = [
             _chapter_summary(
                 chapter,
@@ -1685,6 +2301,7 @@ def chapters():
             )
             for chapter in get_couple_chapters()
         ]
+        _attach_source_places(chapter_cards, 'chapter', place_link_map)
 
         return render_template(
             'pages/chapters.html',
@@ -1719,6 +2336,12 @@ def create_chapter_page():
             end_date=values['end_date'],
             location_name=values['location_name'],
             created_by_user=g.user_id,
+        )
+        sync_couple_source_location(
+            'chapter',
+            chapter_id,
+            values['location_name'],
+            g.user_id,
         )
         return redirect(url_for('pages.chapter', chapter_id=chapter_id))
     except ValueError as exc:
@@ -1757,6 +2380,12 @@ def chapter(chapter_id):
             chapter_data,
             links,
             content,
+        )
+        bootstrap_couple_places_from_existing_locations()
+        place_link_map = get_couple_place_link_map()
+        chapter_data['places'] = place_link_map['source_places'].get(
+            ('chapter', chapter_id),
+            [],
         )
 
         linked_item_ids = links['item_ids']
@@ -1798,7 +2427,8 @@ def update_chapter_page(chapter_id):
     if sm_edition != 'couples':
         return redirect(url_for('pages.home'))
 
-    if not get_couple_chapter(chapter_id):
+    existing_chapter = get_couple_chapter(chapter_id)
+    if not existing_chapter:
         return redirect(url_for('pages.chapters'))
 
     try:
@@ -1810,6 +2440,12 @@ def update_chapter_page(chapter_id):
             start_date=values['start_date'],
             end_date=values['end_date'],
             location_name=values['location_name'],
+        )
+        sync_couple_source_location(
+            'chapter',
+            chapter_id,
+            values['location_name'],
+            existing_chapter['createdByUser'],
         )
         return redirect(url_for('pages.chapter', chapter_id=chapter_id))
     except ValueError as exc:
@@ -1963,6 +2599,9 @@ def story():
         )
 
         chapter_link_map = get_couple_chapter_link_map()
+        bootstrap_couple_places_from_existing_locations()
+        place_link_map = get_couple_place_link_map()
+
         for entry in all_entries:
             if entry['type'] == 'heart':
                 entry['chapters'] = chapter_link_map[
@@ -1972,6 +2611,30 @@ def story():
                 entry['chapters'] = chapter_link_map[
                     'item_chapters'
                 ].get(entry['id'], [])
+
+            collected_places = []
+            seen_place_ids = set()
+
+            for place in place_link_map['source_places'].get(
+                (entry['type'], entry['id']),
+                [],
+            ):
+                if place['id'] not in seen_place_ids:
+                    collected_places.append(place)
+                    seen_place_ids.add(place['id'])
+
+            # A memory/heart/milestone inside a chapter inherits the chapter's
+            # place for browsing and search, without writing duplicate links.
+            for chapter in entry['chapters']:
+                for place in place_link_map['source_places'].get(
+                    ('chapter', chapter['id']),
+                    [],
+                ):
+                    if place['id'] not in seen_place_ids:
+                        collected_places.append(place)
+                        seen_place_ids.add(place['id'])
+
+            entry['places'] = collected_places
 
         entry_type = str(request.args.get('type', 'all')).strip().lower()
         allowed_types = {'all', 'memory', 'heart', 'milestone'}

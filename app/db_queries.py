@@ -2,7 +2,8 @@ from sqlalchemy.exc import IntegrityError
 from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, Setting,
     UserSetting, Item, ItemShare, ListType, SessionLocal, RelationshipStatus, Translation,
     Reminder, ReminderMute, PushSubscription, NotificationLog, CoupleChapter,
-    CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan, CoupleBucketPlanLink)
+    CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan, CoupleBucketPlanLink,
+    CouplePlace, CouplePlaceLink)
 from sqlalchemy.orm import joinedload
 from datetime import date
 from sqlalchemy import desc, asc, and_, or_
@@ -908,6 +909,11 @@ def delete_item(item_id):
             CoupleChapterItem.itemID == item_id
         ).delete()
 
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.sourceID == item_id,
+            CouplePlaceLink.sourceType.in_(['memory', 'milestone']),
+        ).delete(synchronize_session=False)
+
         # Bucketlist items may be promoted into a concrete couple plan.
         # Deleting the wish only removes that relationship; the plan itself
         # remains intact.
@@ -1076,6 +1082,10 @@ def delete_couple_chapter(chapter_id):
         session.query(CoupleChapterHeartMoment).filter(
             CoupleChapterHeartMoment.chapterID == chapter_id
         ).delete()
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.sourceType == 'chapter',
+            CouplePlaceLink.sourceID == chapter_id,
+        ).delete(synchronize_session=False)
         session.query(CouplePlan).filter(
             CouplePlan.chapterID == chapter_id
         ).update(
@@ -1363,6 +1373,10 @@ def delete_couple_plan(plan_id):
         session.query(CoupleBucketPlanLink).filter(
             CoupleBucketPlanLink.planID == plan_id
         ).delete()
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.sourceType == 'plan',
+            CouplePlaceLink.sourceID == plan_id,
+        ).delete(synchronize_session=False)
 
         session.delete(plan)
         session.commit()
@@ -1466,6 +1480,547 @@ def sync_bucket_item_to_plan(bucket_item_id, completed):
         if plan and plan.status != 'experienced':
             plan.status = 'experienced'
             session.commit()
+    finally:
+        session.close()
+
+
+# Couple Places
+
+_ALLOWED_PLACE_SOURCE_TYPES = {
+    'memory',
+    'heart',
+    'milestone',
+    'plan',
+    'chapter',
+}
+
+
+def _normalize_couple_place_name(value):
+    return ' '.join(str(value or '').strip().casefold().split())
+
+
+def _serialize_couple_place(place, creator=None):
+    return {
+        'id': place.id,
+        'name': place.name,
+        'normalizedName': place.normalizedName,
+        'description': place.description or '',
+        'addressLabel': place.addressLabel or '',
+        'latitude': place.latitude,
+        'longitude': place.longitude,
+        'createdByUser': place.createdByUser,
+        'dateCreated': place.dateCreated,
+        'dateModified': place.dateModified,
+        'creator': {
+            'id': creator.id,
+            'firstName': creator.firstName or '',
+            'profilePicture': creator.profilePicture,
+        } if creator else None,
+    }
+
+
+def get_couple_places():
+    session = SessionLocal()
+    try:
+        rows = (
+            session.query(CouplePlace, User)
+            .join(User, CouplePlace.createdByUser == User.id)
+            .order_by(CouplePlace.name.asc())
+            .all()
+        )
+        return [
+            _serialize_couple_place(place, creator)
+            for place, creator in rows
+        ]
+    finally:
+        session.close()
+
+
+def get_couple_place(place_id):
+    session = SessionLocal()
+    try:
+        row = (
+            session.query(CouplePlace, User)
+            .join(User, CouplePlace.createdByUser == User.id)
+            .filter(CouplePlace.id == place_id)
+            .first()
+        )
+        if not row:
+            return None
+        return _serialize_couple_place(row[0], row[1])
+    finally:
+        session.close()
+
+
+def _get_or_create_place_in_session(
+    session,
+    name,
+    created_by_user,
+    latitude=None,
+    longitude=None,
+    address_label='',
+):
+    normalized = _normalize_couple_place_name(name)
+    if not normalized:
+        return None
+
+    place = (
+        session.query(CouplePlace)
+        .filter(CouplePlace.normalizedName == normalized)
+        .order_by(CouplePlace.id.asc())
+        .first()
+    )
+
+    if not place:
+        place = CouplePlace(
+            name=str(name).strip(),
+            normalizedName=normalized,
+            description='',
+            addressLabel=address_label or '',
+            latitude=latitude,
+            longitude=longitude,
+            createdByUser=created_by_user,
+        )
+        session.add(place)
+        session.flush()
+    else:
+        if place.latitude is None and latitude is not None:
+            place.latitude = latitude
+        if place.longitude is None and longitude is not None:
+            place.longitude = longitude
+        if not place.addressLabel and address_label:
+            place.addressLabel = address_label
+
+    return place
+
+
+def create_couple_place(
+    name,
+    description,
+    latitude,
+    longitude,
+    address_label,
+    created_by_user,
+):
+    session = SessionLocal()
+    try:
+        normalized = _normalize_couple_place_name(name)
+        if not normalized:
+            raise ValueError('Place name is required')
+
+        existing = (
+            session.query(CouplePlace)
+            .filter(CouplePlace.normalizedName == normalized)
+            .order_by(CouplePlace.id.asc())
+            .first()
+        )
+        if existing:
+            if description and not existing.description:
+                existing.description = description
+            if address_label and not existing.addressLabel:
+                existing.addressLabel = address_label
+            if latitude is not None and existing.latitude is None:
+                existing.latitude = latitude
+            if longitude is not None and existing.longitude is None:
+                existing.longitude = longitude
+            session.commit()
+            return existing.id
+
+        place = CouplePlace(
+            name=str(name).strip(),
+            normalizedName=normalized,
+            description=description or '',
+            addressLabel=address_label or '',
+            latitude=latitude,
+            longitude=longitude,
+            createdByUser=created_by_user,
+        )
+        session.add(place)
+        session.commit()
+        session.refresh(place)
+        return place.id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def update_couple_place(
+    place_id,
+    name,
+    description,
+    latitude,
+    longitude,
+    address_label,
+):
+    session = SessionLocal()
+    try:
+        place = (
+            session.query(CouplePlace)
+            .filter(CouplePlace.id == place_id)
+            .first()
+        )
+        if not place:
+            return False
+
+        place.name = str(name).strip()
+        place.normalizedName = _normalize_couple_place_name(name)
+        place.description = description or ''
+        place.addressLabel = address_label or ''
+        place.latitude = latitude
+        place.longitude = longitude
+
+        # Keep the legacy chapter coordinate fields useful for future
+        # Dawarich integration when this place is the chapter's location.
+        chapter_ids = {
+            row[0]
+            for row in session.query(CouplePlaceLink.sourceID).filter(
+                CouplePlaceLink.placeID == place_id,
+                CouplePlaceLink.sourceType == 'chapter',
+                CouplePlaceLink.relationKind == 'location',
+            ).all()
+        }
+        if chapter_ids:
+            session.query(CoupleChapter).filter(
+                CoupleChapter.id.in_(chapter_ids)
+            ).update(
+                {
+                    CoupleChapter.latitude: latitude,
+                    CoupleChapter.longitude: longitude,
+                },
+                synchronize_session=False,
+            )
+
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def delete_couple_place(place_id):
+    session = SessionLocal()
+    try:
+        place = (
+            session.query(CouplePlace)
+            .filter(CouplePlace.id == place_id)
+            .first()
+        )
+        if not place:
+            return False
+
+        location_links = session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.placeID == place_id,
+            CouplePlaceLink.relationKind == 'location',
+        ).all()
+
+        plan_ids = {
+            link.sourceID for link in location_links
+            if link.sourceType == 'plan'
+        }
+        chapter_ids = {
+            link.sourceID for link in location_links
+            if link.sourceType == 'chapter'
+        }
+
+        if plan_ids:
+            session.query(CouplePlan).filter(
+                CouplePlan.id.in_(plan_ids)
+            ).update(
+                {CouplePlan.locationName: ''},
+                synchronize_session=False,
+            )
+        if chapter_ids:
+            session.query(CoupleChapter).filter(
+                CoupleChapter.id.in_(chapter_ids)
+            ).update(
+                {
+                    CoupleChapter.locationName: '',
+                    CoupleChapter.latitude: None,
+                    CoupleChapter.longitude: None,
+                },
+                synchronize_session=False,
+            )
+
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.placeID == place_id
+        ).delete(synchronize_session=False)
+        session.delete(place)
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def sync_couple_source_location(
+    source_type,
+    source_id,
+    location_name,
+    created_by_user,
+    latitude=None,
+    longitude=None,
+):
+    """Mirror a Plan/Chapter locationName into the canonical place graph."""
+    if source_type not in {'plan', 'chapter'}:
+        raise ValueError('Unsupported location source type')
+
+    session = SessionLocal()
+    try:
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.sourceType == source_type,
+            CouplePlaceLink.sourceID == source_id,
+            CouplePlaceLink.relationKind == 'location',
+        ).delete(synchronize_session=False)
+
+        normalized = _normalize_couple_place_name(location_name)
+        if not normalized:
+            session.commit()
+            return None
+
+        place = _get_or_create_place_in_session(
+            session,
+            location_name,
+            created_by_user,
+            latitude=latitude,
+            longitude=longitude,
+        )
+
+        existing = (
+            session.query(CouplePlaceLink)
+            .filter(
+                CouplePlaceLink.placeID == place.id,
+                CouplePlaceLink.sourceType == source_type,
+                CouplePlaceLink.sourceID == source_id,
+            )
+            .first()
+        )
+        if existing:
+            existing.relationKind = 'location'
+        else:
+            session.add(CouplePlaceLink(
+                placeID=place.id,
+                sourceType=source_type,
+                sourceID=source_id,
+                relationKind='location',
+            ))
+
+        if source_type == 'chapter':
+            chapter = (
+                session.query(CoupleChapter)
+                .filter(CoupleChapter.id == source_id)
+                .first()
+            )
+            if chapter and place.latitude is not None and place.longitude is not None:
+                chapter.latitude = place.latitude
+                chapter.longitude = place.longitude
+
+        session.commit()
+        return place.id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def bootstrap_couple_places_from_existing_locations():
+    """Idempotently preserve and connect existing Plan/Chapter location text.
+
+    No existing row is rewritten or deleted. The legacy locationName remains the
+    source text while the new place/link tables add map semantics on top.
+    """
+    session = SessionLocal()
+    try:
+        sources = []
+
+        for chapter in session.query(CoupleChapter).filter(
+            CoupleChapter.locationName.isnot(None),
+            CoupleChapter.locationName != '',
+        ).all():
+            sources.append((
+                'chapter',
+                chapter.id,
+                chapter.locationName,
+                chapter.createdByUser,
+                chapter.latitude,
+                chapter.longitude,
+            ))
+
+        for plan in session.query(CouplePlan).filter(
+            CouplePlan.locationName.isnot(None),
+            CouplePlan.locationName != '',
+        ).all():
+            sources.append((
+                'plan',
+                plan.id,
+                plan.locationName,
+                plan.createdByUser,
+                None,
+                None,
+            ))
+
+        for source_type, source_id, name, creator_id, lat, lon in sources:
+            has_location_link = (
+                session.query(CouplePlaceLink.id)
+                .filter(
+                    CouplePlaceLink.sourceType == source_type,
+                    CouplePlaceLink.sourceID == source_id,
+                    CouplePlaceLink.relationKind == 'location',
+                )
+                .first()
+            )
+            if has_location_link:
+                continue
+
+            place = _get_or_create_place_in_session(
+                session,
+                name,
+                creator_id,
+                latitude=lat,
+                longitude=lon,
+            )
+            session.add(CouplePlaceLink(
+                placeID=place.id,
+                sourceType=source_type,
+                sourceID=source_id,
+                relationKind='location',
+            ))
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def get_couple_place_link_map():
+    session = SessionLocal()
+    try:
+        places = {
+            place.id: {
+                'id': place.id,
+                'name': place.name,
+                'addressLabel': place.addressLabel or '',
+                'latitude': place.latitude,
+                'longitude': place.longitude,
+            }
+            for place in session.query(CouplePlace).all()
+        }
+
+        by_place = {place_id: [] for place_id in places}
+        source_places = {}
+
+        for link in session.query(CouplePlaceLink).all():
+            place = places.get(link.placeID)
+            if not place:
+                continue
+
+            source = {
+                'source_type': link.sourceType,
+                'source_id': link.sourceID,
+                'relation_kind': link.relationKind,
+            }
+            by_place.setdefault(link.placeID, []).append(source)
+
+            key = (link.sourceType, link.sourceID)
+            source_places.setdefault(key, []).append({
+                **place,
+                'relation_kind': link.relationKind,
+            })
+
+        return {
+            'places': places,
+            'by_place': by_place,
+            'source_places': source_places,
+        }
+    finally:
+        session.close()
+
+
+def replace_couple_place_manual_links(place_id, requested_links):
+    """Replace only manually curated links; location-derived links stay intact."""
+    session = SessionLocal()
+    try:
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.placeID == place_id,
+            CouplePlaceLink.relationKind == 'manual',
+        ).delete(synchronize_session=False)
+
+        seen = set()
+        for source_type, source_id in requested_links:
+            if source_type not in _ALLOWED_PLACE_SOURCE_TYPES:
+                continue
+            key = (source_type, int(source_id))
+            if key in seen:
+                continue
+            seen.add(key)
+
+            existing = (
+                session.query(CouplePlaceLink.id)
+                .filter(
+                    CouplePlaceLink.placeID == place_id,
+                    CouplePlaceLink.sourceType == source_type,
+                    CouplePlaceLink.sourceID == source_id,
+                )
+                .first()
+            )
+            if existing:
+                continue
+
+            session.add(CouplePlaceLink(
+                placeID=place_id,
+                sourceType=source_type,
+                sourceID=source_id,
+                relationKind='manual',
+            ))
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def copy_couple_place_links(source_type, source_id, target_type, target_id):
+    if source_type not in _ALLOWED_PLACE_SOURCE_TYPES:
+        return
+    if target_type not in _ALLOWED_PLACE_SOURCE_TYPES:
+        return
+
+    session = SessionLocal()
+    try:
+        source_links = session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.sourceType == source_type,
+            CouplePlaceLink.sourceID == source_id,
+        ).all()
+
+        for link in source_links:
+            existing = session.query(CouplePlaceLink.id).filter(
+                CouplePlaceLink.placeID == link.placeID,
+                CouplePlaceLink.sourceType == target_type,
+                CouplePlaceLink.sourceID == target_id,
+            ).first()
+            if existing:
+                continue
+            session.add(CouplePlaceLink(
+                placeID=link.placeID,
+                sourceType=target_type,
+                sourceID=target_id,
+                relationKind=link.relationKind,
+            ))
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
 
