@@ -446,17 +446,6 @@ function toggleSelectAllListItems() {
  * ========================================================= */
 
 
-function deleteSingleListItem(
-    id,
-    button
-) {
-    deleteListItems(
-        [String(id)],
-        button
-    );
-}
-
-
 function deleteSelectedListItems(
     button
 ) {
@@ -511,25 +500,11 @@ async function deleteListItems(
     }
 
 
-    const icon =
-        button
-            ? button.querySelector('i')
-            : null;
-
-    const originalIcon =
-        icon
-            ? icon.textContent
-            : null;
-
 
     if (button) {
         button.disabled = true;
     }
 
-    if (icon) {
-        icon.textContent =
-            'hourglass_top';
-    }
 
 
     const formData =
@@ -598,13 +573,6 @@ async function deleteListItems(
                 false;
         }
 
-        if (
-            icon
-            && originalIcon
-        ) {
-            icon.textContent =
-                originalIcon;
-        }
 
 
         const message =

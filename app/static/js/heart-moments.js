@@ -642,7 +642,7 @@ function createHeartMomentCard(
             );
 
         avatar.className =
-            'heart-moment-author-avatar';
+            'circle heart-moment-author-avatar';
 
         const usesPlaceholder =
             !moment.author.profilePicture

@@ -115,27 +115,7 @@
 
                 <div class="max"></div>
 
-
-                <!-- Direktes Löschen eines Eintrags -->
-                {% if has_list_permission('Delete', list_type_title) %}
-                <button
-                    type="button"
-                    class="circle transparent small list-delete-button"
-                    title="{{ _('Delete') }}"
-                    onclick="
-                        event.preventDefault();
-                        event.stopPropagation();
-                        deleteSingleListItem(
-                            '{{ item.id }}',
-                            this
-                        );
-                    ">
-                    <i>delete</i>
-                </button>
-                {% endif %}
-
-
-                <!-- Erledigt / offen -->
+<!-- Erledigt / offen -->
                 <label
                     class="checkbox list-status-control"
                     onclick="event.stopPropagation();">
