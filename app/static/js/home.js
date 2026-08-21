@@ -1684,6 +1684,13 @@ function handleTouchContextMenu(event) {
 // Füge die Event Listener zu allen Artikeln mit der Klasse "home-item" hinzu 
 function addEventListeners() {
    document.querySelectorAll(".home-item").forEach((article) => { // Schleife über alle Artikel
+      if (
+         window.ownItemsOnly
+         && String(article.dataset.ownerId || '') !== String(window.currentUserId || '')
+      ) {
+         return; // Auf der Erinnerungsseite nur eigene Einträge auswählbar machen.
+      }
+
       const deviceType = getDeviceType(); // Hole den Gerätetyp
 
       if (deviceType === "desktop") { // Wenn es sich um ein Desktop-Gerät handelt, Mouse-Events verwenden
@@ -1698,6 +1705,32 @@ function addEventListeners() {
    });
 }
 addEventListeners(); // Füge die Event Listener zu allen Artikeln hinzu
+
+
+function editMemoryItem(itemId) {
+   selectedArticles = [`article_${itemId}`];
+   getHomeItem([...selectedArticles]);
+}
+
+function deleteMemoryItem(itemId, btn) {
+   selectedArticles = [`article_${itemId}`];
+   deleteHomeItems(btn);
+}
+
+function filterMemoryItems(mode) {
+   const mineOnly = mode === 'mine';
+
+   document.querySelectorAll('.home-item').forEach((article) => {
+      const isMine = String(article.dataset.ownerId || '') === String(window.currentUserId || '');
+      article.style.display = (!mineOnly || isMine) ? '' : 'none';
+   });
+
+   const allButton = document.getElementById('memory-filter-all');
+   const mineButton = document.getElementById('memory-filter-mine');
+
+   if (allButton) allButton.classList.toggle('active', !mineOnly);
+   if (mineButton) mineButton.classList.toggle('active', mineOnly);
+}
 
 
 // ===== Banner Export =====

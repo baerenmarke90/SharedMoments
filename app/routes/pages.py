@@ -488,10 +488,68 @@ def home():
             couple_home_upcoming=couple_home_upcoming,
             couple_home_recent=couple_home_recent,
             page_title='Wir' if sm_edition == 'couples' else None,
+            memories_page=False,
+            current_user_id=g.user_id,
         )
 
     except Exception as e:
         log('error', f'Error while rendering the pages/home.html-Template: {e}')
+        return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/memories')
+@jwt_required
+def memories():
+    """Dedicated shared-memory page backed by the existing Home items."""
+    try:
+        if not has_list_permission('View', 'Home'):
+            return redirect(url_for('pages.home'))
+
+        sm_edition = get_setting_by_name('sm_edition').value
+        home_list_type = get_list_type_by_title('Home')
+        if not home_list_type:
+            return redirect(url_for('pages.home'))
+
+        items = get_items_by_type(
+            home_list_type.id,
+            'desc',
+            edition=sm_edition,
+        )
+
+        list_types = get_all_list_types()
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+        shared_item_ids = get_shared_item_ids()
+
+        return render_template(
+            'pages/home.html',
+            items=items,
+            list_types=list_types,
+            list_type=home_list_type.id,
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            sm_edition=sm_edition,
+            list_type_title='Home',
+            moments_title='Moments',
+            countdown_title='Countdown',
+            countdown_list_type_id='',
+            moments=[],
+            countdowns=[],
+            settings=None,
+            banner_text=None,
+            shared_item_ids=shared_item_ids,
+            heart_moment_memory=None,
+            couple_users=[],
+            couple_home_upcoming=[],
+            couple_home_recent=[],
+            page_title='Erinnerungen',
+            memories_page=True,
+            current_user_id=g.user_id,
+        )
+    except Exception as e:
+        log('error', f'Error while rendering memories page: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
 
 
@@ -834,12 +892,14 @@ def reminders():
         user_data = get_user_by_id(g.user_id)
         reminder_list = get_all_reminders()
         muted_ids = get_user_muted_reminder_ids(g.user_id)
+        sm_edition = get_setting_by_name('sm_edition').value
 
         return render_template('pages/reminders.html',
             list_types=list_types, title=title, darkmode=darkmode, user_data=user_data,
             reminders=reminder_list, muted_ids=muted_ids,
             translate_title=_translate_reminder_title,
-            translate_desc=_translate_reminder_description)
+            translate_desc=_translate_reminder_description,
+            page_title='Termine & Benachrichtigungen' if sm_edition == 'couples' else None)
     except Exception as e:
         log('error', f'Error while rendering reminders page: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500

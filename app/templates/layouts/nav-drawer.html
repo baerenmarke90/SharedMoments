@@ -18,8 +18,12 @@
        {% endif %}
        {% endfor %}
 
-       <!-- HEART MOMENTS NAV -->
+       <!-- COUPLES CONTENT NAV -->
        {% if nav_edition == 'couples' %}
+       <a href="/memories">
+          <i>photo_library</i>
+          <span>Erinnerungen</span>
+       </a>
        <a href="/heart-moments">
           <i>favorite</i>
           <span>{{ _('Heart Moments') }}</span>
@@ -35,8 +39,8 @@
 
        {% if has_permission('View Reminders') %}
        <a href="/reminders">
-       <i>notifications</i>
-       <span>{{ _('Reminders') }}</span>
+       <i>notifications_active</i>
+       <span>{% if nav_edition == 'couples' %}Termine &amp; Benachrichtigungen{% else %}{{ _('Reminders') }}{% endif %}</span>
        </a>
        {% endif %}
 
