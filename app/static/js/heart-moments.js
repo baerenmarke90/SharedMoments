@@ -126,14 +126,15 @@ function formatMomentDate(value) {
 
 
 function heartMomentProfilePictureUrl(author) {
-    if (!author || !author.id) {
-        return '/api/v2/media/static/profile-placeholder.jpg';
-    }
+    const filename =
+        author
+        && author.profilePicture
+            ? author.profilePicture
+            : 'profile-placeholder.jpg';
 
     return (
-        '/api/v2/users/'
-        + encodeURIComponent(author.id)
-        + '/profile-picture'
+        '/api/v2/media/static/'
+        + encodeURIComponent(filename)
     );
 }
 

@@ -50,7 +50,7 @@
             {% if heart_moment_memory.author %}
             <img
                 class="circle"
-                src="/api/v2/users/{{ heart_moment_memory.author.id }}/profile-picture"
+                src="/api/v2/media/static/{{ heart_moment_memory.author.profilePicture or 'profile-placeholder.jpg' }}"
                 alt=""
                 loading="lazy">
             {% endif %}
