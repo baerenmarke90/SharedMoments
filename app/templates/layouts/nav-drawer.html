@@ -30,6 +30,12 @@
           <i>photo_library</i>
           <span>Erinnerungen</span>
        </a>
+       {% if has_list_permission('View', 'Moments') %}
+       <a href="/milestones">
+          <i>star</i>
+          <span>Meilensteine</span>
+       </a>
+       {% endif %}
        <a href="/heart-moments">
           <i>favorite</i>
           <span>{{ _('Heart Moments') }}</span>

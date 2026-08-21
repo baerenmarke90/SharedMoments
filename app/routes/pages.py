@@ -510,7 +510,7 @@ def _build_story_entries(
                 'author_name': user.firstName if user else '',
                 'author_picture': user.profilePicture if user else None,
                 'image_url': None,
-                'href': None,
+                'href': f'/milestones#milestone-{item.id}',
                 'is_gallery': False,
             })
 
@@ -711,6 +711,7 @@ def home():
             couple_home_recent=couple_home_recent,
             page_title='Wir' if sm_edition == 'couples' else None,
             memories_page=False,
+            milestones_page=False,
             current_user_id=g.user_id,
         )
 
@@ -768,10 +769,69 @@ def memories():
             couple_home_recent=[],
             page_title='Erinnerungen',
             memories_page=True,
+            milestones_page=False,
             current_user_id=g.user_id,
         )
     except Exception as e:
         log('error', f'Error while rendering memories page: {e}')
+        return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/milestones')
+@jwt_required
+def milestones():
+    """Dedicated milestone page backed by the existing Moments items."""
+    try:
+        if not has_list_permission('View', 'Moments'):
+            return redirect(url_for('pages.home'))
+
+        sm_edition = get_setting_by_name('sm_edition').value
+        moments_list_type = get_list_type_by_title('Moments')
+        home_list_type = get_list_type_by_title('Home')
+
+        if not moments_list_type:
+            return redirect(url_for('pages.home'))
+
+        moments = get_items_by_type(
+            moments_list_type.id,
+            'asc',
+            edition=sm_edition,
+        )
+
+        list_types = get_all_list_types()
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+
+        return render_template(
+            'pages/home.html',
+            items=[],
+            list_types=list_types,
+            list_type=home_list_type.id if home_list_type else 1,
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            sm_edition=sm_edition,
+            list_type_title='Home',
+            moments_title='Moments',
+            countdown_title='Countdown',
+            countdown_list_type_id='',
+            moments=moments,
+            countdowns=[],
+            settings=None,
+            banner_text=None,
+            shared_item_ids=[],
+            heart_moment_memory=None,
+            couple_users=[],
+            couple_home_upcoming=[],
+            couple_home_recent=[],
+            page_title='Meilensteine',
+            memories_page=False,
+            milestones_page=True,
+            current_user_id=g.user_id,
+        )
+    except Exception as e:
+        log('error', f'Error while rendering milestones page: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
 
 

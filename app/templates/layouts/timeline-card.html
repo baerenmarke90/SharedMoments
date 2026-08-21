@@ -4,7 +4,8 @@
        <nav style="overflow: auto;">
 
          {% for moment, user in moments %}
-         <div class="center-align">
+         <div class="center-align"
+              id="milestone-{{ moment.id }}">
             <div class="small-margin">{{ moment.title }}</div>
            <button class="circle small"
                data-id="{{ moment.id }}"

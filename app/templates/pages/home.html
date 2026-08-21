@@ -270,6 +270,13 @@
          </div>
       </section>
 
+      {% elif milestones_page|default(false) %}
+      <section style="max-width:820px;margin:0 auto;">
+         <div id="div-render-timeline-card">
+            {% include 'layouts/timeline-card.html' %}
+         </div>
+      </section>
+
       {% elif sm_edition == 'couples' %}
       <div id="div-render-couple-home-dashboard">
          {% include 'layouts/couple-home-dashboard.html' %}
@@ -379,7 +386,9 @@
       </div>
       {% endif %}
 
-      {% if sm_edition == 'couples' and not memories_page|default(false) %}
+      {% if sm_edition == 'couples'
+            and not memories_page|default(false)
+            and not milestones_page|default(false) %}
       <div class="overlay"
            id="div-overlay-couple-memory-detail"
            onclick="callUi('#dialog-couple-memory-detail')"></div>
@@ -459,7 +468,18 @@
    </main>
 
    <!-- Zentrale Erstellen-Aktion -->
-   {% if sm_edition == 'couples' and not memories_page|default(false) %}
+   {% if milestones_page|default(false) and has_list_permission('Create', moments_title) %}
+   <div id="div-fab-create-milestone"
+        class="fixed bottom right"
+        style="margin-right: 8px;margin-bottom: 16px;z-index: 90;"
+        onclick="callUi('#dialog-create-new-timeline-item')">
+      <button class="square round extra"
+              aria-label="Meilenstein hinzufügen"
+              style="box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16), 0px 3px 6px rgba(0, 0, 0, 0.23);">
+         <i>add</i>
+      </button>
+   </div>
+   {% elif sm_edition == 'couples' and not memories_page|default(false) %}
    <div id="div-fab-couple-create"
         class="fixed bottom right"
         style="margin-right: 8px;margin-bottom: 16px;z-index: 90;"

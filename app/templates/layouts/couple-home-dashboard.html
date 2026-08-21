@@ -90,6 +90,21 @@
    align-items: center;
    justify-content: center;
 }
+.couple-recent-leading > i {
+   width: 58px;
+   height: 58px;
+   border-radius: 0.8rem;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   background: var(--surface-container-high);
+   font-size: 1.9rem;
+   line-height: 1;
+}
+.couple-recent-leading-heart > i {
+   color: #e56aa6;
+   font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+}
 .couple-recent-thumb {
    width: 58px;
    height: 58px;
@@ -247,7 +262,7 @@
                     {% endif %}>
                {% endif %}
 
-                  <div class="couple-recent-leading">
+                  <div class="couple-recent-leading couple-recent-leading-{{ entry.type }}">
                      {% if entry.image_url %}
                      <img class="couple-recent-thumb"
                           src="{{ entry.image_url }}"

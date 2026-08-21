@@ -42,7 +42,18 @@
             display: grid;
             grid-template-columns: minmax(0, 1fr) 150px;
             gap: 0.75rem;
+            align-items: start;
             margin-top: 0.8rem;
+         }
+
+         .story-search-row > .field {
+            margin-top: 0;
+            margin-bottom: 0;
+         }
+
+         .story-year-field {
+            align-self: start;
+            margin-top: 0 !important;
          }
 
          .story-search-field {
@@ -275,7 +286,7 @@
                      </button>
                   </div>
 
-                  <div class="field border round suffix">
+                  <div class="field border round suffix story-year-field">
                      <select name="year" onchange="this.form.submit()">
                         <option value="">Alle Jahre</option>
                         {% for year in story_years %}
