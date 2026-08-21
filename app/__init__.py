@@ -22,6 +22,39 @@ except Exception as exc:
     log('error', f'Heart Moments schema initialization failed: {exc}')
     raise
 
+# OIDC / Pocket ID schema initialization
+from app.oidc_schema import ensure_oidc_schema
+
+try:
+    ensure_oidc_schema()
+    log('info', 'OIDC identity schema ready')
+except Exception as exc:
+    log(
+        'error',
+        f'OIDC identity schema initialization failed: {exc}'
+    )
+    raise
+
+
+# OIDC client initialization
+from app.oidc import init_oidc
+init_oidc(app)
+
+
+# Authentication settings schema
+from app.auth_settings import ensure_auth_settings_schema
+
+try:
+    ensure_auth_settings_schema()
+    log('info', 'Authentication settings schema ready')
+except Exception as exc:
+    log(
+        'error',
+        f'Authentication settings schema initialization failed: {exc}'
+    )
+    raise
+
+
 base_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Konfiguration der Sprache

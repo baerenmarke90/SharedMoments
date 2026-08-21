@@ -17,6 +17,58 @@ class Config:
     WEBAUTHN_RP_NAME = os.environ.get('WEBAUTHN_RP_NAME') or 'SharedMoments'
     WEBAUTHN_ORIGIN = os.environ.get('WEBAUTHN_ORIGIN') or ''
 
+    # OpenID Connect / Pocket ID
+    OIDC_ENABLED = (
+        os.environ.get('OIDC_ENABLED', 'false').lower()
+        == 'true'
+    )
+    OIDC_PROVIDER_NAME = os.environ.get(
+        'OIDC_PROVIDER_NAME',
+        'Pocket ID'
+    )
+    OIDC_ISSUER = os.environ.get(
+        'OIDC_ISSUER',
+        ''
+    ).rstrip('/')
+    OIDC_CLIENT_ID = os.environ.get(
+        'OIDC_CLIENT_ID',
+        ''
+    )
+    OIDC_CLIENT_SECRET = os.environ.get(
+        'OIDC_CLIENT_SECRET',
+        ''
+    )
+    OIDC_REDIRECT_URI = os.environ.get(
+        'OIDC_REDIRECT_URI',
+        ''
+    )
+
+    # Login methods
+    AUTH_LOCAL_LOGIN_ENABLED = (
+        os.environ.get(
+            'AUTH_LOCAL_LOGIN_ENABLED',
+            'true'
+        ).lower()
+        == 'true'
+    )
+    AUTH_PASSKEY_LOGIN_ENABLED = (
+        os.environ.get(
+            'AUTH_PASSKEY_LOGIN_ENABLED',
+            'true'
+        ).lower()
+        == 'true'
+    )
+
+    # Emergency recovery:
+    # forces password login to remain available.
+    AUTH_FORCE_LOCAL_LOGIN = (
+        os.environ.get(
+            'AUTH_FORCE_LOCAL_LOGIN',
+            'false'
+        ).lower()
+        == 'true'
+    )
+
     # AI Provider
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
     OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')

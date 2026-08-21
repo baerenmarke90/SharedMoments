@@ -76,6 +76,169 @@ function updateProfilePicture(input) {
     });
 }
 
+// --- Authentication Settings ---
+
+async function saveAuthenticationSettings(button) {
+    const localInput =
+        document.getElementById(
+            'auth-local-login-enabled'
+        );
+
+    const passkeyInput =
+        document.getElementById(
+            'auth-passkey-login-enabled'
+        );
+
+    if (!localInput || !passkeyInput) {
+        return;
+    }
+
+    if (button) {
+        button.disabled = true;
+    }
+
+    try {
+        const response = await fetch(
+            '/api/v2/auth/settings',
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+                body: JSON.stringify({
+                    local_login_enabled:
+                        localInput.checked,
+
+                    passkey_login_enabled:
+                        passkeyInput.checked
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (
+            !response.ok
+            || result.status !== 'success'
+        ) {
+            showSnackbar(
+                'settings',
+                true,
+                'error',
+                result.message
+                    || _('Authentication settings could not be saved.'),
+                result,
+                true
+            );
+
+            return;
+        }
+
+        showSnackbar(
+            'settings',
+            true,
+            'success',
+            result.message,
+            null,
+            false
+        );
+
+    } catch (error) {
+        showSnackbar(
+            'settings',
+            true,
+            'error',
+            String(error),
+            null,
+            false
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+        }
+    }
+}
+
+
+// --- Pocket ID / OIDC ---
+
+async function unlinkPocketId(button) {
+    const confirmed = confirm(
+        _(
+            'Unlink Pocket ID from this account?'
+        )
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    if (!navigator.onLine) {
+        showSnackbar(
+            'settings',
+            true,
+            'error',
+            _('You are offline'),
+            null,
+            false
+        );
+        return;
+    }
+
+    if (button) {
+        button.disabled = true;
+    }
+
+    try {
+        const response = await fetch(
+            '/api/v2/user/oidc',
+            {
+                method: 'DELETE'
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.status !== 'success') {
+            if (button) {
+                button.disabled = false;
+            }
+
+            showSnackbar(
+                'settings',
+                true,
+                'error',
+                result.message
+                    || _('Pocket ID could not be unlinked.'),
+                result,
+                true
+            );
+
+            return;
+        }
+
+        window.location.href =
+            '/user-settings?oidc=unlinked';
+
+    } catch (error) {
+        if (button) {
+            button.disabled = false;
+        }
+
+        showSnackbar(
+            'settings',
+            true,
+            'error',
+            String(error),
+            null,
+            false
+        );
+    }
+}
+
+
 // --- Change Password ---
 function changePassword() {
     const currentPw = document.getElementById('input-current-password').value;

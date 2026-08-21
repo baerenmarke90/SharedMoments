@@ -55,6 +55,111 @@ class Passkey(Base):
 
     user = relationship('User', back_populates='passkeys')
 
+
+class OIDCIdentity(Base):
+    __tablename__ = 'oidcIdentities'
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    userID = Column(
+        Integer,
+        ForeignKey('users.id'),
+        nullable=False,
+        index=True
+    )
+
+    provider = Column(
+        String(64),
+        nullable=False,
+        default='pocketid'
+    )
+
+    issuer = Column(
+        String(512),
+        nullable=False
+    )
+
+    subject = Column(
+        String(512),
+        nullable=False
+    )
+
+    email = Column(
+        String(255),
+        nullable=True
+    )
+
+    preferredUsername = Column(
+        String(255),
+        nullable=True
+    )
+
+    dateCreated = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp()
+    )
+
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    user = relationship(
+        'User',
+        foreign_keys=[userID]
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            'issuer',
+            'subject',
+            name='uq_oidc_identity_issuer_subject'
+        ),
+        UniqueConstraint(
+            'userID',
+            'provider',
+            name='uq_oidc_identity_user_provider'
+        ),
+    )
+
+
+class AuthConfiguration(Base):
+    __tablename__ = 'authConfiguration'
+
+    id = Column(
+        Integer,
+        primary_key=True
+    )
+
+    localLoginEnabled = Column(
+        Boolean,
+        nullable=False,
+        default=True
+    )
+
+    passkeyLoginEnabled = Column(
+        Boolean,
+        nullable=False,
+        default=True
+    )
+
+    dateCreated = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp()
+    )
+
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+
 class Role(Base):
     __tablename__ = 'roles'
     id = Column(Integer, primary_key=True, autoincrement=True)
