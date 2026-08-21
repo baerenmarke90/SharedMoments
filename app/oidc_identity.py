@@ -1,6 +1,9 @@
+from sqlalchemy import func
+
 from app.models import (
     OIDCIdentity,
     SessionLocal,
+    User,
 )
 
 
@@ -60,6 +63,53 @@ def get_oidc_identity_for_user(
             db.expunge(identity)
 
         return identity
+
+    finally:
+        db.close()
+
+
+def get_unique_user_by_oidc_email(email):
+    """
+    Find exactly one existing SharedMoments user by
+    e-mail address for safe OIDC auto-linking.
+
+    Returns None when:
+      - no e-mail was supplied
+      - no user matches
+      - multiple users match
+
+    The system user (id=1) is never eligible.
+    """
+
+    normalized_email = str(
+        email or ''
+    ).strip().lower()
+
+    if not normalized_email:
+        return None
+
+    db = SessionLocal()
+
+    try:
+        users = (
+            db.query(User)
+            .filter(
+                User.id != 1,
+                User.email.isnot(None),
+                func.lower(User.email)
+                == normalized_email
+            )
+            .limit(2)
+            .all()
+        )
+
+        if len(users) != 1:
+            return None
+
+        user = users[0]
+        db.expunge(user)
+
+        return user
 
     finally:
         db.close()

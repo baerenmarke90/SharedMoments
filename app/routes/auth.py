@@ -483,6 +483,7 @@ def oidc_callback():
     from app.oidc import get_pocketid_client
     from app.oidc_identity import (
         get_oidc_identity_by_subject,
+        get_unique_user_by_oidc_email,
         link_oidc_identity,
     )
 
@@ -602,23 +603,76 @@ def oidc_callback():
             )
         )
 
-        if not identity:
-            log(
-                'warning',
-                'Pocket ID authentication succeeded '
-                'but identity is not linked'
+        if identity:
+            user = get_user_by_id(
+                identity.userID
             )
 
-            return redirect(
-                url_for(
-                    'auth.login',
-                    oidc_error='not_linked'
+        else:
+            # -------------------------------------------------
+            # Safe first-login auto-link
+            # -------------------------------------------------
+            #
+            # Only trust the e-mail for automatic account
+            # linking when the OIDC provider explicitly marks
+            # it as verified.
+            #
+            # issuer + sub remain the permanent identity key.
+            #
+
+            email_verified = (
+                userinfo.get('email_verified')
+                is True
+            )
+
+            user = None
+
+            if email and email_verified:
+                user = (
+                    get_unique_user_by_oidc_email(
+                        email
+                    )
                 )
-            )
 
-        user = get_user_by_id(
-            identity.userID
-        )
+            if user:
+                link_oidc_identity(
+                    user_id=user.id,
+                    issuer=issuer,
+                    subject=subject,
+                    email=email,
+                    preferred_username=(
+                        preferred_username
+                    )
+                )
+
+                log(
+                    'info',
+                    'Pocket ID automatically linked '
+                    f'to SharedMoments user {user.id} '
+                    'using verified e-mail'
+                )
+
+            else:
+                if email and not email_verified:
+                    log(
+                        'warning',
+                        'Pocket ID identity is not linked '
+                        'and supplied e-mail is not verified'
+                    )
+                else:
+                    log(
+                        'warning',
+                        'Pocket ID authentication succeeded '
+                        'but no unique existing account '
+                        'could be auto-linked'
+                    )
+
+                return redirect(
+                    url_for(
+                        'auth.login',
+                        oidc_error='not_linked'
+                    )
+                )
 
         if not user:
             log(

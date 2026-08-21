@@ -308,6 +308,27 @@
                               {% endif %}
                           </div>
                       </div>
+
+                      {% if auth_oidc_enabled %}
+                          {% if auth_current_user_oidc_linked %}
+                          <button
+                              type="button"
+                              class="transparent circle"
+                              title="{{ _('Unlink Pocket ID') }}"
+                              onclick="unlinkPocketId(this)">
+                              <i>link_off</i>
+                          </button>
+                          {% else %}
+                          <a
+                              class="button border"
+                              href="/oidc/link">
+                              <i>link</i>
+                              <span>
+                                  {{ _('Link Pocket ID') }}
+                              </span>
+                          </a>
+                          {% endif %}
+                      {% endif %}
                   </div>
 
                   {% if auth_force_local_login %}
