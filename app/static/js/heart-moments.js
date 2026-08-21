@@ -125,21 +125,15 @@ function formatMomentDate(value) {
 }
 
 
-function heartMomentProfilePictureUrl(profilePicture) {
-    const filename = String(
-        profilePicture || ''
-    ).trim();
-
-    if (
-        !filename
-        || filename === 'profile-placeholder.jpg'
-    ) {
+function heartMomentProfilePictureUrl(author) {
+    if (!author || !author.id) {
         return '/api/v2/media/static/profile-placeholder.jpg';
     }
 
     return (
-        '/api/v2/media/'
-        + encodeURIComponent(filename)
+        '/api/v2/users/'
+        + encodeURIComponent(author.id)
+        + '/profile-picture'
     );
 }
 
@@ -622,7 +616,7 @@ function createHeartMomentCard(
 
         avatar.src =
             heartMomentProfilePictureUrl(
-                moment.author.profilePicture
+                moment.author
             );
 
         avatar.addEventListener(

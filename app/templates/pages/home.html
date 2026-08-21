@@ -336,3 +336,51 @@
 
    </body>
 </html>
+<style>
+/* Heart Moment memory sizing override */
+
+.heart-memory-avatar {
+    display: block !important;
+
+    width: 36px !important;
+    height: 36px !important;
+
+    min-width: 36px !important;
+    min-height: 36px !important;
+
+    max-width: 36px !important;
+    max-height: 36px !important;
+
+    flex: 0 0 36px !important;
+
+    border-radius: 50% !important;
+    object-fit: cover !important;
+}
+
+.heart-memory-author {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.heart-memory-image {
+    display: block;
+
+    width: min(100%, 520px) !important;
+    height: auto !important;
+
+    max-height: 260px !important;
+
+    object-fit: cover !important;
+    border-radius: 1rem;
+
+    margin: 1rem auto 0;
+}
+
+@media (max-width: 600px) {
+    .heart-memory-image {
+        width: 100% !important;
+        max-height: 220px !important;
+    }
+}
+</style>

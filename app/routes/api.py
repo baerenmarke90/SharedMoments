@@ -3175,3 +3175,81 @@ def heart_moment_image_api(moment_id):
 # ============================================================
 # HEART MOMENT IMAGE API END
 # ============================================================
+
+
+# ============================================================
+# USER PROFILE PICTURE API
+# ============================================================
+
+@api_bp.route(
+    '/api/v2/users/<int:user_id>/profile-picture',
+    methods=['GET']
+)
+@jwt_required
+def user_profile_picture(user_id):
+    from pathlib import Path
+    from app.models import SessionLocal, User
+
+    db = SessionLocal()
+
+    try:
+        user = (
+            db.query(User)
+            .filter(User.id == user_id)
+            .first()
+        )
+
+        if not user:
+            return '', 404
+
+        app_dir = (
+            Path(__file__)
+            .resolve()
+            .parent
+            .parent
+        )
+
+        placeholder = (
+            app_dir
+            / 'static'
+            / 'images'
+            / 'profile-placeholder.jpg'
+        )
+
+        filename = str(
+            user.profilePicture or ''
+        ).strip()
+
+        # Kein eigenes Profilbild:
+        # offiziellen SharedMoments-Placeholder verwenden.
+        if (
+            not filename
+            or filename == 'profile-placeholder.jpg'
+        ):
+            return send_file(
+                placeholder
+            )
+
+        # Nur Dateinamen erlauben,
+        # niemals Pfade aus der DB übernehmen.
+        safe_filename = Path(filename).name
+
+        profile_file = (
+            app_dir
+            / 'uploads'
+            / 'profiles'
+            / safe_filename
+        )
+
+        if not profile_file.is_file():
+            return send_file(
+                placeholder
+            )
+
+        return send_file(
+            profile_file,
+            conditional=True,
+        )
+
+    finally:
+        db.close()

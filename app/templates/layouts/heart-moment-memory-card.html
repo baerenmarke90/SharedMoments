@@ -35,28 +35,11 @@
         {% if heart_moment_memory.author %}
         <div class="heart-memory-author">
 
-            {% if heart_moment_memory.author.profilePicture
-                  and heart_moment_memory.author.profilePicture != 'profile-placeholder.jpg' %}
-
             <img
                 class="heart-memory-avatar"
-                src="/api/v2/media/{{ heart_moment_memory.author.profilePicture|urlencode }}"
-                alt=""
-                loading="lazy"
-                onerror="
-                    this.onerror=null;
-                    this.src='/api/v2/media/static/profile-placeholder.jpg';
-                ">
-
-            {% else %}
-
-            <img
-                class="heart-memory-avatar"
-                src="/api/v2/media/static/profile-placeholder.jpg"
+                src="/api/v2/users/{{ heart_moment_memory.author.id }}/profile-picture"
                 alt=""
                 loading="lazy">
-
-            {% endif %}
 
             <span>
                 {{ _('Heart Moment from') }}
