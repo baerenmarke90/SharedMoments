@@ -18,6 +18,14 @@
        {% endif %}
        {% endfor %}
 
+       <!-- HEART MOMENTS NAV -->
+       {% if nav_edition == 'couples' %}
+       <a href="/heart-moments">
+          <i>favorite</i>
+          <span>{{ _('Heart Moments') }}</span>
+       </a>
+       {% endif %}
+
        {% if has_permission('Manage Lists') %}
        <a onclick="callUi('#dialog-manage-list-types')">
        <i>tune</i>

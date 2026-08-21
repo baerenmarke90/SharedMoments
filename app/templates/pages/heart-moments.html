@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{{ title.value }}</title>
+    {% include 'layouts/head.html' %}
+
+    <style>
+        .heart-moments-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .heart-moments-filters {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .heart-moments-filters button {
+            white-space: nowrap;
+        }
+
+        .heart-moment-card {
+            margin-bottom: 1rem;
+        }
+
+        .heart-moment-description {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            margin-top: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .heart-moment-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .heart-moment-actions {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .heart-moment-empty {
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+
+<body class="{% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
+
+    {% include 'layouts/header.html' %}
+
+    <div
+        class="overlay"
+        id="div-overlay-nav-drawer"
+        onclick="callUi('#dialog-nav-drawer')">
+    </div>
+
+    <div id="div-render-nav-drawer">
+        {% include 'layouts/nav-drawer.html' %}
+    </div>
+
+    <main class="responsive">
+
+        <article class="primary-container">
+
+            <div class="heart-moments-header">
+                <h4>
+                    <i>favorite</i>
+                    {{ _('Heart Moments') }}
+                </h4>
+
+                <p>
+                    {{ _('Keep the little moments that made you feel loved, seen, appreciated or grateful.') }}
+                </p>
+            </div>
+
+            <div class="heart-moments-filters">
+                <button
+                    class="chip fill heart-filter"
+                    data-filter="all"
+                    onclick="setHeartMomentFilter('all', this)">
+                    {{ _('All Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="shared"
+                    onclick="setHeartMomentFilter('shared', this)">
+                    {{ _('Shared Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="mine"
+                    onclick="setHeartMomentFilter('mine', this)">
+                    {{ _('My Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="private"
+                    onclick="setHeartMomentFilter('private', this)">
+                    {{ _('My private Heart Moments') }}
+                </button>
+
+                <button
+                    class="chip heart-filter"
+                    data-filter="partner"
+                    onclick="setHeartMomentFilter('partner', this)">
+                    {{ _("Partner's Heart Moments") }}
+                </button>
+            </div>
+
+            <div id="heart-moments-loading" class="center-align">
+                <progress class="circle"></progress>
+            </div>
+
+            <div
+                id="heart-moments-empty"
+                class="center-align heart-moment-empty"
+                style="display:none;">
+
+                <i class="extra">favorite_border</i>
+
+                <h5>{{ _('No Heart Moments yet') }}</h5>
+
+                <p>
+                    {{ _('Create your first Heart Moment') }}
+                </p>
+            </div>
+
+            <div id="heart-moments-list"></div>
+
+        </article>
+
+        {% include 'layouts/footer.html' %}
+
+    </main>
+
+
+    <!-- Create Heart Moment -->
+    <dialog class="bottom" id="dialog-create-heart-moment">
+
+        <nav>
+            <button
+                class="circle transparent"
+                onclick="callUi('#dialog-create-heart-moment')">
+                <i>close</i>
+            </button>
+
+            <h5 class="max">
+                {{ _('Create Heart Moment') }}
+            </h5>
+
+            <a onclick="saveHeartMoment()">
+                {{ _('Save') }}
+            </a>
+        </nav>
+
+        <div class="grid">
+
+            <div class="s12">
+                <div class="field label border">
+                    <input
+                        type="date"
+                        id="heart-create-date">
+
+                    <label>
+                        {{ _('Moment date') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12">
+                <div class="field label border">
+                    <textarea
+                        id="heart-create-description"
+                        rows="5"></textarea>
+
+                    <label>
+                        {{ _('Heart Moment description') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-create-feeling">
+                        <option value="seen">
+                            {{ _('Heart feeling seen') }}
+                        </option>
+
+                        <option value="loved">
+                            {{ _('Heart feeling loved') }}
+                        </option>
+
+                        <option value="appreciated">
+                            {{ _('Heart feeling appreciated') }}
+                        </option>
+
+                        <option value="supported">
+                            {{ _('Heart feeling supported') }}
+                        </option>
+
+                        <option value="grateful">
+                            {{ _('Heart feeling grateful') }}
+                        </option>
+
+                        <option value="happy">
+                            {{ _('Heart feeling happy') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('How did you feel?') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-create-visibility">
+                        <option value="shared">
+                            {{ _('Shared with partner') }}
+                        </option>
+
+                        <option value="private">
+                            {{ _('Only visible to me') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('Heart Moment visibility') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- Edit Heart Moment -->
+    <dialog class="bottom" id="dialog-edit-heart-moment">
+
+        <nav>
+            <button
+                class="circle transparent"
+                onclick="callUi('#dialog-edit-heart-moment')">
+                <i>close</i>
+            </button>
+
+            <h5 class="max">
+                {{ _('Edit Heart Moment') }}
+            </h5>
+
+            <a onclick="saveEditedHeartMoment()">
+                {{ _('Save') }}
+            </a>
+        </nav>
+
+        <input
+            type="hidden"
+            id="heart-edit-id">
+
+        <div class="grid">
+
+            <div class="s12">
+                <div class="field label border">
+                    <input
+                        type="date"
+                        id="heart-edit-date">
+
+                    <label>
+                        {{ _('Moment date') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12">
+                <div class="field label border">
+                    <textarea
+                        id="heart-edit-description"
+                        rows="5"></textarea>
+
+                    <label>
+                        {{ _('Heart Moment description') }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-edit-feeling">
+                        <option value="seen">
+                            {{ _('Heart feeling seen') }}
+                        </option>
+
+                        <option value="loved">
+                            {{ _('Heart feeling loved') }}
+                        </option>
+
+                        <option value="appreciated">
+                            {{ _('Heart feeling appreciated') }}
+                        </option>
+
+                        <option value="supported">
+                            {{ _('Heart feeling supported') }}
+                        </option>
+
+                        <option value="grateful">
+                            {{ _('Heart feeling grateful') }}
+                        </option>
+
+                        <option value="happy">
+                            {{ _('Heart feeling happy') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('How did you feel?') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+            <div class="s12 m6">
+                <div class="field label border suffix">
+
+                    <select id="heart-edit-visibility">
+                        <option value="shared">
+                            {{ _('Shared with partner') }}
+                        </option>
+
+                        <option value="private">
+                            {{ _('Only visible to me') }}
+                        </option>
+                    </select>
+
+                    <label>
+                        {{ _('Heart Moment visibility') }}
+                    </label>
+
+                    <i>arrow_drop_down</i>
+                </div>
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- FAB -->
+    <div
+        class="fixed bottom right"
+        style="margin-right:8px;margin-bottom:16px;z-index:90;">
+
+        <button
+            class="square round extra"
+            onclick="openCreateHeartMoment()"
+            style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+
+            <i>add</i>
+
+        </button>
+
+    </div>
+
+
+    <div
+        class="snackbar"
+        id="heart-moments-snackbar">
+
+        <div
+            class="max"
+            id="heart-moments-snackbar-text">
+        </div>
+
+    </div>
+
+
+    <script src="{{ static_versioned('js/main.js') }}"></script>
+
+    <script>
+        window.currentHeartMomentUserId = {{ current_user_id|int }};
+
+        window.heartMomentText = {
+            created: {{ _('Heart Moment created successfully')|tojson }},
+            updated: {{ _('Heart Moment updated successfully')|tojson }},
+            deleted: {{ _('Heart Moment deleted successfully')|tojson }},
+            loadError: {{ _('Unable to load Heart Moments')|tojson }},
+            saveError: {{ _('An error occurred while saving the Heart Moment.')|tojson }},
+            deleteError: {{ _('An error occurred while deleting the Heart Moment.')|tojson }},
+            descriptionRequired: {{ _('Please describe the Heart Moment')|tojson }},
+            deleteConfirm: {{ _('Delete this Heart Moment?')|tojson }},
+
+            shared: {{ _('Heart Moment shared')|tojson }},
+            private: {{ _('Heart Moment private')|tojson }},
+
+            feelings: {
+                loved: {{ _('Heart feeling loved')|tojson }},
+                seen: {{ _('Heart feeling seen')|tojson }},
+                appreciated: {{ _('Heart feeling appreciated')|tojson }},
+                supported: {{ _('Heart feeling supported')|tojson }},
+                grateful: {{ _('Heart feeling grateful')|tojson }},
+                happy: {{ _('Heart feeling happy')|tojson }}
+            }
+        };
+    </script>
+
+    <script src="{{ static_versioned('js/heart-moments.js') }}"></script>
+
+</body>
+</html>

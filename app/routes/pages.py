@@ -494,3 +494,48 @@ def list_view(content_url):
     except Exception as e:
         log('error', f'Error while processing the list view: {e}')
         return "An error occurred while processing your request. Page not found.", 500
+
+
+# ============================================================
+# HEART MOMENTS PAGE START
+# ============================================================
+
+@pages_bp.route('/heart-moments')
+@jwt_required
+def heart_moments_page():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        list_types = get_all_list_types()
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+
+        return render_template(
+            'pages/heart-moments.html',
+            list_types=list_types,
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            current_user_id=g.user_id,
+            sm_edition=sm_edition,
+        )
+
+    except Exception as e:
+        log(
+            'error',
+            f'Error while rendering Heart Moments page: {e}'
+        )
+
+        return (
+            'An error occurred while rendering the Heart Moments page.',
+            500
+        )
+
+
+# ============================================================
+# HEART MOMENTS PAGE END
+# ============================================================
