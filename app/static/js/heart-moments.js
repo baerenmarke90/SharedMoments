@@ -479,6 +479,35 @@ async function loadHeartMoments() {
 }
 
 
+function formatMomentDateDashboard(value) {
+    if (!value) {
+        return '';
+    }
+
+    const datePart =
+        String(value)
+            .slice(0, 10);
+
+    const parts =
+        datePart.split('-');
+
+    if (parts.length !== 3) {
+        return formatMomentDate(value);
+    }
+
+    const year =
+        parts[0].slice(-2);
+
+    const month =
+        parts[1].padStart(2, '0');
+
+    const day =
+        parts[2].padStart(2, '0');
+
+    return `${day}.${month}.${year}`;
+}
+
+
 function renderHeartMoments() {
     const list =
         document.getElementById(
@@ -522,7 +551,7 @@ function createHeartMomentCard(
         );
 
     article.className =
-        'surface-container padding '
+        'surface-container no-padding '
         + 'heart-moment-card';
 
     article.id =
@@ -576,10 +605,14 @@ function createHeartMomentCard(
         'heart-moment-meta small-text';
 
     const dateElement =
-        document.createElement('span');
+        document.createElement('a');
+
+    dateElement.className =
+        'heart-moment-date-chip '
+        + 'chip no-border secondary small round';
 
     dateElement.textContent =
-        formatMomentDate(
+        formatMomentDateDashboard(
             moment.momentDate
         );
 
@@ -667,6 +700,9 @@ function createHeartMomentCard(
 
     const visibilityElement =
         document.createElement('span');
+
+    visibilityElement.className =
+        'heart-moment-visibility';
 
     visibilityElement.textContent =
         moment.visibility === 'private'
@@ -814,6 +850,16 @@ function createHeartMomentCard(
             image
         );
     }
+
+    /*
+     * Meta-Daten aus dem Header lösen und als
+     * Dashboard-artigen Footer ans Kartenende setzen.
+     */
+    meta.classList.add(
+        'heart-moment-footer'
+    );
+
+    article.appendChild(meta);
 
     return article;
 }

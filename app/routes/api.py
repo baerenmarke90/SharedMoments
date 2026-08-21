@@ -848,16 +848,62 @@ def item():
                 list_type_obj = get_list_type_by_id(list_type)
                 list_type_title = list_type_obj.title if list_type_obj else ''
 
-                if list_type == 2:
-                    items = get_items_by_type(list_type, sort_by='asc', edition=sm_edition)
-                    rendered_items = render_template('layouts/timeline-card.html', moments=items, moments_title=list_type_title)
+                if list_type == 1:
+                    items = get_items_by_type(
+                        list_type,
+                        edition=sm_edition
+                    )
+
+                    shared_item_ids = (
+                        get_shared_item_ids()
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/home-items.html',
+                        items=items,
+                        list_type_title=list_type_title,
+                        shared_item_ids=shared_item_ids
+                    )
+
+                elif list_type == 2:
+                    items = get_items_by_type(
+                        list_type,
+                        sort_by='asc',
+                        edition=sm_edition
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/timeline-card.html',
+                        moments=items,
+                        moments_title=list_type_title
+                    )
+
                 elif list_type_title == 'Countdown':
-                    items = get_items_by_type(list_type, sort_by='asc', edition=sm_edition)
-                    rendered_items = render_template('layouts/countdown-card.html', countdowns=items, countdown_title='Countdown')
+                    items = get_items_by_type(
+                        list_type,
+                        sort_by='asc',
+                        edition=sm_edition
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/countdown-card.html',
+                        countdowns=items,
+                        countdown_title='Countdown'
+                    )
+
                 else:
-                    items = get_items_by_type(list_type, edition=sm_edition)
-                    shared_item_ids = get_shared_item_ids()
-                    rendered_items = render_template('layouts/home-items.html', items=items, list_type_title=list_type_title, shared_item_ids=shared_item_ids)
+                    items = get_items_by_type(
+                        list_type,
+                        edition=sm_edition,
+                        checked_last=True
+                    )
+
+                    rendered_items = render_template(
+                        'layouts/list-items.html',
+                        items=items,
+                        mainTitle=list_type_obj.mainTitle,
+                        list_type_title=list_type_title
+                    )
 
                 return jsonify({
                     'status': 'success',
@@ -929,29 +975,95 @@ def item_by_id(id):
             perm_check = require_list_permission('Update', list_type)
             if perm_check is not None:
                 return perm_check
-            content_url = request.form.get('contentURL', '')
-            dateCreated = request.form.get('dateCreated', '')
+            # contentURL muss zwischen
+            # "nicht gesendet" und "explizit leer"
+            # unterscheiden.
+            #
+            # Ein leerer Wert bedeutet:
+            # Alle Medien aus dem Beitrag entfernen.
+            content_url_present = (
+                'contentURL'
+                in request.form
+            )
+
+            content_url = (
+                request.form.get(
+                    'contentURL',
+                    ''
+                )
+                if content_url_present
+                else None
+            )
+
+            dateCreated = request.form.get(
+                'dateCreated',
+                ''
+            )
 
             if dateCreated:
-                dateCreated = datetime.strptime(request.form['dateCreated'], "%Y-%m-%d")
+                dateCreated = datetime.strptime(
+                    request.form[
+                        'dateCreated'
+                    ],
+                    "%Y-%m-%d"
+                )
 
-            if not title or content is None or not content_type or not list_type or not content_url:
+            if (
+                not title
+                or content is None
+                or not content_type
+                or not list_type
+                or not content_url_present
+                or not dateCreated
+            ):
                 item = get_item_by_id(id)
+
                 if not title:
                     title = item.title
-                if content is None or (content == '' and 'content' not in request.form):
-                    content = item.content
-                if not content_type:
-                    content_type = item.contentType
-                if not list_type:
-                    list_type = item.listType
-                if not content_url:
-                    content_url = item.contentURL
-                if not dateCreated:
-                    dateCreated = item.dateCreated
 
-                if dateCreated.date() == item.dateCreated.date():
-                    dateCreated = item.dateCreated
+                if (
+                    content is None
+                    or (
+                        content == ''
+                        and 'content'
+                        not in request.form
+                    )
+                ):
+                    content = item.content
+
+                if not content_type:
+                    content_type = (
+                        item.contentType
+                    )
+
+                if not list_type:
+                    list_type = (
+                        item.listType
+                    )
+
+                # Nur übernehmen, wenn das Feld
+                # wirklich NICHT gesendet wurde.
+                # contentURL="" bleibt leer.
+                if not content_url_present:
+                    content_url = (
+                        item.contentURL
+                    )
+
+                if not dateCreated:
+                    dateCreated = (
+                        item.dateCreated
+                    )
+
+                if (
+                    dateCreated.date()
+                    == item.dateCreated.date()
+                ):
+                    dateCreated = (
+                        item.dateCreated
+                    )
+
+            if content_url is None:
+                content_url = ''
 
             edition = request.form.get('edition')
 

@@ -147,7 +147,87 @@
             margin-top: 0.75rem;
         }
 
-    </style>
+
+        /* HEART MOMENT DASHBOARD CARD START */
+
+        .heart-moment-card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /*
+         * Aufbau wie normale Dashboard-Posts:
+         * Medium zuerst, Inhalt darunter.
+         */
+        .heart-moment-card > .heart-moment-image {
+            order: 0;
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: none;
+            object-fit: cover;
+            border-radius: 0;
+            margin: 0;
+        }
+
+        .heart-moment-card > .row {
+            order: 1;
+            margin: 0;
+            padding: 1rem 1rem 0;
+        }
+
+        .heart-moment-card > .heart-moment-description {
+            order: 2;
+            margin: 1rem 1rem 0;
+            padding: 0;
+        }
+
+        .heart-moment-card > .heart-moment-footer {
+            order: 3;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.55rem;
+
+            margin-top: 0.85rem;
+            padding: 0 1rem 1rem;
+
+            opacity: 1;
+        }
+
+        .heart-moment-visibility {
+            order: 1;
+            opacity: 0.8;
+        }
+
+        .heart-moment-date-chip {
+            order: 2;
+            margin-left: auto;
+        }
+
+        /*
+         * Name + Avatar rechts wie beim Dashboard.
+         * DOM ist Avatar -> Name, daher visuell umdrehen.
+         */
+        .heart-moment-footer .heart-moment-author {
+            order: 3;
+            flex-direction: row-reverse;
+        }
+
+        .heart-moment-card .heart-moment-actions {
+            margin-left: auto;
+        }
+
+        @media (max-width: 600px) {
+            .heart-moment-card > .heart-moment-footer {
+                gap: 0.45rem;
+            }
+        }
+
+        /* HEART MOMENT DASHBOARD CARD END */
+
+</style>
 </head>
 
 <body class="{% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
