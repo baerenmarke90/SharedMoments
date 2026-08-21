@@ -720,14 +720,98 @@ let selectedFileBuffers = []; // Pre-read file data for offline support
 function openCreateDialog() {
    selectedImages = [];
    selectedFileBuffers = [];
-   document.getElementById("div-create-home-item-title").value = "";
-   document.getElementById("textarea-create-home-item-content").value = "";
-   document.getElementById("div-create-home-item-date-created").value = "";
-   document.getElementById("div-create-home-item-preview-grid").innerHTML = "";
-   document.getElementById("file-input-create-home-item").value = "";
-   document.getElementById("div-toggle-select-create").style.display = "none";
+
+   const titleInput = document.getElementById("div-create-home-item-title");
+   const contentInput = document.getElementById("textarea-create-home-item-content");
+   const dateInput = document.getElementById("div-create-home-item-date-created");
+   const previewGrid = document.getElementById("div-create-home-item-preview-grid");
+   const fileInput = document.getElementById("file-input-create-home-item");
+   const toggleSelect = document.getElementById("div-toggle-select-create");
+   const dialog = document.getElementById("dialog-create-new-home-item");
+
+   if (!dialog) {
+      console.error('[Memories] Create dialog is not available in the DOM.');
+      if (typeof showSnackbar === 'function') {
+         showSnackbar(
+            'home',
+            true,
+            'error',
+            'Der Erinnerungsdialog konnte nicht geöffnet werden.',
+            null,
+            false
+         );
+      }
+      return;
+   }
+
+   if (titleInput) titleInput.value = "";
+   if (contentInput) contentInput.value = "";
+   if (dateInput) dateInput.value = "";
+   if (previewGrid) previewGrid.innerHTML = "";
+   if (fileInput) fileInput.value = "";
+   if (toggleSelect) toggleSelect.style.display = "none";
+
    window.uploadedUrls = "";
    callUi('#dialog-create-new-home-item');
+}
+
+function openMemoryCreateFromCoupleHome() {
+   const coupleCreateDialog = document.getElementById('dialog-couple-create');
+
+   if (coupleCreateDialog) {
+      callUi('#dialog-couple-create');
+   }
+
+   // BeerCSS/mobile browsers can drop the second dialog when one dialog is
+   // closed and another is opened in the same click event. Give the closing
+   // transition a short head start before opening the memory dialog.
+   window.setTimeout(() => {
+      openCreateDialog();
+   }, 180);
+}
+
+function initHomeMediaPickerDelegation() {
+   if (window.__sharedMomentsMediaPickerDelegationInstalled) {
+      return;
+   }
+
+   window.__sharedMomentsMediaPickerDelegationInstalled = true;
+
+   document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!target || typeof target.closest !== 'function') {
+         return;
+      }
+
+      const field = target.closest('.field');
+      if (!field) {
+         return;
+      }
+
+      const fileInput = field.querySelector(
+         '#file-input-create-home-item, #file-input-edit-home-item'
+      );
+
+      if (!fileInput || target === fileInput) {
+         return;
+      }
+
+      // The BeerCSS field also contains a visual text input. On touch devices
+      // that element can receive the tap instead of the real file input.
+      event.preventDefault();
+      event.stopPropagation();
+      fileInput.click();
+   });
+}
+
+if (document.readyState === 'loading') {
+   document.addEventListener(
+      'DOMContentLoaded',
+      initHomeMediaPickerDelegation,
+      { once: true }
+   );
+} else {
+   initHomeMediaPickerDelegation();
 }
 
 // Funktion zum Generieren der Vorschau für das File-Input
