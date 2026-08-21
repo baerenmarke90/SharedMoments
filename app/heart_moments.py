@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy import or_
 
 from .models import HeartMoment, User, SessionLocal
+from .heart_moment_media import delete_heart_moment_image
 
 
 ALLOWED_FEELINGS = {
@@ -38,15 +39,24 @@ def _normalize_date(value):
     try:
         return date.fromisoformat(str(value))
     except ValueError as exc:
-        raise ValueError('momentDate must use YYYY-MM-DD format') from exc
+        raise ValueError(
+            'momentDate must use YYYY-MM-DD format'
+        ) from exc
 
 
-def _normalize_choice(value, allowed, field_name):
-    value = str(value or '').strip().lower()
+def _normalize_choice(
+    value,
+    allowed,
+    field_name,
+):
+    value = str(
+        value or ''
+    ).strip().lower()
 
     if value not in allowed:
         raise ValueError(
-            f'Invalid {field_name}. Allowed values: '
+            f'Invalid {field_name}. '
+            f'Allowed values: '
             + ', '.join(sorted(allowed))
         )
 
@@ -56,92 +66,129 @@ def _normalize_choice(value, allowed, field_name):
 def _serialize(session, moment):
     author = (
         session.query(User)
-        .filter(User.id == moment.authorUserID)
+        .filter(
+            User.id == moment.authorUserID
+        )
         .first()
     )
 
     return {
         'id': moment.id,
         'authorUserID': moment.authorUserID,
+
         'author': {
             'id': author.id,
             'firstName': author.firstName,
             'lastName': author.lastName,
         } if author else None,
+
         'momentDate': (
             moment.momentDate.isoformat()
-            if moment.momentDate else None
+            if moment.momentDate
+            else None
         ),
+
         'description': moment.description,
         'feeling': moment.feeling,
         'visibility': moment.visibility,
+
+        # Only used by the UI as "has image".
+        # The actual image is always retrieved
+        # through the protected image endpoint.
         'mediaFilename': moment.mediaFilename,
+
         'dateCreated': (
             moment.dateCreated.isoformat()
-            if moment.dateCreated else None
+            if moment.dateCreated
+            else None
         ),
+
         'dateModified': (
             moment.dateModified.isoformat()
-            if moment.dateModified else None
+            if moment.dateModified
+            else None
         ),
     }
 
 
-def list_heart_moments(user_id, filter_name='all', feeling=None):
-    filter_name = str(filter_name or 'all').strip().lower()
+def list_heart_moments(
+    user_id,
+    filter_name='all',
+    feeling=None,
+):
+    filter_name = str(
+        filter_name or 'all'
+    ).strip().lower()
 
     if filter_name not in ALLOWED_FILTERS:
         raise ValueError(
             'Invalid filter. Allowed values: '
-            + ', '.join(sorted(ALLOWED_FILTERS))
+            + ', '.join(
+                sorted(ALLOWED_FILTERS)
+            )
         )
 
     normalized_feeling = None
 
     if feeling:
-        normalized_feeling = _normalize_choice(
-            feeling,
-            ALLOWED_FEELINGS,
-            'feeling',
+        normalized_feeling = (
+            _normalize_choice(
+                feeling,
+                ALLOWED_FEELINGS,
+                'feeling',
+            )
         )
 
     session = SessionLocal()
 
     try:
-        # Central privacy rule:
-        # A user may see a moment if it is shared OR they are its author.
-        query = session.query(HeartMoment).filter(
-            or_(
-                HeartMoment.visibility == 'shared',
-                HeartMoment.authorUserID == user_id,
+        query = (
+            session.query(HeartMoment)
+            .filter(
+                or_(
+                    HeartMoment.visibility
+                    == 'shared',
+
+                    HeartMoment.authorUserID
+                    == user_id,
+                )
             )
         )
 
         if filter_name == 'shared':
             query = query.filter(
-                HeartMoment.visibility == 'shared'
+                HeartMoment.visibility
+                == 'shared'
             )
 
         elif filter_name == 'mine':
             query = query.filter(
-                HeartMoment.authorUserID == user_id
+                HeartMoment.authorUserID
+                == user_id
             )
 
         elif filter_name == 'private':
             query = query.filter(
-                HeartMoment.authorUserID == user_id,
-                HeartMoment.visibility == 'private',
+                HeartMoment.authorUserID
+                == user_id,
+
+                HeartMoment.visibility
+                == 'private',
             )
 
         elif filter_name == 'partner':
             query = query.filter(
-                HeartMoment.authorUserID != user_id,
-                HeartMoment.visibility == 'shared',
+                HeartMoment.authorUserID
+                != user_id,
+
+                HeartMoment.visibility
+                == 'shared',
             )
 
         if normalized_feeling:
             query = query.filter(
-                HeartMoment.feeling == normalized_feeling
+                HeartMoment.feeling
+                == normalized_feeling
             )
 
         moments = query.order_by(
@@ -158,7 +205,10 @@ def list_heart_moments(user_id, filter_name='all', feeling=None):
         session.close()
 
 
-def get_visible_heart_moment(moment_id, user_id):
+def get_visible_heart_moment(
+    moment_id,
+    user_id,
+):
     session = SessionLocal()
 
     try:
@@ -166,9 +216,13 @@ def get_visible_heart_moment(moment_id, user_id):
             session.query(HeartMoment)
             .filter(
                 HeartMoment.id == moment_id,
+
                 or_(
-                    HeartMoment.visibility == 'shared',
-                    HeartMoment.authorUserID == user_id,
+                    HeartMoment.visibility
+                    == 'shared',
+
+                    HeartMoment.authorUserID
+                    == user_id,
                 ),
             )
             .first()
@@ -177,7 +231,39 @@ def get_visible_heart_moment(moment_id, user_id):
         if not moment:
             return None
 
-        return _serialize(session, moment)
+        return _serialize(
+            session,
+            moment,
+        )
+
+    finally:
+        session.close()
+
+
+def get_owned_heart_moment(
+    moment_id,
+    user_id,
+):
+    session = SessionLocal()
+
+    try:
+        moment = (
+            session.query(HeartMoment)
+            .filter(
+                HeartMoment.id == moment_id,
+                HeartMoment.authorUserID
+                == user_id,
+            )
+            .first()
+        )
+
+        if not moment:
+            return None
+
+        return _serialize(
+            session,
+            moment,
+        )
 
     finally:
         session.close()
@@ -189,12 +275,15 @@ def create_heart_moment(
     feeling,
     moment_date=None,
     visibility='shared',
-    media_filename=None,
 ):
-    description = str(description or '').strip()
+    description = str(
+        description or ''
+    ).strip()
 
     if not description:
-        raise ValueError('Description is required')
+        raise ValueError(
+            'Description is required'
+        )
 
     feeling = _normalize_choice(
         feeling,
@@ -208,11 +297,8 @@ def create_heart_moment(
         'visibility',
     )
 
-    moment_date = _normalize_date(moment_date)
-
-    media_filename = (
-        str(media_filename).strip()
-        if media_filename else None
+    moment_date = _normalize_date(
+        moment_date
     )
 
     session = SessionLocal()
@@ -224,14 +310,17 @@ def create_heart_moment(
             description=description,
             feeling=feeling,
             visibility=visibility,
-            mediaFilename=media_filename,
+            mediaFilename=None,
         )
 
         session.add(moment)
         session.commit()
         session.refresh(moment)
 
-        return _serialize(session, moment)
+        return _serialize(
+            session,
+            moment,
+        )
 
     except Exception:
         session.rollback()
@@ -241,17 +330,20 @@ def create_heart_moment(
         session.close()
 
 
-def update_heart_moment(moment_id, user_id, changes):
+def update_heart_moment(
+    moment_id,
+    user_id,
+    changes,
+):
     session = SessionLocal()
 
     try:
-        # Ownership is enforced directly in the query.
-        # A partner must never be able to edit another user's moment.
         moment = (
             session.query(HeartMoment)
             .filter(
                 HeartMoment.id == moment_id,
-                HeartMoment.authorUserID == user_id,
+                HeartMoment.authorUserID
+                == user_id,
             )
             .first()
         )
@@ -261,45 +353,63 @@ def update_heart_moment(moment_id, user_id, changes):
 
         if 'description' in changes:
             description = str(
-                changes.get('description') or ''
+                changes.get(
+                    'description'
+                ) or ''
             ).strip()
 
             if not description:
-                raise ValueError('Description is required')
+                raise ValueError(
+                    'Description is required'
+                )
 
-            moment.description = description
+            moment.description = (
+                description
+            )
 
         if 'feeling' in changes:
-            moment.feeling = _normalize_choice(
-                changes.get('feeling'),
-                ALLOWED_FEELINGS,
-                'feeling',
+            moment.feeling = (
+                _normalize_choice(
+                    changes.get(
+                        'feeling'
+                    ),
+                    ALLOWED_FEELINGS,
+                    'feeling',
+                )
             )
 
         if 'visibility' in changes:
-            moment.visibility = _normalize_choice(
-                changes.get('visibility'),
-                ALLOWED_VISIBILITIES,
-                'visibility',
+            moment.visibility = (
+                _normalize_choice(
+                    changes.get(
+                        'visibility'
+                    ),
+                    ALLOWED_VISIBILITIES,
+                    'visibility',
+                )
             )
 
         if 'momentDate' in changes:
-            moment.momentDate = _normalize_date(
-                changes.get('momentDate')
+            moment.momentDate = (
+                _normalize_date(
+                    changes.get(
+                        'momentDate'
+                    )
+                )
             )
 
-        if 'mediaFilename' in changes:
-            media_filename = changes.get('mediaFilename')
-
-            moment.mediaFilename = (
-                str(media_filename).strip()
-                if media_filename else None
-            )
+        # mediaFilename is deliberately NOT
+        # accepted here. Media can only be
+        # changed through the protected
+        # image endpoint.
 
         session.commit()
         session.refresh(moment)
 
-        return _serialize(session, moment)
+        return _serialize(
+            session,
+            moment,
+        )
 
     except Exception:
         session.rollback()
@@ -309,16 +419,60 @@ def update_heart_moment(moment_id, user_id, changes):
         session.close()
 
 
-def delete_heart_moment(moment_id, user_id):
+def set_heart_moment_media(
+    moment_id,
+    user_id,
+    media_filename,
+):
     session = SessionLocal()
 
     try:
-        # Delete is author-only.
         moment = (
             session.query(HeartMoment)
             .filter(
                 HeartMoment.id == moment_id,
-                HeartMoment.authorUserID == user_id,
+                HeartMoment.authorUserID
+                == user_id,
+            )
+            .first()
+        )
+
+        if not moment:
+            return None
+
+        moment.mediaFilename = (
+            media_filename
+        )
+
+        session.commit()
+        session.refresh(moment)
+
+        return _serialize(
+            session,
+            moment,
+        )
+
+    except Exception:
+        session.rollback()
+        raise
+
+    finally:
+        session.close()
+
+
+def delete_heart_moment(
+    moment_id,
+    user_id,
+):
+    session = SessionLocal()
+
+    try:
+        moment = (
+            session.query(HeartMoment)
+            .filter(
+                HeartMoment.id == moment_id,
+                HeartMoment.authorUserID
+                == user_id,
             )
             .first()
         )
@@ -326,8 +480,23 @@ def delete_heart_moment(moment_id, user_id):
         if not moment:
             return False
 
+        media_filename = (
+            moment.mediaFilename
+        )
+
         session.delete(moment)
         session.commit()
+
+        if media_filename:
+            try:
+                delete_heart_moment_image(
+                    media_filename
+                )
+            except Exception:
+                # DB deletion must not fail
+                # because an orphaned file
+                # could not be removed.
+                pass
 
         return True
 

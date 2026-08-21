@@ -56,6 +56,35 @@
         .heart-moment-empty {
             padding: 2rem 0;
         }
+
+        .heart-moment-image {
+            display: block;
+            width: 100%;
+            max-height: 480px;
+            object-fit: cover;
+            border-radius: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .heart-image-picker {
+            margin-top: 0.5rem;
+        }
+
+        .heart-image-picker-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .heart-image-preview {
+            display: block;
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            border-radius: 1rem;
+            margin-top: 0.75rem;
+        }
+
     </style>
 </head>
 
@@ -255,6 +284,54 @@
                 </div>
             </div>
 
+            <div class="s12 heart-image-picker">
+
+                <input
+                    type="file"
+                    id="heart-create-image"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    hidden
+                    onchange="previewCreateHeartImage()">
+
+                <div class="heart-image-picker-actions">
+
+                    <button
+                        type="button"
+                        class="border"
+                        onclick="document.getElementById('heart-create-image').click()">
+
+                        <i>add_photo_alternate</i>
+                        <span>{{ _('Choose photo') }}</span>
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="border"
+                        id="heart-create-remove-image"
+                        style="display:none;"
+                        onclick="clearCreateHeartImage()">
+
+                        <i>delete</i>
+                        <span>{{ _('Remove photo') }}</span>
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="heart-create-image-preview-wrap"
+                    style="display:none;">
+
+                    <img
+                        id="heart-create-image-preview"
+                        class="heart-image-preview"
+                        alt="{{ _('Photo preview') }}">
+
+                </div>
+
+            </div>
+
         </div>
 
     </dialog>
@@ -367,6 +444,54 @@
                 </div>
             </div>
 
+            <div class="s12 heart-image-picker">
+
+                <input
+                    type="file"
+                    id="heart-edit-image"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    hidden
+                    onchange="previewEditHeartImage()">
+
+                <div class="heart-image-picker-actions">
+
+                    <button
+                        type="button"
+                        class="border"
+                        onclick="document.getElementById('heart-edit-image').click()">
+
+                        <i>add_photo_alternate</i>
+                        <span>{{ _('Choose photo') }}</span>
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="border"
+                        id="heart-edit-remove-image"
+                        style="display:none;"
+                        onclick="clearEditHeartImage()">
+
+                        <i>delete</i>
+                        <span>{{ _('Remove photo') }}</span>
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="heart-edit-image-preview-wrap"
+                    style="display:none;">
+
+                    <img
+                        id="heart-edit-image-preview"
+                        class="heart-image-preview"
+                        alt="{{ _('Photo preview') }}">
+
+                </div>
+
+            </div>
+
         </div>
 
     </dialog>
@@ -415,6 +540,8 @@
             deleteError: {{ _('An error occurred while deleting the Heart Moment.')|tojson }},
             descriptionRequired: {{ _('Please describe the Heart Moment')|tojson }},
             deleteConfirm: {{ _('Delete this Heart Moment?')|tojson }},
+            imageUploadError: {{ _('Heart Moment saved, but the photo could not be uploaded.')|tojson }},
+            imageRemoveError: {{ _('The photo could not be removed.')|tojson }},
 
             shared: {{ _('Heart Moment shared')|tojson }},
             private: {{ _('Heart Moment private')|tojson }},

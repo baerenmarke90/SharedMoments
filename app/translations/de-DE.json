@@ -4478,5 +4478,45 @@
     "languageCode": "de-DE",
     "entityType": "ui",
     "translatedText": "Nur für mich"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Choose photo",
+    "helpText": null,
+    "languageCode": "de-DE",
+    "entityType": "ui",
+    "translatedText": "Bild auswählen"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Remove photo",
+    "helpText": null,
+    "languageCode": "de-DE",
+    "entityType": "ui",
+    "translatedText": "Bild entfernen"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Photo preview",
+    "helpText": null,
+    "languageCode": "de-DE",
+    "entityType": "ui",
+    "translatedText": "Bildvorschau"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment saved, but the photo could not be uploaded.",
+    "helpText": null,
+    "languageCode": "de-DE",
+    "entityType": "ui",
+    "translatedText": "Der Herzmoment wurde gespeichert, aber das Bild konnte nicht hochgeladen werden."
+  },
+  {
+    "entityID": 0,
+    "fieldName": "The photo could not be removed.",
+    "helpText": null,
+    "languageCode": "de-DE",
+    "entityType": "ui",
+    "translatedText": "Das Bild konnte nicht entfernt werden."
   }
 ]

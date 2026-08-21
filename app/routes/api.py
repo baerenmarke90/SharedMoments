@@ -2735,7 +2735,6 @@ def heart_moments_api():
             feeling=data.get('feeling'),
             moment_date=data.get('momentDate'),
             visibility=data.get('visibility', 'shared'),
-            media_filename=data.get('mediaFilename'),
         )
 
         log(
@@ -2901,4 +2900,278 @@ def heart_moment_by_id_api(moment_id):
 
 # ============================================================
 # HEART MOMENTS API END
+# ============================================================
+
+
+# ============================================================
+# HEART MOMENT IMAGE API START
+# ============================================================
+
+from flask import send_file
+
+from app.heart_moments import (
+    get_owned_heart_moment,
+    set_heart_moment_media,
+)
+
+from app.heart_moment_media import (
+    save_heart_moment_image,
+    delete_heart_moment_image,
+    heart_moment_image_path,
+    heart_moment_image_mimetype,
+)
+
+
+@api_bp.route(
+    '/api/v2/heart-moments/<int:moment_id>/image',
+    methods=['GET', 'POST', 'DELETE']
+)
+@jwt_required
+def heart_moment_image_api(moment_id):
+    try:
+
+        # ----------------------------------------------------
+        # GET
+        # ----------------------------------------------------
+        if request.method == 'GET':
+            moment = get_visible_heart_moment(
+                moment_id=moment_id,
+                user_id=g.user_id,
+            )
+
+            if (
+                not moment
+                or not moment.get(
+                    'mediaFilename'
+                )
+            ):
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Image not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            filename = moment[
+                'mediaFilename'
+            ]
+
+            path = (
+                heart_moment_image_path(
+                    filename
+                )
+            )
+
+            if (
+                not path
+                or not path.is_file()
+            ):
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Image not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            response = send_file(
+                path,
+                mimetype=(
+                    heart_moment_image_mimetype(
+                        filename
+                    )
+                ),
+                conditional=True,
+            )
+
+            # Never allow a shared/public proxy
+            # cache to treat private couple media
+            # as public content.
+            response.headers[
+                'Cache-Control'
+            ] = 'private, max-age=3600'
+
+            return response
+
+
+        # POST and DELETE are author-only.
+        moment = get_owned_heart_moment(
+            moment_id=moment_id,
+            user_id=g.user_id,
+        )
+
+        if not moment:
+            return jsonify({
+                'status': 'error',
+                'message': 'Heart Moment not found',
+                'data': {
+                    'error_code': 404
+                }
+            }), 404
+
+
+        # ----------------------------------------------------
+        # POST / replace image
+        # ----------------------------------------------------
+        if request.method == 'POST':
+            image = request.files.get(
+                'image'
+            )
+
+            if not image:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'No image provided',
+                    'data': {
+                        'error_code': 400
+                    }
+                }), 400
+
+            old_filename = moment.get(
+                'mediaFilename'
+            )
+
+            new_filename = (
+                save_heart_moment_image(
+                    image
+                )
+            )
+
+            try:
+                updated = (
+                    set_heart_moment_media(
+                        moment_id=moment_id,
+                        user_id=g.user_id,
+                        media_filename=(
+                            new_filename
+                        ),
+                    )
+                )
+
+                if not updated:
+                    delete_heart_moment_image(
+                        new_filename
+                    )
+
+                    return jsonify({
+                        'status': 'error',
+                        'message': (
+                            'Heart Moment '
+                            'not found'
+                        ),
+                        'data': {
+                            'error_code': 404
+                        }
+                    }), 404
+
+            except Exception:
+                delete_heart_moment_image(
+                    new_filename
+                )
+                raise
+
+            if (
+                old_filename
+                and old_filename
+                != new_filename
+            ):
+                try:
+                    delete_heart_moment_image(
+                        old_filename
+                    )
+                except Exception:
+                    pass
+
+            return jsonify({
+                'status': 'success',
+                'message': (
+                    'Heart Moment image '
+                    'uploaded successfully'
+                ),
+                'data': {
+                    'item': updated
+                }
+            }), 200
+
+
+        # ----------------------------------------------------
+        # DELETE image
+        # ----------------------------------------------------
+        old_filename = moment.get(
+            'mediaFilename'
+        )
+
+        if not old_filename:
+            return jsonify({
+                'status': 'success',
+                'message': (
+                    'Heart Moment has no image'
+                ),
+                'data': {
+                    'item': moment
+                }
+            }), 200
+
+        updated = set_heart_moment_media(
+            moment_id=moment_id,
+            user_id=g.user_id,
+            media_filename=None,
+        )
+
+        try:
+            delete_heart_moment_image(
+                old_filename
+            )
+        except Exception:
+            pass
+
+        return jsonify({
+            'status': 'success',
+            'message': (
+                'Heart Moment image removed'
+            ),
+            'data': {
+                'item': updated
+            }
+        }), 200
+
+
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'data': {
+                'error_code': 400
+            }
+        }), 400
+
+    except Exception as e:
+        log(
+            'error',
+            f'Heart Moment image error: '
+            f'ID={moment_id}, '
+            f'User={g.user_id}, '
+            f'Error={e}'
+        )
+
+        return jsonify({
+            'status': 'error',
+            'message': (
+                'An error occurred while '
+                'processing the image.'
+            ),
+            'data': {
+                'error_code': 500,
+                'error_message': (
+                    str(e)
+                    if app.debug
+                    else None
+                )
+            }
+        }), 500
+
+
+# ============================================================
+# HEART MOMENT IMAGE API END
 # ============================================================
