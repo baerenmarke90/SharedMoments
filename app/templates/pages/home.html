@@ -522,20 +522,83 @@
       window.uploadedUrls = '';
 
       {% if sm_edition == 'couples' %}
-      document.addEventListener('DOMContentLoaded', () => {
-         ['div-render-home-items', 'div-render-timeline-card'].forEach((id) => {
-            const target = document.getElementById(id);
-            if (!target) return;
+      /*
+       * Couple home is server-rendered from several existing data sources.
+       * Refresh only after a successful item mutation.
+       *
+       * Do not watch the hidden legacy render containers: the existing
+       * JavaScript renders loading skeletons before POST/PUT/DELETE, and an
+       * observer would reload the page before the request can finish.
+       */
+      (() => {
+         const originalFetch = window.fetch.bind(window);
+         let reloadScheduled = false;
 
-            const observer = new MutationObserver(() => {
-               window.location.reload();
-            });
+         window.fetch = async (...args) => {
+            const response = await originalFetch(...args);
 
-            observer.observe(target, {
-               childList: true
-            });
-         });
-      });
+            try {
+               const request = args[0];
+               const options = args[1] || {};
+
+               const rawUrl = typeof request === 'string'
+                  ? request
+                  : request.url;
+
+               const method = (
+                  options.method
+                  || (typeof request !== 'string' && request.method)
+                  || 'GET'
+               ).toUpperCase();
+
+               const path = new URL(
+                  rawUrl,
+                  window.location.origin
+               ).pathname;
+
+               const isItemMutation = (
+                  ['POST', 'PUT', 'DELETE'].includes(method)
+                  && (
+                     path === '/api/v2/items'
+                     || path.startsWith('/api/v2/item/')
+                  )
+               );
+
+               if (
+                  isItemMutation
+                  && response.ok
+                  && !reloadScheduled
+               ) {
+                  const clonedResponse = response.clone();
+
+                  clonedResponse.json()
+                     .then((result) => {
+                        if (
+                           result
+                           && result.status === 'success'
+                           && !reloadScheduled
+                        ) {
+                           reloadScheduled = true;
+
+                           window.setTimeout(() => {
+                              window.location.reload();
+                           }, 150);
+                        }
+                     })
+                     .catch(() => {
+                        // Leave the original response untouched.
+                     });
+               }
+            } catch (error) {
+               console.warn(
+                  '[Couple Home] Could not schedule dashboard refresh:',
+                  error
+               );
+            }
+
+            return response;
+         };
+      })();
       {% endif %}
    </script>
    <script src="{{ static_versioned('js/main.js') }}"></script>
