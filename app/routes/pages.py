@@ -5,7 +5,8 @@ from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_relationship_statuses_with_names, get_items_by_type,
     get_supported_languages, get_translation_for_entity, get_translation_progress,
     get_translations_by_language, get_user_by_id, get_user_setting, get_setting_by_name,
-    get_item_by_id, get_user_settings, get_list_type_by_content_url, get_all_settings,
+    get_item_by_id, create_item, update_item, delete_item, get_user_settings,
+    get_list_type_by_content_url, get_all_settings,
     get_shared_item_ids, get_list_type_by_title, ensure_countdown_list_type,
     ensure_banner_song_setting, get_all_reminders, get_user_muted_reminder_ids,
     ensure_notification_settings, get_passkeys_by_user, get_all_users,
@@ -13,7 +14,9 @@ from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     update_couple_chapter, delete_couple_chapter, get_couple_chapter_links,
     replace_couple_chapter_links, get_couple_chapter_link_map,
     get_couple_plans, get_couple_plan, create_couple_plan,
-    update_couple_plan, delete_couple_plan, set_couple_plan_chapter)
+    update_couple_plan, delete_couple_plan, set_couple_plan_chapter,
+    get_couple_bucket_plan_map, link_couple_bucket_plan,
+    sync_bucket_item_to_plan)
 from app.logger import log
 import os
 from app.utils import generate_banner_text
@@ -1140,6 +1143,300 @@ def milestones():
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
 
 
+def _get_bucket_list_type():
+    return (
+        get_list_type_by_content_url('bucket-list')
+        or get_list_type_by_title('Bucket List')
+    )
+
+
+def _bucket_item_or_none(item_id, list_type):
+    item = get_item_by_id(item_id)
+    if not item or not list_type or item.listType != list_type.id:
+        return None
+    return item
+
+
+@pages_bp.route('/bucketlist')
+@jwt_required
+def bucketlist():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        list_type = _get_bucket_list_type()
+        if not list_type:
+            return "Bucket List not found.", 404
+        if not has_list_permission('View', list_type.title):
+            return redirect(url_for('pages.home'))
+
+        selected_status = str(request.args.get('status', 'open')).strip().lower()
+        if selected_status not in {'all', 'open', 'planned', 'done'}:
+            selected_status = 'open'
+
+        search_query = str(request.args.get('q', '')).strip()
+        search_needle = search_query.casefold()
+        plan_map = get_couple_bucket_plan_map()
+
+        raw_items = get_items_by_type(
+            list_type.id,
+            'desc',
+            edition=sm_edition,
+            checked_last=True,
+        )
+
+        bucket_items = []
+        total_count = 0
+        done_count = 0
+        planned_count = 0
+
+        for item, creator in raw_items:
+            completed = str(item.content or '').strip() == '1'
+            linked_plan = plan_map.get(item.id)
+            plan_meta = None
+            if linked_plan:
+                status_meta = _PLAN_STATUS_META.get(
+                    linked_plan.get('status'),
+                    _PLAN_STATUS_META['idea'],
+                )
+                plan_meta = dict(linked_plan)
+                plan_meta['status_label'] = status_meta['label']
+                plan_meta['status_icon'] = status_meta['icon']
+
+            total_count += 1
+            if completed:
+                done_count += 1
+            if (
+                linked_plan
+                and linked_plan.get('status') != 'experienced'
+                and not completed
+            ):
+                planned_count += 1
+
+            if selected_status == 'open' and completed:
+                continue
+            if selected_status == 'done' and not completed:
+                continue
+            if selected_status == 'planned' and not (
+                linked_plan
+                and linked_plan.get('status') != 'experienced'
+                and not completed
+            ):
+                continue
+
+            if search_needle and search_needle not in (item.title or '').casefold():
+                continue
+
+            bucket_items.append({
+                'id': item.id,
+                'title': item.title or '',
+                'completed': completed,
+                'creator': creator,
+                'plan': plan_meta,
+                'date_created': item.dateCreated,
+            })
+
+        open_count = total_count - done_count
+        progress_percent = (
+            round((done_count / total_count) * 100)
+            if total_count else 0
+        )
+
+        return render_template(
+            'pages/bucketlist.html',
+            title=get_display_title(),
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            sm_edition=sm_edition,
+            page_title='Bucketlist',
+            bucket_items=bucket_items,
+            bucket_list_type=list_type,
+            list_type_title=list_type.title,
+            selected_status=selected_status,
+            search_query=search_query,
+            total_count=total_count,
+            open_count=open_count,
+            planned_count=planned_count,
+            done_count=done_count,
+            progress_percent=progress_percent,
+            bucket_error=request.args.get('error', ''),
+        )
+    except Exception as e:
+        log('error', f'Error while rendering couple bucketlist: {e}')
+        return "An error occurred while rendering the Bucketlist.", 500
+
+
+@pages_bp.route('/bucketlist/create', methods=['POST'])
+@jwt_required
+def create_bucket_item_page():
+    list_type = _get_bucket_list_type()
+    if not list_type or not has_list_permission('Create', list_type.title):
+        return redirect(url_for('pages.bucketlist'))
+
+    title = str(request.form.get('title', '')).strip()
+    if not title:
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Bitte gib eurem Wunsch einen Titel.',
+        ))
+    if len(title) > 255:
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Der Eintrag darf höchstens 255 Zeichen lang sein.',
+        ))
+
+    try:
+        create_item(
+            title=title,
+            content='0',
+            contentType='list',
+            listType=list_type.id,
+            contentURL='',
+            createdByUser=g.user_id,
+            dateCreated=datetime.utcnow(),
+            edition='couples',
+        )
+        return redirect(url_for('pages.bucketlist'))
+    except Exception as e:
+        log('error', f'Error while creating bucketlist item: {e}')
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Der Bucketlist-Eintrag konnte nicht gespeichert werden.',
+        ))
+
+
+@pages_bp.route('/bucketlist/<int:item_id>/toggle', methods=['POST'])
+@jwt_required
+def toggle_bucket_item_page(item_id):
+    list_type = _get_bucket_list_type()
+    if not list_type or not has_list_permission('Update', list_type.title):
+        return redirect(url_for('pages.bucketlist'))
+
+    item = _bucket_item_or_none(item_id, list_type)
+    if not item:
+        return redirect(url_for('pages.bucketlist'))
+
+    completed = str(request.form.get('completed', '0')) == '1'
+    try:
+        update_item(item_id, content='1' if completed else '0')
+        sync_bucket_item_to_plan(item_id, completed)
+
+        return_status = str(request.form.get('return_status', 'open')).strip()
+        if return_status not in {'all', 'open', 'planned', 'done'}:
+            return_status = 'open'
+        return_query = str(request.form.get('return_q', '')).strip()
+
+        redirect_kwargs = {'status': return_status}
+        if return_query:
+            redirect_kwargs['q'] = return_query
+        return redirect(url_for('pages.bucketlist', **redirect_kwargs))
+    except Exception as e:
+        log('error', f'Error while toggling bucketlist item {item_id}: {e}')
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Der Status konnte nicht geändert werden.',
+        ))
+
+
+@pages_bp.route('/bucketlist/<int:item_id>/update', methods=['POST'])
+@jwt_required
+def update_bucket_item_page(item_id):
+    list_type = _get_bucket_list_type()
+    if not list_type or not has_list_permission('Update', list_type.title):
+        return redirect(url_for('pages.bucketlist'))
+
+    item = _bucket_item_or_none(item_id, list_type)
+    if not item:
+        return redirect(url_for('pages.bucketlist'))
+
+    title = str(request.form.get('title', '')).strip()
+    if not title:
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Bitte gib eurem Wunsch einen Titel.',
+        ))
+
+    try:
+        update_item(item_id, title=title[:255])
+        return redirect(url_for('pages.bucketlist') + f'#bucket-{item_id}')
+    except Exception as e:
+        log('error', f'Error while updating bucketlist item {item_id}: {e}')
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Der Eintrag konnte nicht geändert werden.',
+        ))
+
+
+@pages_bp.route('/bucketlist/<int:item_id>/delete', methods=['POST'])
+@jwt_required
+def delete_bucket_item_page(item_id):
+    list_type = _get_bucket_list_type()
+    if not list_type or not has_list_permission('Delete', list_type.title):
+        return redirect(url_for('pages.bucketlist'))
+
+    item = _bucket_item_or_none(item_id, list_type)
+    if not item:
+        return redirect(url_for('pages.bucketlist'))
+
+    try:
+        delete_item(item_id)
+        return redirect(url_for('pages.bucketlist'))
+    except Exception as e:
+        log('error', f'Error while deleting bucketlist item {item_id}: {e}')
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Der Eintrag konnte nicht gelöscht werden.',
+        ))
+
+
+@pages_bp.route('/bucketlist/<int:item_id>/plan', methods=['POST'])
+@jwt_required
+def bucket_item_to_plan_page(item_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    list_type = _get_bucket_list_type()
+    if not list_type or not has_list_permission('Update', list_type.title):
+        return redirect(url_for('pages.bucketlist'))
+
+    item = _bucket_item_or_none(item_id, list_type)
+    if not item:
+        return redirect(url_for('pages.bucketlist'))
+
+    existing = get_couple_bucket_plan_map().get(item_id)
+    if existing:
+        return redirect(url_for('pages.plans') + f"#plan-{existing['id']}")
+
+    try:
+        plan_id = create_couple_plan(
+            title=item.title or 'Bucketlist-Idee',
+            description='',
+            status='planned',
+            target_start_date=None,
+            target_end_date=None,
+            location_name='',
+            created_by_user=g.user_id,
+        )
+        try:
+            link_couple_bucket_plan(item_id, plan_id)
+        except Exception:
+            # Avoid leaving a duplicate/orphan plan if the relationship itself
+            # could not be persisted.
+            delete_couple_plan(plan_id)
+            raise
+
+        return redirect(url_for('pages.plans') + f'#plan-{plan_id}')
+    except Exception as e:
+        log('error', f'Error while promoting bucket item {item_id} to plan: {e}')
+        return redirect(url_for(
+            'pages.bucketlist',
+            error='Aus dem Bucketlist-Eintrag konnte kein Plan erstellt werden.',
+        ))
+
+
 @pages_bp.route('/plans')
 @jwt_required
 def plans():
@@ -2094,6 +2391,12 @@ def list_view(content_url):
             return redirect(url_for('pages.home'))
 
         sm_edition = get_setting_by_name('sm_edition').value
+
+        # Couples get the relationship-first Bucketlist UI while the generic
+        # custom-list implementation remains untouched for other editions.
+        if content_url == 'bucket-list' and sm_edition == 'couples':
+            return redirect(url_for('pages.bucketlist'))
+
         items = get_items_by_type(list_type.id, edition=sm_edition, checked_last=True)
         list_types = get_all_list_types()
         title = get_display_title()

@@ -385,6 +385,24 @@ class CouplePlan(Base):
     chapter = relationship('CoupleChapter', foreign_keys=[chapterID])
 
 
+class CoupleBucketPlanLink(Base):
+    __tablename__ = 'coupleBucketPlanLinks'
+
+    bucketItemID = Column(
+        Integer,
+        ForeignKey('items.id'),
+        primary_key=True,
+    )
+    planID = Column(
+        Integer,
+        ForeignKey('couplePlans.id'),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+
+
 class ListType(Base):
     __tablename__ = 'listTypes'
     id = Column(Integer, primary_key=True, autoincrement=True)

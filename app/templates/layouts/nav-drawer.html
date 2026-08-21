@@ -10,7 +10,10 @@
 
        <!-- Listenelemente -->
        {% for list_type in list_types %}
-       {% if list_type.navbar == 1 and has_list_permission('View', list_type.title) and (list_type.edition == 'all' or list_type.edition == nav_edition) %}
+       {% if list_type.navbar == 1
+             and has_list_permission('View', list_type.title)
+             and (list_type.edition == 'all' or list_type.edition == nav_edition)
+             and not (nav_edition == 'couples' and list_type.contentURL == 'bucket-list') %}
        <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}">
        <i>{{ list_type.icon }}</i>
        <span>{% if nav_edition == 'couples' and list_type.title == 'Home' %}Wir{% else %}{{ _(list_type.title) }}{% endif %}</span>
@@ -34,6 +37,18 @@
           <i>explore</i>
           <span>Unsere Pläne</span>
        </a>
+       {% set bucket_nav = namespace(visible=false) %}
+       {% for list_type in list_types %}
+          {% if list_type.contentURL == 'bucket-list' and has_list_permission('View', list_type.title) %}
+             {% set bucket_nav.visible = true %}
+          {% endif %}
+       {% endfor %}
+       {% if bucket_nav.visible %}
+       <a href="/bucketlist">
+          <i>checklist</i>
+          <span>Bucketlist</span>
+       </a>
+       {% endif %}
        <a href="/memories">
           <i>photo_library</i>
           <span>Erinnerungen</span>

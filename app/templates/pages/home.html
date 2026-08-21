@@ -490,11 +490,21 @@
          {% endif %}
 
          <a class="row padding"
+            href="{{ url_for('pages.bucketlist', create=1) }}">
+            <i>checklist</i>
+            <div class="max">
+               <strong>Bucketlist</strong>
+               <div class="small">Etwas für irgendwann gemeinsam vormerken</div>
+            </div>
+            <i>chevron_right</i>
+         </a>
+
+         <a class="row padding"
             href="{{ url_for('pages.plans', create=1) }}">
             <i>explore</i>
             <div class="max">
                <strong>Plan</strong>
-               <div class="small">Etwas, das ihr zusammen machen oder erleben wollt</div>
+               <div class="small">Etwas, das ihr konkret angehen wollt</div>
             </div>
             <i>chevron_right</i>
          </a>

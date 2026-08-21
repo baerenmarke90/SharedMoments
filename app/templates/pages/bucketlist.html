@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Bucketlist · {{ title.value }}</title>
+      {% include 'layouts/head.html' %}
+      <style>
+         .bucket-page {
+            max-width: 760px;
+            margin: 0 auto;
+            padding-bottom: 6rem;
+         }
+
+         .bucket-intro {
+            margin: 0.55rem 0.15rem 0.9rem;
+            max-width: 680px;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            opacity: 0.74;
+         }
+
+         .bucket-summary {
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.8rem;
+            border-radius: 1rem;
+         }
+
+         .bucket-summary-top {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.8rem;
+         }
+
+         .bucket-summary-count {
+            font-weight: 600;
+         }
+
+         .bucket-summary-percent {
+            font-size: 0.85rem;
+            opacity: 0.7;
+         }
+
+         .bucket-progress-track {
+            height: 7px;
+            margin-top: 0.55rem;
+            border-radius: 999px;
+            overflow: hidden;
+            background: var(--surface-container-highest);
+         }
+
+         .bucket-progress-bar {
+            height: 100%;
+            min-width: {% if progress_percent > 0 %}4px{% else %}0{% endif %};
+            width: {{ progress_percent }}%;
+            border-radius: inherit;
+            background: var(--primary);
+            transition: width .2s ease;
+         }
+
+         .bucket-quick-add {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 0.55rem;
+            margin: 0 0 0.75rem;
+         }
+
+         .bucket-quick-add .field {
+            margin: 0;
+         }
+
+         .bucket-quick-add button {
+            min-width: 46px;
+            min-height: 46px;
+         }
+
+         .bucket-tools {
+            display: flex;
+            gap: 0.55rem;
+            align-items: center;
+            margin-bottom: 0.55rem;
+         }
+
+         .bucket-search {
+            flex: 1;
+            min-width: 0;
+         }
+
+         .bucket-search .field {
+            margin: 0;
+         }
+
+         .bucket-filters {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            overflow-x: auto;
+            padding: 0.05rem 0.1rem 0.65rem;
+            margin-bottom: 0.25rem;
+            scrollbar-width: none;
+         }
+
+         .bucket-filters::-webkit-scrollbar {
+            display: none;
+         }
+
+         .bucket-filter-chip {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center;
+            gap: 0.36rem !important;
+            flex: 0 0 auto;
+            min-height: 36px;
+            padding: 0.25rem 0.72rem !important;
+            text-decoration: none;
+            white-space: nowrap;
+         }
+
+         .bucket-filter-chip > i {
+            position: static !important;
+            inset: auto !important;
+            width: 1.15rem !important;
+            min-width: 1.15rem;
+            height: 1.15rem !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.08rem !important;
+            line-height: 1 !important;
+         }
+
+         .bucket-filter-chip > span {
+            display: inline-block;
+            line-height: 1.1;
+         }
+
+         .bucket-list {
+            display: flex;
+            flex-direction: column;
+            overflow: visible;
+            border-radius: 1rem;
+         }
+
+         .bucket-item {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) auto auto;
+            align-items: center;
+            gap: 0.65rem;
+            min-height: 60px;
+            padding: 0.62rem 0.75rem;
+            scroll-margin-top: 5rem;
+         }
+
+         .bucket-item + .bucket-item {
+            border-top: 1px solid var(--outline-variant);
+         }
+
+         .bucket-check-form {
+            margin: 0;
+         }
+
+         .bucket-check {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            min-height: 38px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+         }
+
+         .bucket-check > i {
+            position: static !important;
+            font-size: 1.7rem;
+            color: var(--primary);
+         }
+
+         .bucket-item.completed .bucket-check > i {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+         }
+
+         .bucket-main {
+            min-width: 0;
+         }
+
+         .bucket-title {
+            font-size: 1rem;
+            font-weight: 550;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+         }
+
+         .bucket-item.completed .bucket-title {
+            text-decoration: line-through;
+            opacity: 0.58;
+         }
+
+         .bucket-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.22rem;
+            min-height: 1rem;
+            font-size: 0.8rem;
+            opacity: 0.72;
+         }
+
+         .bucket-plan-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: inherit;
+            text-decoration: none;
+            font-weight: 500;
+         }
+
+         .bucket-plan-chip > i {
+            position: static !important;
+            font-size: 0.95rem;
+         }
+
+         .bucket-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+            opacity: 0.82;
+         }
+
+         .bucket-actions {
+            position: relative;
+            margin: 0;
+         }
+
+         .bucket-actions > summary {
+            list-style: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+         }
+
+         .bucket-actions > summary::-webkit-details-marker {
+            display: none;
+         }
+
+         .bucket-actions > summary > i {
+            position: static !important;
+            font-size: 1.25rem;
+         }
+
+         .bucket-actions[open] > summary {
+            background: var(--surface-container-high);
+         }
+
+         .bucket-actions-menu {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            z-index: 25;
+            min-width: 190px;
+            padding: 0.35rem;
+            border-radius: 0.8rem;
+            background: var(--surface-container-high);
+            box-shadow: 0 6px 20px rgba(0,0,0,.18);
+         }
+
+         .bucket-actions-menu form {
+            margin: 0;
+         }
+
+         .bucket-menu-action {
+            width: 100%;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.55rem;
+            padding: 0.4rem 0.65rem;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            border-radius: 0.6rem;
+            cursor: pointer;
+         }
+
+         .bucket-menu-action:hover {
+            background: var(--surface-container-highest);
+         }
+
+         .bucket-menu-action > i {
+            position: static !important;
+            width: 1.2rem;
+            font-size: 1.1rem;
+         }
+
+         .bucket-empty {
+            text-align: center;
+            padding: 2.6rem 1rem;
+            border-radius: 1rem;
+         }
+
+         .bucket-empty > i {
+            position: static !important;
+            font-size: 2.7rem;
+            opacity: 0.6;
+         }
+
+         .bucket-error {
+            margin-bottom: 0.8rem;
+         }
+
+         @media (max-width: 600px) {
+            .bucket-page {
+               padding-left: 0.15rem;
+               padding-right: 0.15rem;
+            }
+
+            .bucket-intro {
+               margin-top: 0.4rem;
+               margin-bottom: 0.7rem;
+               font-size: 0.9rem;
+            }
+
+            .bucket-summary {
+               padding: 0.75rem 0.85rem;
+            }
+
+            .bucket-item {
+               grid-template-columns: 38px minmax(0, 1fr) 24px 34px;
+               gap: 0.48rem;
+               min-height: 57px;
+               padding: 0.55rem 0.55rem;
+            }
+
+            .bucket-check {
+               width: 34px;
+               height: 34px;
+               min-width: 34px;
+               min-height: 34px;
+            }
+
+            .bucket-avatar {
+               width: 24px;
+               height: 24px;
+            }
+
+            .bucket-actions > summary {
+               width: 34px;
+               height: 34px;
+            }
+         }
+      </style>
+   </head>
+
+   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive bucket-page">
+         <p class="bucket-intro">
+            Eure gemeinsame Irgendwann-Liste: alles, was ihr im Leben noch zusammen machen, sehen oder erleben wollt. Wird aus einer Idee etwas Konkretes, macht ihr daraus einen Plan.
+         </p>
+
+         {% if bucket_error %}
+         <article class="error-container bucket-error">
+            <div class="padding">{{ bucket_error }}</div>
+         </article>
+         {% endif %}
+
+         <article class="surface-container bucket-summary">
+            <div class="bucket-summary-top">
+               <span class="bucket-summary-count">
+                  {{ done_count }} von {{ total_count }} erlebt
+               </span>
+               <span class="bucket-summary-percent">{{ progress_percent }} %</span>
+            </div>
+            <div class="bucket-progress-track" aria-hidden="true">
+               <div class="bucket-progress-bar"></div>
+            </div>
+         </article>
+
+         {% if has_list_permission('Create', list_type_title) %}
+         <form class="bucket-quick-add"
+               method="post"
+               action="{{ url_for('pages.create_bucket_item_page') }}">
+            <div class="field label border">
+               <input id="bucket-quick-add"
+                      type="text"
+                      name="title"
+                      maxlength="255"
+                      autocomplete="off"
+                      required>
+               <label>Was wollt ihr irgendwann zusammen machen?</label>
+            </div>
+            <button class="square round" type="submit" aria-label="Zur Bucketlist hinzufügen">
+               <i>add</i>
+            </button>
+         </form>
+         {% endif %}
+
+         <form class="bucket-tools" method="get" action="{{ url_for('pages.bucketlist') }}">
+            <input type="hidden" name="status" value="{{ selected_status }}">
+            <div class="bucket-search">
+               <div class="field border prefix">
+                  <i>search</i>
+                  <input type="search"
+                         name="q"
+                         value="{{ search_query }}"
+                         placeholder="Bucketlist durchsuchen">
+               </div>
+            </div>
+         </form>
+
+         <nav class="bucket-filters">
+            <a class="chip round bucket-filter-chip{% if selected_status == 'open' %} fill{% endif %}"
+               href="{{ url_for('pages.bucketlist', status='open', q=search_query) if search_query else url_for('pages.bucketlist', status='open') }}">
+               <i>radio_button_unchecked</i><span>Offen {{ open_count }}</span>
+            </a>
+            <a class="chip round bucket-filter-chip{% if selected_status == 'planned' %} fill{% endif %}"
+               href="{{ url_for('pages.bucketlist', status='planned', q=search_query) if search_query else url_for('pages.bucketlist', status='planned') }}">
+               <i>event_available</i><span>In Planung {{ planned_count }}</span>
+            </a>
+            <a class="chip round bucket-filter-chip{% if selected_status == 'done' %} fill{% endif %}"
+               href="{{ url_for('pages.bucketlist', status='done', q=search_query) if search_query else url_for('pages.bucketlist', status='done') }}">
+               <i>check_circle</i><span>Erledigt {{ done_count }}</span>
+            </a>
+            <a class="chip round bucket-filter-chip{% if selected_status == 'all' %} fill{% endif %}"
+               href="{{ url_for('pages.bucketlist', status='all', q=search_query) if search_query else url_for('pages.bucketlist', status='all') }}">
+               <i>apps</i><span>Alle {{ total_count }}</span>
+            </a>
+         </nav>
+
+         {% if bucket_items %}
+         <section class="surface-container bucket-list">
+            {% for entry in bucket_items %}
+            <article class="bucket-item{% if entry.completed %} completed{% endif %}"
+                     id="bucket-{{ entry.id }}">
+               {% if has_list_permission('Update', list_type_title) %}
+               <form class="bucket-check-form"
+                     method="post"
+                     action="{{ url_for('pages.toggle_bucket_item_page', item_id=entry.id) }}">
+                  <input type="hidden" name="completed" value="{{ '0' if entry.completed else '1' }}">
+                  <input type="hidden" name="return_status" value="{{ selected_status }}">
+                  <input type="hidden" name="return_q" value="{{ search_query }}">
+                  <button class="bucket-check transparent"
+                          type="submit"
+                          aria-label="{% if entry.completed %}Als offen markieren{% else %}Als erledigt markieren{% endif %}">
+                     <i>{% if entry.completed %}check_circle{% else %}radio_button_unchecked{% endif %}</i>
+                  </button>
+               </form>
+               {% else %}
+               <span class="bucket-check">
+                  <i>{% if entry.completed %}check_circle{% else %}radio_button_unchecked{% endif %}</i>
+               </span>
+               {% endif %}
+
+               <div class="bucket-main">
+                  <div class="bucket-title">{{ entry.title }}</div>
+                  <div class="bucket-meta">
+                     {% if entry.plan %}
+                     <a class="bucket-plan-chip"
+                        href="{{ url_for('pages.plans') }}#plan-{{ entry.plan.id }}">
+                        <i>{{ entry.plan.status_icon }}</i>
+                        <span>{{ entry.plan.status_label }}</span>
+                     </a>
+                     {% elif entry.completed %}
+                     <span>Erlebt</span>
+                     {% else %}
+                     <span>Irgendwann</span>
+                     {% endif %}
+                  </div>
+               </div>
+
+               {% if entry.creator %}
+               <img class="bucket-avatar"
+                    src="/api/v2/media/static/{{ entry.creator.profilePicture or 'profile-placeholder.jpg' }}"
+                    alt=""
+                    title="{{ entry.creator.firstName or '' }}"
+                    loading="lazy">
+               {% else %}
+               <span></span>
+               {% endif %}
+
+               {% if has_list_permission('Update', list_type_title)
+                     or has_list_permission('Delete', list_type_title) %}
+               <details class="bucket-actions">
+                  <summary aria-label="Aktionen"><i>more_vert</i></summary>
+                  <div class="bucket-actions-menu">
+                     {% if not entry.completed and not entry.plan %}
+                     <form method="post"
+                           action="{{ url_for('pages.bucket_item_to_plan_page', item_id=entry.id) }}">
+                        <button class="bucket-menu-action" type="submit">
+                           <i>event_available</i>
+                           <span>Als Plan angehen</span>
+                        </button>
+                     </form>
+                     {% endif %}
+
+                     {% if entry.plan %}
+                     <a class="bucket-menu-action"
+                        href="{{ url_for('pages.plans') }}#plan-{{ entry.plan.id }}">
+                        <i>explore</i>
+                        <span>Plan öffnen</span>
+                     </a>
+                     {% endif %}
+
+                     {% if has_list_permission('Update', list_type_title) %}
+                     <button class="bucket-menu-action"
+                             type="button"
+                             data-action="{{ url_for('pages.update_bucket_item_page', item_id=entry.id) }}"
+                             data-title="{{ entry.title|e }}"
+                             onclick="openBucketEdit(this)">
+                        <i>edit</i>
+                        <span>Bearbeiten</span>
+                     </button>
+                     {% endif %}
+
+                     {% if has_list_permission('Delete', list_type_title) %}
+                     <form method="post"
+                           action="{{ url_for('pages.delete_bucket_item_page', item_id=entry.id) }}"
+                           onsubmit="return confirm('Diesen Bucketlist-Eintrag wirklich löschen?');">
+                        <button class="bucket-menu-action error" type="submit">
+                           <i>delete</i>
+                           <span>Löschen</span>
+                        </button>
+                     </form>
+                     {% endif %}
+                  </div>
+               </details>
+               {% else %}
+               <span></span>
+               {% endif %}
+            </article>
+            {% endfor %}
+         </section>
+         {% else %}
+         <article class="surface-container bucket-empty">
+            <i>{% if search_query %}search_off{% elif selected_status == 'done' %}check_circle{% else %}checklist{% endif %}</i>
+            <h5>
+               {% if search_query %}
+               Nichts gefunden
+               {% elif selected_status == 'done' %}
+               Noch nichts abgehakt
+               {% elif selected_status == 'planned' %}
+               Noch nichts konkret geplant
+               {% else %}
+               Keine offenen Wünsche
+               {% endif %}
+            </h5>
+            <p class="small">
+               {% if search_query %}
+               Versuch es mit einem anderen Suchbegriff.
+               {% elif selected_status == 'open' %}
+               Zeit für eine neue gemeinsame Idee.
+               {% else %}
+               Eure Bucketlist wartet auf die nächsten Abenteuer.
+               {% endif %}
+            </p>
+         </article>
+         {% endif %}
+      </main>
+
+      {% if has_list_permission('Create', list_type_title) %}
+      <div class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index:90;">
+         <button class="square round extra"
+                 type="button"
+                 aria-label="Bucketlist-Eintrag hinzufügen"
+                 onclick="document.getElementById('bucket-quick-add')?.focus();document.getElementById('bucket-quick-add')?.scrollIntoView({behavior:'smooth',block:'center'});"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
+      {% endif %}
+
+      <div class="overlay"
+           id="div-overlay-edit-bucket-item"
+           onclick="callUi('#dialog-edit-bucket-item')"></div>
+
+      <dialog class="modal" id="dialog-edit-bucket-item">
+         <form id="form-edit-bucket-item" method="post">
+            <h5>Bucketlist-Eintrag bearbeiten</h5>
+            <div class="field label border">
+               <input id="input-edit-bucket-title"
+                      type="text"
+                      name="title"
+                      maxlength="255"
+                      required>
+               <label>Titel</label>
+            </div>
+            <nav class="right-align no-space">
+               <button type="button"
+                       class="transparent link"
+                       onclick="callUi('#dialog-edit-bucket-item')">
+                  Abbrechen
+               </button>
+               <button type="submit" class="transparent link">Speichern</button>
+            </nav>
+         </form>
+      </dialog>
+
+      {% include 'layouts/footer.html' %}
+
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+      <script>
+         function openBucketEdit(button) {
+            const form = document.getElementById('form-edit-bucket-item');
+            const input = document.getElementById('input-edit-bucket-title');
+            if (!form || !input) return;
+
+            form.action = button.dataset.action || '';
+            input.value = button.dataset.title || '';
+            button.closest('details')?.removeAttribute('open');
+            callUi('#dialog-edit-bucket-item');
+            window.setTimeout(() => input.focus(), 80);
+         }
+
+         document.addEventListener('click', (event) => {
+            document.querySelectorAll('.bucket-actions[open]').forEach((menu) => {
+               if (!menu.contains(event.target)) menu.removeAttribute('open');
+            });
+         });
+
+         document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('create') !== '1') return;
+
+            const input = document.getElementById('bucket-quick-add');
+            window.setTimeout(() => {
+               input?.scrollIntoView({behavior: 'smooth', block: 'center'});
+               input?.focus();
+            }, 0);
+
+            params.delete('create');
+            const query = params.toString();
+            const cleanUrl = window.location.pathname
+               + (query ? `?${query}` : '')
+               + window.location.hash;
+            window.history.replaceState({}, '', cleanUrl);
+         });
+      </script>
+   </body>
+</html>

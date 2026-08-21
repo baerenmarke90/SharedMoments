@@ -2,7 +2,7 @@ from sqlalchemy.exc import IntegrityError
 from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, Setting,
     UserSetting, Item, ItemShare, ListType, SessionLocal, RelationshipStatus, Translation,
     Reminder, ReminderMute, PushSubscription, NotificationLog, CoupleChapter,
-    CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan)
+    CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan, CoupleBucketPlanLink)
 from sqlalchemy.orm import joinedload
 from datetime import date
 from sqlalchemy import desc, asc, and_, or_
@@ -908,6 +908,13 @@ def delete_item(item_id):
             CoupleChapterItem.itemID == item_id
         ).delete()
 
+        # Bucketlist items may be promoted into a concrete couple plan.
+        # Deleting the wish only removes that relationship; the plan itself
+        # remains intact.
+        session.query(CoupleBucketPlanLink).filter(
+            CoupleBucketPlanLink.bucketItemID == item_id
+        ).delete()
+
         session.query(ItemShare).filter(ItemShare.itemID == item_id).delete()
 
         item = session.query(Item).filter(Item.id == item_id).first()
@@ -1314,6 +1321,25 @@ def update_couple_plan(
         plan.targetStartDate = target_start_date
         plan.targetEndDate = target_end_date
         plan.locationName = location_name or ''
+
+        # If a plan originated from the Bucketlist, reaching "Erlebt" also
+        # completes the original wish. The Bucketlist remains the long-term
+        # backlog while Plans represent concrete execution.
+        if status == 'experienced':
+            bucket_link = (
+                session.query(CoupleBucketPlanLink)
+                .filter(CoupleBucketPlanLink.planID == plan_id)
+                .first()
+            )
+            if bucket_link:
+                bucket_item = (
+                    session.query(Item)
+                    .filter(Item.id == bucket_link.bucketItemID)
+                    .first()
+                )
+                if bucket_item:
+                    bucket_item.content = '1'
+
         session.commit()
         return True
     except Exception:
@@ -1333,6 +1359,11 @@ def delete_couple_plan(plan_id):
         )
         if not plan:
             return False
+
+        session.query(CoupleBucketPlanLink).filter(
+            CoupleBucketPlanLink.planID == plan_id
+        ).delete()
+
         session.delete(plan)
         session.commit()
         return True
@@ -1359,6 +1390,82 @@ def set_couple_plan_chapter(plan_id, chapter_id):
     except Exception:
         session.rollback()
         raise
+    finally:
+        session.close()
+
+
+# Bucketlist <-> Couple Plans
+
+def get_couple_bucket_plan_map():
+    """Return plans that originated from existing Bucket List Item rows."""
+    session = SessionLocal()
+    try:
+        rows = (
+            session.query(CoupleBucketPlanLink, CouplePlan)
+            .join(CouplePlan, CoupleBucketPlanLink.planID == CouplePlan.id)
+            .all()
+        )
+        return {
+            link.bucketItemID: {
+                'id': plan.id,
+                'title': plan.title,
+                'status': plan.status,
+                'chapterID': plan.chapterID,
+            }
+            for link, plan in rows
+        }
+    finally:
+        session.close()
+
+
+def link_couple_bucket_plan(bucket_item_id, plan_id):
+    session = SessionLocal()
+    try:
+        existing = (
+            session.query(CoupleBucketPlanLink)
+            .filter(CoupleBucketPlanLink.bucketItemID == bucket_item_id)
+            .first()
+        )
+        if existing:
+            return existing.planID
+
+        link = CoupleBucketPlanLink(
+            bucketItemID=bucket_item_id,
+            planID=plan_id,
+        )
+        session.add(link)
+        session.commit()
+        return plan_id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def sync_bucket_item_to_plan(bucket_item_id, completed):
+    """When a linked Bucketlist wish is checked, mark its plan experienced."""
+    if not completed:
+        return
+
+    session = SessionLocal()
+    try:
+        link = (
+            session.query(CoupleBucketPlanLink)
+            .filter(CoupleBucketPlanLink.bucketItemID == bucket_item_id)
+            .first()
+        )
+        if not link:
+            return
+
+        plan = (
+            session.query(CouplePlan)
+            .filter(CouplePlan.id == link.planID)
+            .first()
+        )
+        if plan and plan.status != 'experienced':
+            plan.status = 'experienced'
+            session.commit()
     finally:
         session.close()
 
