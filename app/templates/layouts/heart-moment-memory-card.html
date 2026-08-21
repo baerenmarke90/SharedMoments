@@ -1,20 +1,12 @@
 <article class="primary-container heart-memory-card">
     <div class="padding">
 
-        <div class="row">
-            <i class="circle">favorite</i>
+        <div class="heart-memory-header">
+            <i>favorite_border</i>
 
-            <div class="max">
-                <h5 class="no-margin">
-                    {{ _('Do you remember?') }}
-                </h5>
-
-                <time
-                    class="heart-memory-date small-text"
-                    datetime="{{ heart_moment_memory.momentDate }}">
-                    {{ heart_moment_memory.momentDate }}
-                </time>
-            </div>
+            <h5 class="heart-memory-title">
+                {{ _('Do you remember?') }}
+            </h5>
         </div>
 
 
@@ -32,24 +24,38 @@
         </p>
 
 
-        {% if heart_moment_memory.author %}
-        <div class="heart-memory-author">
+        <nav class="heart-memory-meta">
 
-            <img
-                class="heart-memory-avatar"
-                src="/api/v2/users/{{ heart_moment_memory.author.id }}/profile-picture"
-                alt=""
-                loading="lazy">
-
-            <span>
+            {% if heart_moment_memory.author %}
+            <span class="heart-memory-author-label">
                 {{ _('Heart Moment from') }}
                 <strong>
                     {{ heart_moment_memory.author.firstName }}
                 </strong>
             </span>
+            {% endif %}
 
-        </div>
-        {% endif %}
+            <div class="max"></div>
+
+            <!-- Gleiche Datums-Pille wie normale Home-Karten -->
+            <a class="chip no-border secondary small round">
+                <span
+                    class="heart-memory-date"
+                    data-date="{{ heart_moment_memory.momentDate }}">
+                    {{ heart_moment_memory.momentDate }}
+                </span>
+            </a>
+
+            <!-- Exakt dieselbe BeerCSS-Avatar-Klasse wie Home-Items -->
+            {% if heart_moment_memory.author %}
+            <img
+                class="circle"
+                src="/api/v2/users/{{ heart_moment_memory.author.id }}/profile-picture"
+                alt=""
+                loading="lazy">
+            {% endif %}
+
+        </nav>
 
 
         <nav class="right-align heart-memory-open">
@@ -57,7 +63,7 @@
                 class="button border"
                 href="/heart-moments?highlight={{ heart_moment_memory.id }}">
 
-                <i>favorite</i>
+                <i>favorite_border</i>
 
                 <span>
                     {{ _('Open Heart Moment') }}
@@ -68,6 +74,7 @@
     </div>
 </article>
 
+
 <script>
 document.addEventListener(
     'DOMContentLoaded',
@@ -76,18 +83,25 @@ document.addEventListener(
             .querySelectorAll('.heart-memory-date')
             .forEach(element => {
                 const value =
-                    element.getAttribute('datetime');
+                    element.dataset.date;
 
                 if (!value) {
                     return;
                 }
 
-                const parsed =
-                    new Date(`${value}T00:00:00`);
+                /*
+                 * Heart Moments liefert YYYY-MM-DD.
+                 * Dashboard-Darstellung: DD.MM.YY
+                 */
+                const parts =
+                    value.split('-');
 
-                if (!Number.isNaN(parsed.getTime())) {
+                if (parts.length === 3) {
+                    const year =
+                        parts[0].slice(-2);
+
                     element.textContent =
-                        parsed.toLocaleDateString();
+                        `${parts[2]}.${parts[1]}.${year}`;
                 }
             });
     }

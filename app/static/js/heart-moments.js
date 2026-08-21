@@ -611,6 +611,17 @@ function createHeartMomentCard(
         avatar.className =
             'heart-moment-author-avatar';
 
+        const usesPlaceholder =
+            !moment.author.profilePicture
+            || moment.author.profilePicture
+                === 'profile-placeholder.jpg';
+
+        if (!usesPlaceholder) {
+            avatar.classList.add(
+                'heart-moment-author-avatar-custom'
+            );
+        }
+
         avatar.alt = '';
         avatar.loading = 'lazy';
 
