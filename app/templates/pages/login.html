@@ -101,7 +101,7 @@
                 <a
                     class="button"
                     href="/oidc/login"
-                    style="width:100%; justify-content:center;">
+                    style="display:flex; width:100%; max-width:100%; box-sizing:border-box; justify-content:center; margin:0;">
                     <i>shield_person</i>
                     <span>
                         {{ _('Login with Pocket ID') }}
@@ -116,7 +116,7 @@
                 {% if passkey_login_enabled %}
                 <button
                     onclick="authenticatePasskey()"
-                    style="width:100%;">
+                    style="display:flex; width:100%; max-width:100%; box-sizing:border-box; justify-content:center; margin:0;">
                     <i>home</i>
                     <span>{{ _('Login with passkey') }}</span>
                 </button>
