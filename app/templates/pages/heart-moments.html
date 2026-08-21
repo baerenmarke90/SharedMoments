@@ -47,6 +47,12 @@
             }
         }
 
+        .heart-moment-highlight {
+            box-shadow:
+                0 0 0 2px var(--primary),
+                0 3px 6px rgba(0, 0, 0, 0.18);
+        }
+
         .heart-moment-card {
             margin-bottom: 1rem;
         }
@@ -64,6 +70,35 @@
             align-items: center;
             gap: 0.75rem;
             opacity: 0.8;
+        }
+
+        .heart-moment-author {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .heart-moment-author-avatar {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .heart-moment-author-fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            border-radius: 50%;
+            background: var(--surface-container-high);
+        }
+
+        .heart-moment-author-fallback i {
+            font-size: 18px;
         }
 
         .heart-moment-actions {

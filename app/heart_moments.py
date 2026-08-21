@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, timedelta
+import hashlib
 
 from sqlalchemy import or_
 
@@ -80,6 +81,7 @@ def _serialize(session, moment):
             'id': author.id,
             'firstName': author.firstName,
             'lastName': author.lastName,
+            'profilePicture': author.profilePicture,
         } if author else None,
 
         'momentDate': (
@@ -503,6 +505,67 @@ def delete_heart_moment(
     except Exception:
         session.rollback()
         raise
+
+    finally:
+        session.close()
+
+
+
+MEMORY_MIN_AGE_DAYS = 30
+
+
+def get_daily_shared_heart_moment_memory(
+    min_age_days=MEMORY_MIN_AGE_DAYS,
+):
+    """
+    Return one deterministic shared Heart Moment for the current day.
+
+    Private Heart Moments are excluded directly in the database query.
+    Only moments older than min_age_days are eligible.
+    """
+    session = SessionLocal()
+
+    try:
+        cutoff_date = (
+            date.today()
+            - timedelta(days=min_age_days)
+        )
+
+        moments = (
+            session.query(HeartMoment)
+            .filter(
+                HeartMoment.visibility == 'shared',
+                HeartMoment.momentDate <= cutoff_date,
+            )
+            .order_by(
+                HeartMoment.id.asc()
+            )
+            .all()
+        )
+
+        if not moments:
+            return None
+
+        # Deterministic for the current calendar day.
+        # Both partners therefore receive the same memory.
+        seed = date.today().isoformat().encode(
+            'utf-8'
+        )
+
+        digest = hashlib.sha256(
+            seed
+        ).digest()
+
+        index = int.from_bytes(
+            digest[:8],
+            byteorder='big',
+            signed=False,
+        ) % len(moments)
+
+        return _serialize(
+            session,
+            moments[index],
+        )
 
     finally:
         session.close()

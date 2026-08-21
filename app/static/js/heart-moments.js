@@ -1,6 +1,11 @@
 let currentHeartMomentFilter = 'all';
 let currentHeartMoments = [];
 
+const heartMomentHighlightId =
+    new URLSearchParams(
+        window.location.search
+    ).get('highlight');
+
 let heartSnackbarTimer = null;
 
 let createImageObjectUrl = null;
@@ -423,6 +428,25 @@ async function loadHeartMoments() {
 
         renderHeartMoments();
 
+        if (heartMomentHighlightId) {
+            const target =
+                document.getElementById(
+                    `heart-moment-${heartMomentHighlightId}`
+                );
+
+            if (target) {
+                window.setTimeout(
+                    () => {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    },
+                    100
+                );
+            }
+        }
+
     } catch (error) {
         console.error(
             '[HeartMoments] Load failed:',
@@ -488,6 +512,19 @@ function createHeartMomentCard(
         'surface-container padding '
         + 'heart-moment-card';
 
+    article.id =
+        `heart-moment-${moment.id}`;
+
+    if (
+        heartMomentHighlightId
+        && Number(heartMomentHighlightId)
+            === Number(moment.id)
+    ) {
+        article.classList.add(
+            'heart-moment-highlight'
+        );
+    }
+
     const header =
         document.createElement('div');
 
@@ -543,6 +580,9 @@ function createHeartMomentCard(
                 'span'
             );
 
+        authorElement.className =
+            'heart-moment-author';
+
         const authorName = [
             moment.author.firstName,
             moment.author.lastName
@@ -550,8 +590,94 @@ function createHeartMomentCard(
             .filter(Boolean)
             .join(' ');
 
-        authorElement.textContent =
+        if (moment.author.profilePicture) {
+            const avatar =
+                document.createElement(
+                    'img'
+                );
+
+            avatar.className =
+                'heart-moment-author-avatar';
+
+            avatar.alt = '';
+
+            avatar.loading = 'lazy';
+
+            avatar.src =
+                '/api/v2/media/'
+                + encodeURIComponent(
+                    moment.author.profilePicture
+                );
+
+            avatar.addEventListener(
+                'error',
+                () => {
+                    avatar.remove();
+
+                    const fallback =
+                        document.createElement(
+                            'span'
+                        );
+
+                    fallback.className =
+                        'heart-moment-author-fallback';
+
+                    const icon =
+                        document.createElement(
+                            'i'
+                        );
+
+                    icon.textContent = 'person';
+
+                    fallback.appendChild(
+                        icon
+                    );
+
+                    authorElement.prepend(
+                        fallback
+                    );
+                },
+                { once: true }
+            );
+
+            authorElement.appendChild(
+                avatar
+            );
+
+        } else {
+            const fallback =
+                document.createElement(
+                    'span'
+                );
+
+            fallback.className =
+                'heart-moment-author-fallback';
+
+            const icon =
+                document.createElement(
+                    'i'
+                );
+
+            icon.textContent = 'person';
+
+            fallback.appendChild(icon);
+
+            authorElement.appendChild(
+                fallback
+            );
+        }
+
+        const authorNameElement =
+            document.createElement(
+                'span'
+            );
+
+        authorNameElement.textContent =
             authorName;
+
+        authorElement.appendChild(
+            authorNameElement
+        );
 
         meta.appendChild(
             authorElement
