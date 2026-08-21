@@ -1,31 +1,56 @@
-function handleListItemClick(
-    row,
+let listSelectionMode = false;
+
+const selectedListItems =
+    new Set();
+
+
+function handleListRowClick(
     event,
+    row,
     id
 ) {
+    /*
+     * Buttons und Checkboxen verwalten
+     * ihre Aktion selbst.
+     */
     if (
         event.target.closest(
-            '.list-delete-button'
+            'button, input, label, a'
         )
     ) {
         return;
     }
 
-    /*
-     * Native Checkbox-Umschaltung verhindern.
-     * Wir steuern den Status selbst, damit Klick
-     * auf Text, Zeile oder Checkbox identisch ist.
-     */
-    event.preventDefault();
 
+    /*
+     * Auswahlmodus:
+     * Klick auf die Zeile markiert den
+     * Eintrag zum gemeinsamen Löschen.
+     */
+    if (listSelectionMode) {
+        toggleListItemSelection(
+            id
+        );
+
+        return;
+    }
+
+
+    /*
+     * Normalmodus:
+     * Klick auf die Zeile schaltet
+     * offen <-> erledigt.
+     */
     const checkbox =
         row.querySelector(
-            'input[type="checkbox"]'
+            '.list-status-control '
+            + 'input[type="checkbox"]'
         );
 
     if (!checkbox) {
         return;
     }
+
 
     checkbox.checked =
         !checkbox.checked;
@@ -44,7 +69,7 @@ function updateListItem(
     if (!navigator.onLine) {
         revertCheckbox(
             id,
-            value ? 1 : 0
+            value
         );
 
         showSnackbar(
@@ -60,18 +85,12 @@ function updateListItem(
     }
 
 
-    const numericValue =
-        value
-            ? 1
-            : 0;
-
-
     const formData =
         new FormData();
 
     formData.append(
         'content',
-        numericValue
+        value ? 1 : 0
     );
 
     formData.append(
@@ -89,101 +108,67 @@ function updateListItem(
     )
         .then(
             async response => {
-                try {
-                    const result =
-                        await response.json();
+                const result =
+                    await response.json();
 
-                    if (
-                        result.status
-                        === 'success'
-                    ) {
-                        document
-                            .getElementById(
-                                'div-render-list-items'
-                            )
-                            .innerHTML =
-                                result
-                                    .data
-                                    .rendered_items;
 
-                        showSnackbar(
-                            'list',
-                            true,
-                            'green',
-                            result.message,
-                            result,
-                            false
-                        );
+                if (
+                    result.status
+                    === 'success'
+                ) {
+                    document
+                        .getElementById(
+                            'div-render-list-items'
+                        )
+                        .innerHTML =
+                            result
+                                .data
+                                .rendered_items;
 
-                    } else {
-                        if (
-                            result.data
-                            && result.data
-                                .rendered_items
-                        ) {
-                            document
-                                .getElementById(
-                                    'div-render-list-items'
-                                )
-                                .innerHTML =
-                                    result
-                                        .data
-                                        .rendered_items;
-
-                        } else {
-                            revertCheckbox(
-                                id,
-                                numericValue
-                            );
-                        }
-
-                        showSnackbar(
-                            'list',
-                            true,
-                            'error',
-                            result.message,
-                            result,
-                            true
-                        );
-                    }
-
-                } catch (error) {
-                    revertCheckbox(
-                        id,
-                        numericValue
-                    );
 
                     showSnackbar(
                         'list',
                         true,
-                        'error',
-                        _('Server not reachable'),
-                        null,
+                        'green',
+                        result.message,
+                        result,
                         false
                     );
+
+                    return;
                 }
+
+
+                revertCheckbox(
+                    id,
+                    value
+                );
+
+                showSnackbar(
+                    'list',
+                    true,
+                    'error',
+                    result.message,
+                    result,
+                    true
+                );
             }
         )
         .catch(
             error => {
                 revertCheckbox(
                     id,
-                    numericValue
+                    value
                 );
-
-                if (
-                    String(error)
-                    === 'TypeError: Failed to fetch'
-                ) {
-                    error =
-                        _('Server not reachable');
-                }
 
                 showSnackbar(
                     'list',
                     true,
                     'error',
-                    error,
+                    String(error)
+                        === 'TypeError: Failed to fetch'
+                            ? _('Server not reachable')
+                            : String(error),
                     null,
                     false
                 );
@@ -192,8 +177,309 @@ function updateListItem(
 }
 
 
-async function deleteListItem(
+function revertCheckbox(
     id,
+    attemptedValue
+) {
+    const row =
+        document.querySelector(
+            '.list-item-row'
+            + `[data-item-id="${id}"]`
+        );
+
+    if (!row) {
+        return;
+    }
+
+
+    const checkbox =
+        row.querySelector(
+            '.list-status-control '
+            + 'input[type="checkbox"]'
+        );
+
+    if (!checkbox) {
+        return;
+    }
+
+
+    checkbox.checked =
+        !attemptedValue;
+}
+
+
+/* =========================================================
+ * MEHRFACH-AUSWAHL
+ * ========================================================= */
+
+
+function startListSelectionMode() {
+    listSelectionMode = true;
+
+    selectedListItems.clear();
+
+
+    document.body.classList.add(
+        'list-selection-active'
+    );
+
+
+    const footer =
+        document.getElementById(
+            'footer-list-selection'
+        );
+
+    if (footer) {
+        footer.style.display = '';
+    }
+
+
+    const createFab =
+        document.getElementById(
+            'div-fab-create-new-list-entry'
+        );
+
+    if (createFab) {
+        createFab.style.display =
+            'none';
+    }
+
+
+    syncListSelectionUi();
+}
+
+
+function exitListSelectionMode() {
+    listSelectionMode = false;
+
+    selectedListItems.clear();
+
+
+    document.body.classList.remove(
+        'list-selection-active'
+    );
+
+
+    document
+        .querySelectorAll(
+            '.list-item-row'
+        )
+        .forEach(
+            row => {
+                row.classList.remove(
+                    'list-item-selected'
+                );
+
+                const checkbox =
+                    row.querySelector(
+                        '.list-select-checkbox'
+                    );
+
+                if (checkbox) {
+                    checkbox.checked =
+                        false;
+                }
+            }
+        );
+
+
+    const footer =
+        document.getElementById(
+            'footer-list-selection'
+        );
+
+    if (footer) {
+        footer.style.display =
+            'none';
+    }
+
+
+    const createFab =
+        document.getElementById(
+            'div-fab-create-new-list-entry'
+        );
+
+    if (createFab) {
+        createFab.style.display =
+            '';
+    }
+
+
+    syncListSelectionUi();
+}
+
+
+function toggleListItemSelection(
+    id
+) {
+    id = String(id);
+
+    if (
+        selectedListItems.has(id)
+    ) {
+        selectedListItems.delete(id);
+
+    } else {
+        selectedListItems.add(id);
+    }
+
+
+    syncListSelectionUi();
+}
+
+
+function setListItemSelected(
+    id,
+    selected
+) {
+    id = String(id);
+
+    if (selected) {
+        selectedListItems.add(id);
+
+    } else {
+        selectedListItems.delete(id);
+    }
+
+
+    syncListSelectionUi();
+}
+
+
+function syncListSelectionUi() {
+    document
+        .querySelectorAll(
+            '.list-item-row'
+        )
+        .forEach(
+            row => {
+                const id =
+                    String(
+                        row.dataset.itemId
+                    );
+
+                const selected =
+                    selectedListItems.has(
+                        id
+                    );
+
+
+                row.classList.toggle(
+                    'list-item-selected',
+                    selected
+                );
+
+
+                const checkbox =
+                    row.querySelector(
+                        '.list-select-checkbox'
+                    );
+
+                if (checkbox) {
+                    checkbox.checked =
+                        selected;
+                }
+            }
+        );
+
+
+    const count =
+        document.getElementById(
+            'list-selection-count'
+        );
+
+    if (count) {
+        count.textContent =
+            selectedListItems.size;
+    }
+
+
+    const deleteButton =
+        document.getElementById(
+            'list-selection-delete-button'
+        );
+
+    if (deleteButton) {
+        deleteButton.disabled =
+            selectedListItems.size === 0;
+    }
+}
+
+
+function toggleSelectAllListItems() {
+    const rows =
+        Array.from(
+            document.querySelectorAll(
+                '.list-item-row'
+            )
+        );
+
+
+    const allSelected =
+        rows.length > 0
+        && selectedListItems.size
+            === rows.length;
+
+
+    selectedListItems.clear();
+
+
+    if (!allSelected) {
+        rows.forEach(
+            row => {
+                selectedListItems.add(
+                    String(
+                        row.dataset.itemId
+                    )
+                );
+            }
+        );
+    }
+
+
+    syncListSelectionUi();
+}
+
+
+/* =========================================================
+ * LÖSCHEN
+ * ========================================================= */
+
+
+function deleteSingleListItem(
+    id,
+    button
+) {
+    deleteListItems(
+        [String(id)],
+        button
+    );
+}
+
+
+function deleteSelectedListItems(
+    button
+) {
+    const ids =
+        Array.from(
+            selectedListItems
+        );
+
+
+    if (!ids.length) {
+        return;
+    }
+
+
+    deleteListItems(
+        ids,
+        button
+    );
+}
+
+
+async function deleteListItems(
+    ids,
     button
 ) {
     if (!navigator.onLine) {
@@ -210,6 +496,12 @@ async function deleteListItem(
     }
 
 
+    /*
+     * Vor JEDEM Löschen bestätigen.
+     *
+     * Vorhandene SharedMoments-
+     * Übersetzung wird verwendet.
+     */
     if (
         !confirm(
             _('Delete selected items?')
@@ -220,15 +512,19 @@ async function deleteListItem(
 
 
     const icon =
-        button.querySelector('i');
+        button
+            ? button.querySelector('i')
+            : null;
 
-    const oldIcon =
+    const originalIcon =
         icon
             ? icon.textContent
-            : 'delete';
+            : null;
 
 
-    button.disabled = true;
+    if (button) {
+        button.disabled = true;
+    }
 
     if (icon) {
         icon.textContent =
@@ -241,7 +537,7 @@ async function deleteListItem(
 
     formData.append(
         'ids',
-        id
+        ids.join(',')
     );
 
     formData.append(
@@ -283,6 +579,9 @@ async function deleteListItem(
                     .rendered_items;
 
 
+        exitListSelectionMode();
+
+
         showSnackbar(
             'list',
             true,
@@ -294,11 +593,17 @@ async function deleteListItem(
 
 
     } catch (error) {
-        button.disabled = false;
+        if (button) {
+            button.disabled =
+                false;
+        }
 
-        if (icon) {
+        if (
+            icon
+            && originalIcon
+        ) {
             icon.textContent =
-                oldIcon;
+                originalIcon;
         }
 
 
@@ -323,36 +628,4 @@ async function deleteListItem(
             true
         );
     }
-}
-
-
-function revertCheckbox(
-    id,
-    failedValue
-) {
-    const row =
-        document.querySelector(
-            '#div-render-list-items '
-            + `.list-item-row[data-item-id="${id}"]`
-        );
-
-    if (!row) {
-        return;
-    }
-
-
-    const checkbox =
-        row.querySelector(
-            'input[type="checkbox"]'
-        );
-
-    if (!checkbox) {
-        return;
-    }
-
-
-    checkbox.checked =
-        failedValue === 1
-            ? false
-            : true;
 }
