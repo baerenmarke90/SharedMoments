@@ -11,22 +11,40 @@
         }
 
         .heart-moments-filters {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 0.5rem;
-            overflow: visible;
             padding-bottom: 0.75rem;
             margin-bottom: 1rem;
         }
 
         .heart-moments-filters button {
-            flex: 0 0 auto !important;
-            width: auto !important;
-            min-width: max-content;
-            max-width: 100%;
+            width: 100% !important;
+            min-width: 0;
+            max-width: none;
+            margin: 0;
             white-space: nowrap;
-            padding-left: 1rem;
-            padding-right: 1rem;
+            justify-content: center;
+        }
+
+        /* Mobile: 3 Filter oben, 2 Filter unten */
+        .heart-moments-filters button:nth-child(-n+3) {
+            grid-column: span 2;
+        }
+
+        .heart-moments-filters button:nth-child(n+4) {
+            grid-column: span 3;
+        }
+
+        /* Auf größeren Displays alle Filter in einer Reihe */
+        @media (min-width: 700px) {
+            .heart-moments-filters {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+
+            .heart-moments-filters button:nth-child(n) {
+                grid-column: span 1;
+            }
         }
 
         .heart-moment-card {
