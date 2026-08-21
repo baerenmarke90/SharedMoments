@@ -956,21 +956,66 @@ async function generatePreviewForFileInput(event, mode) {
 
 
 // Funktion zum Rendern eines Bildes aus einer Datei
+function getFileObjectContentType(file) {
+   if (!file) {
+      return 'unknown';
+   }
+
+   const mimeType = String(file.type || '').toLowerCase();
+
+   if (mimeType.startsWith('image/')) {
+      return 'image';
+   }
+
+   if (mimeType.startsWith('video/')) {
+      return mimeType === 'video/quicktime'
+         ? 'video-mov'
+         : 'video';
+   }
+
+   return getFileContentType(null, file.name) || 'unknown';
+}
+
+function setPreviewImageFallback(img, filename) {
+   const container = img.closest('.preview-image-container');
+   if (!container) {
+      return;
+   }
+
+   img.remove();
+
+   const fallback = document.createElement('div');
+   fallback.className = 'preview-file-fallback';
+
+   const icon = document.createElement('i');
+   icon.textContent = 'image';
+
+   const label = document.createElement('span');
+   label.textContent = filename || _('Image selected');
+
+   fallback.appendChild(icon);
+   fallback.appendChild(label);
+   container.insertBefore(fallback, container.firstChild);
+}
+
+// Funktion zum Rendern eines Bildes aus einer Datei
 function renderFile(
    file,
    index,
    containerDiv,
    mode = 'create'
 ) {
-   const url =
-      URL.createObjectURL(file);
+   const url = URL.createObjectURL(file);
+   const fileType = getFileObjectContentType(file);
 
    return createPreview(
       url,
       index,
       containerDiv,
       mode,
-      file.name
+      file.name,
+      fileType,
+      file
    );
 }
 
@@ -1158,7 +1203,7 @@ function toggleEditMediaRemoval(
 }
 
 
-function createPreview(src, index, containerDiv, mode, filename) {
+function createPreview(src, index, containerDiv, mode, filename, forcedFileType = null, fileObject = null) {
    // Erstelle einen Container für das Bild/Video-Thumbnail und den Chip
    const container = document.createElement("div");
    container.className = "preview-image-container";
@@ -1170,39 +1215,72 @@ function createPreview(src, index, containerDiv, mode, filename) {
    chip.textContent = "";
    chip.style.display = "none";
 
-   if (
-       mode === "create"
-       || mode === "edit-new"
-    ) {
-       var fileType =
-          filename
-             ? getFileContentType(
-                  null,
-                  filename
-               )
-             : getFileContentType(
-                  src,
-                  null
-               );
+   let fileType = forcedFileType;
 
-    } else if (mode === "edit") {
-       var fileType =
-          getFileContentType(
-             null,
-             src
-          );
+   if (!fileType) {
+      if (
+         mode === "create"
+         || mode === "edit-new"
+      ) {
+         fileType = filename
+            ? getFileContentType(null, filename)
+            : getFileContentType(src, null);
+      } else if (mode === "edit") {
+         fileType = getFileContentType(null, src);
+      }
    }
 
    let readyPromise;
 
    if (fileType === "image") {
-       readyPromise = Promise.resolve();
-       // Erstelle das Bild
+       // Auf Android kann der Photo Picker Dateien mit korrektem MIME-Type,
+       // aber ohne verlaessliche Dateiendung liefern. Ausserdem sind Blob-URLs
+       // in einzelnen WebView/PWA-Konstellationen bei der Vorschau unzuverlaessig.
+       // Deshalb warten wir auf den echten Bild-Load und fallen bei Bedarf auf
+       // FileReader/data: zurueck.
        const img = document.createElement("img");
        img.className = "preview-image";
-       img.src = src;
        img.dataset.index = index;
+       img.alt = filename || '';
        img.addEventListener("click", selectImage);
+
+       readyPromise = new Promise((resolve) => {
+          let fileReaderFallbackTried = false;
+
+          img.addEventListener('load', () => resolve(), { once: true });
+
+          img.addEventListener('error', () => {
+             if (
+                fileObject
+                && !fileReaderFallbackTried
+                && typeof FileReader !== 'undefined'
+             ) {
+                fileReaderFallbackTried = true;
+                const reader = new FileReader();
+
+                reader.addEventListener('load', () => {
+                   img.src = reader.result;
+                }, { once: true });
+
+                reader.addEventListener('error', () => {
+                   setPreviewImageFallback(img, filename);
+                   resolve();
+                }, { once: true });
+
+                try {
+                   reader.readAsDataURL(fileObject);
+                   return;
+                } catch (error) {
+                   console.warn('[Memories] FileReader preview fallback failed', error);
+                }
+             }
+
+             setPreviewImageFallback(img, filename);
+             resolve();
+          });
+
+          img.src = src;
+       });
 
        // Füge das Bild und den Chip dem Container hinzu
        container.appendChild(img);
