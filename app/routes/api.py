@@ -2682,3 +2682,223 @@ def _run_export(export_id, user_id, app_ref):
             log('error', f'Data export failed: {e}')
             job['status'] = 'error'
             job['error'] = str(e)
+
+
+# ============================================================
+# HEART MOMENTS API START
+# ============================================================
+
+from app.heart_moments import (
+    list_heart_moments,
+    get_visible_heart_moment,
+    create_heart_moment,
+    update_heart_moment,
+    delete_heart_moment,
+)
+
+
+def _heart_moment_request_data():
+    if request.is_json:
+        return request.get_json(silent=True) or {}
+
+    return request.form.to_dict()
+
+
+@api_bp.route('/api/v2/heart-moments', methods=['GET', 'POST'])
+@jwt_required
+def heart_moments_api():
+    try:
+        if request.method == 'GET':
+            filter_name = request.args.get('filter', 'all')
+            feeling = request.args.get('feeling')
+
+            moments = list_heart_moments(
+                user_id=g.user_id,
+                filter_name=filter_name,
+                feeling=feeling,
+            )
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Heart Moments loaded successfully',
+                'data': {
+                    'items': moments,
+                    'filter': filter_name,
+                }
+            }), 200
+
+        data = _heart_moment_request_data()
+
+        moment = create_heart_moment(
+            user_id=g.user_id,
+            description=data.get('description'),
+            feeling=data.get('feeling'),
+            moment_date=data.get('momentDate'),
+            visibility=data.get('visibility', 'shared'),
+            media_filename=data.get('mediaFilename'),
+        )
+
+        log(
+            'info',
+            f'Heart Moment created: '
+            f'ID={moment["id"]}, '
+            f'User={g.user_id}, '
+            f'Visibility={moment["visibility"]}'
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Heart Moment created successfully',
+            'data': {
+                'item': moment
+            }
+        }), 201
+
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'data': {
+                'error_code': 400
+            }
+        }), 400
+
+    except Exception as e:
+        log(
+            'error',
+            f'Error while processing Heart Moments: {e}'
+        )
+
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while processing Heart Moments.',
+            'data': {
+                'error_code': 500,
+                'error_message': str(e) if app.debug else None
+            }
+        }), 500
+
+
+@api_bp.route(
+    '/api/v2/heart-moments/<int:moment_id>',
+    methods=['GET', 'PUT', 'DELETE']
+)
+@jwt_required
+def heart_moment_by_id_api(moment_id):
+    try:
+        if request.method == 'GET':
+            moment = get_visible_heart_moment(
+                moment_id=moment_id,
+                user_id=g.user_id,
+            )
+
+            # Deliberately return 404 for inaccessible private moments.
+            # This avoids disclosing whether such a moment exists.
+            if not moment:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Heart Moment not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Heart Moment loaded successfully',
+                'data': {
+                    'item': moment
+                }
+            }), 200
+
+        if request.method == 'PUT':
+            data = _heart_moment_request_data()
+
+            moment = update_heart_moment(
+                moment_id=moment_id,
+                user_id=g.user_id,
+                changes=data,
+            )
+
+            # Update is author-only. Use 404 so foreign/private
+            # object existence is not disclosed.
+            if not moment:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Heart Moment not found',
+                    'data': {
+                        'error_code': 404
+                    }
+                }), 404
+
+            log(
+                'info',
+                f'Heart Moment updated: '
+                f'ID={moment_id}, User={g.user_id}'
+            )
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Heart Moment updated successfully',
+                'data': {
+                    'item': moment
+                }
+            }), 200
+
+        deleted = delete_heart_moment(
+            moment_id=moment_id,
+            user_id=g.user_id,
+        )
+
+        if not deleted:
+            return jsonify({
+                'status': 'error',
+                'message': 'Heart Moment not found',
+                'data': {
+                    'error_code': 404
+                }
+            }), 404
+
+        log(
+            'info',
+            f'Heart Moment deleted: '
+            f'ID={moment_id}, User={g.user_id}'
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Heart Moment deleted successfully',
+            'data': {
+                'id': moment_id
+            }
+        }), 200
+
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'data': {
+                'error_code': 400
+            }
+        }), 400
+
+    except Exception as e:
+        log(
+            'error',
+            f'Error while processing Heart Moment '
+            f'ID={moment_id}: {e}'
+        )
+
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while processing the Heart Moment.',
+            'data': {
+                'error_code': 500,
+                'error_message': str(e) if app.debug else None
+            }
+        }), 500
+
+
+# ============================================================
+# HEART MOMENTS API END
+# ============================================================
