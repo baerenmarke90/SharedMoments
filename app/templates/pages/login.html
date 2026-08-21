@@ -66,28 +66,6 @@
                 </div>
                 {% endif %}
 
-                {% if oidc_login_enabled %}
-                <a
-                    class="button"
-                    href="/oidc/login"
-                    style="width:100%; justify-content:center;">
-                    <i>shield_person</i>
-                    <span>
-                        {{ _('Login with Pocket ID') }}
-                    </span>
-                </a>
-
-                {% if local_login_enabled or passkey_login_enabled %}
-                <div
-                    class="row"
-                    style="margin:1.25rem 0; opacity:0.65;">
-                    <hr class="max">
-                    <span>{{ _('or') }}</span>
-                    <hr class="max">
-                </div>
-                {% endif %}
-                {% endif %}
-
                 {% if local_login_enabled %}
                 <form id="loginForm">
                     <div class="field label border">
@@ -109,11 +87,33 @@
                 </form>
                 {% endif %}
 
-                {% if passkey_login_enabled %}
-                {% if local_login_enabled %}
-                <br>
+                {% if local_login_enabled and (oidc_login_enabled or passkey_login_enabled) %}
+                <div
+                    class="row"
+                    style="margin:1.25rem 0; opacity:0.65;">
+                    <hr class="max">
+                    <span>{{ _('or') }}</span>
+                    <hr class="max">
+                </div>
                 {% endif %}
 
+                {% if oidc_login_enabled %}
+                <a
+                    class="button"
+                    href="/oidc/login"
+                    style="width:100%; justify-content:center;">
+                    <i>shield_person</i>
+                    <span>
+                        {{ _('Login with Pocket ID') }}
+                    </span>
+                </a>
+                {% endif %}
+
+                {% if oidc_login_enabled and passkey_login_enabled %}
+                <div class="space"></div>
+                {% endif %}
+
+                {% if passkey_login_enabled %}
                 <button
                     onclick="authenticatePasskey()"
                     style="width:100%;">
