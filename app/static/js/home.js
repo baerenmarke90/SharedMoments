@@ -760,12 +760,31 @@ function openCreateDialog() {
    callUi('#dialog-create-new-home-item');
 }
 
-function openMemoryCreateFromCoupleHome() {
-   const coupleCreateDialog = document.getElementById('dialog-couple-create');
+function isCoupleCreateMenuOpen() {
+   const dialog = document.getElementById('dialog-couple-create');
+   if (!dialog) return false;
+   return dialog.classList.contains('active') || dialog.hasAttribute('open');
+}
 
-   if (coupleCreateDialog) {
+function closeCoupleCreateMenu() {
+   const dialog = document.getElementById('dialog-couple-create');
+   if (!dialog) return;
+
+   dialog.style.transform = '';
+   dialog.classList.remove('couple-create-dragging');
+
+   if (dialog.classList.contains('active')) {
       callUi('#dialog-couple-create');
+      return;
    }
+
+   if (dialog.hasAttribute('open') && typeof dialog.close === 'function') {
+      dialog.close();
+   }
+}
+
+function openMemoryCreateFromCoupleHome() {
+   closeCoupleCreateMenu();
 
    // BeerCSS/mobile browsers can drop the second dialog when one dialog is
    // closed and another is opened in the same click event. Give the closing
@@ -773,6 +792,72 @@ function openMemoryCreateFromCoupleHome() {
    window.setTimeout(() => {
       openCreateDialog();
    }, 180);
+}
+
+function openMilestoneCreateFromCoupleHome() {
+   closeCoupleCreateMenu();
+   window.setTimeout(() => {
+      callUi('#dialog-create-new-timeline-item');
+   }, 180);
+}
+
+function initCoupleCreateMenuDismissal() {
+   const dialog = document.getElementById('dialog-couple-create');
+   const handle = document.getElementById('couple-create-drag-handle');
+   if (!dialog || dialog.dataset.dismissReady === '1') return;
+
+   dialog.dataset.dismissReady = '1';
+
+   // Native dialog backdrops dispatch the click on the dialog element itself.
+   dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+         closeCoupleCreateMenu();
+      }
+   });
+
+   if (!handle) return;
+
+   let startY = null;
+   let currentY = null;
+
+   handle.addEventListener('pointerdown', (event) => {
+      startY = event.clientY;
+      currentY = event.clientY;
+      dialog.classList.add('couple-create-dragging');
+      if (handle.setPointerCapture) {
+         handle.setPointerCapture(event.pointerId);
+      }
+   });
+
+   handle.addEventListener('pointermove', (event) => {
+      if (startY === null) return;
+      currentY = event.clientY;
+      const distance = Math.max(0, currentY - startY);
+      dialog.style.transform = `translateY(${Math.min(distance, 180)}px)`;
+   });
+
+   const finishDrag = () => {
+      if (startY === null) return;
+      const distance = Math.max(0, (currentY ?? startY) - startY);
+      startY = null;
+      currentY = null;
+      dialog.classList.remove('couple-create-dragging');
+
+      if (distance >= 70) {
+         closeCoupleCreateMenu();
+      } else {
+         dialog.style.transform = '';
+      }
+   };
+
+   handle.addEventListener('pointerup', finishDrag);
+   handle.addEventListener('pointercancel', finishDrag);
+}
+
+if (document.readyState === 'loading') {
+   document.addEventListener('DOMContentLoaded', initCoupleCreateMenuDismissal);
+} else {
+   initCoupleCreateMenuDismissal();
 }
 
 function getHomeMediaSelectionSignature(fileInput) {

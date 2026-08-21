@@ -21,6 +21,9 @@
          }
 
          .places-map-card {
+            position: relative;
+            z-index: 0;
+            isolation: isolate;
             overflow: hidden;
             margin-bottom: 1rem;
             border-radius: 1rem;
@@ -187,12 +190,24 @@
          }
 
          .place-editor-map {
+            position: relative;
+            z-index: 0;
+            isolation: isolate;
             width: 100%;
             height: 260px;
             margin-top: 0.65rem;
             border-radius: 0.9rem;
             overflow: hidden;
             background: var(--surface-container-high);
+         }
+
+         #dialog-create-place {
+            z-index: 1200 !important;
+            background: var(--surface);
+         }
+
+         #div-overlay-create-place {
+            z-index: 1190 !important;
          }
 
          .place-editor-tools {
@@ -265,6 +280,9 @@
          }
 
          .leaflet-container {
+            position: relative;
+            z-index: 0;
+            isolation: isolate;
             font: inherit;
          }
 

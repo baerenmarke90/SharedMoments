@@ -67,6 +67,24 @@
             border: 2px solid var(--primary);
          }
 
+         .couple-create-drag-handle {
+            width: 46px;
+            height: 5px;
+            border-radius: 999px;
+            margin: 0.15rem auto 0.5rem;
+            background: var(--outline-variant);
+            touch-action: none;
+            cursor: grab;
+         }
+
+         #dialog-couple-create {
+            transition: transform 160ms ease-out;
+         }
+
+         #dialog-couple-create.couple-create-dragging {
+            transition: none;
+         }
+
          /* Heart Moment memory card */
 
          .heart-memory-card {
@@ -446,6 +464,9 @@
            onclick="callUi('#dialog-couple-create')"></div>
 
       <dialog class="bottom" id="dialog-couple-create">
+         <div class="couple-create-drag-handle"
+              id="couple-create-drag-handle"
+              aria-hidden="true"></div>
          <nav>
             <button class="circle transparent"
                     onclick="callUi('#dialog-couple-create')">
@@ -468,7 +489,8 @@
          </a>
          {% endif %}
 
-         <a class="row padding" href="/heart-moments?create=1">
+         <a class="row padding" href="/heart-moments?create=1"
+            onclick="closeCoupleCreateMenu();">
             <i>favorite</i>
             <div class="max">
                <strong>Herzmoment</strong>
@@ -479,7 +501,7 @@
 
          {% if has_list_permission('Create', moments_title) %}
          <a class="row padding"
-            onclick="callUi('#dialog-couple-create'); callUi('#dialog-create-new-timeline-item');">
+            onclick="openMilestoneCreateFromCoupleHome();">
             <i>star</i>
             <div class="max">
                <strong>Meilenstein</strong>
@@ -490,7 +512,8 @@
          {% endif %}
 
          <a class="row padding"
-            href="{{ url_for('pages.bucketlist', create=1) }}">
+            href="{{ url_for('pages.bucketlist', create=1) }}"
+            onclick="closeCoupleCreateMenu();">
             <i>checklist</i>
             <div class="max">
                <strong>Bucketlist</strong>
@@ -500,7 +523,8 @@
          </a>
 
          <a class="row padding"
-            href="{{ url_for('pages.plans', create=1) }}">
+            href="{{ url_for('pages.plans', create=1) }}"
+            onclick="closeCoupleCreateMenu();">
             <i>explore</i>
             <div class="max">
                <strong>Plan</strong>
@@ -510,7 +534,8 @@
          </a>
 
          <a class="row padding"
-            href="{{ url_for('pages.chapters', create=1) }}">
+            href="{{ url_for('pages.chapters', create=1) }}"
+            onclick="closeCoupleCreateMenu();">
             <i>auto_stories</i>
             <div class="max">
                <strong>Kapitel</strong>
@@ -520,7 +545,8 @@
          </a>
 
          <a class="row padding"
-            href="{{ url_for('pages.places', create=1) }}">
+            href="{{ url_for('pages.places', create=1) }}"
+            onclick="closeCoupleCreateMenu();">
             <i>add_location_alt</i>
             <div class="max">
                <strong>Ort</strong>
