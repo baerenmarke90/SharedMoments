@@ -12,14 +12,21 @@
 
         .heart-moments-filters {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.5rem;
-            overflow-x: auto;
+            overflow: visible;
             padding-bottom: 0.75rem;
             margin-bottom: 1rem;
         }
 
         .heart-moments-filters button {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            min-width: max-content;
+            max-width: 100%;
             white-space: nowrap;
+            padding-left: 1rem;
+            padding-right: 1rem;
         }
 
         .heart-moment-card {
