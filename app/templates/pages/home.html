@@ -171,6 +171,16 @@
       <div id="div-render-banner-card">
          {% include 'layouts/banner-card.html' %}
       </div>
+
+      <br>
+
+       {% if sm_edition == 'couples' and heart_moment_memory %}
+       <div id="div-render-heart-moment-memory">
+          {% include 'layouts/heart-moment-memory-card.html' %}
+       </div>
+      <br>
+       {% endif %}
+
       <br>
 
       {% if has_list_permission('View', moments_title) %}

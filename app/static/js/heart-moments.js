@@ -125,6 +125,25 @@ function formatMomentDate(value) {
 }
 
 
+function heartMomentProfilePictureUrl(profilePicture) {
+    const filename = String(
+        profilePicture || ''
+    ).trim();
+
+    if (
+        !filename
+        || filename === 'profile-placeholder.jpg'
+    ) {
+        return '/api/v2/media/static/profile-placeholder.jpg';
+    }
+
+    return (
+        '/api/v2/media/'
+        + encodeURIComponent(filename)
+    );
+}
+
+
 function heartMomentImageUrl(moment) {
     const version = encodeURIComponent(
         moment.dateModified
@@ -590,82 +609,39 @@ function createHeartMomentCard(
             .filter(Boolean)
             .join(' ');
 
-        if (moment.author.profilePicture) {
-            const avatar =
-                document.createElement(
-                    'img'
-                );
-
-            avatar.className =
-                'heart-moment-author-avatar';
-
-            avatar.alt = '';
-
-            avatar.loading = 'lazy';
-
-            avatar.src =
-                '/api/v2/media/'
-                + encodeURIComponent(
-                    moment.author.profilePicture
-                );
-
-            avatar.addEventListener(
-                'error',
-                () => {
-                    avatar.remove();
-
-                    const fallback =
-                        document.createElement(
-                            'span'
-                        );
-
-                    fallback.className =
-                        'heart-moment-author-fallback';
-
-                    const icon =
-                        document.createElement(
-                            'i'
-                        );
-
-                    icon.textContent = 'person';
-
-                    fallback.appendChild(
-                        icon
-                    );
-
-                    authorElement.prepend(
-                        fallback
-                    );
-                },
-                { once: true }
+        const avatar =
+            document.createElement(
+                'img'
             );
 
-            authorElement.appendChild(
-                avatar
+        avatar.className =
+            'heart-moment-author-avatar';
+
+        avatar.alt = '';
+        avatar.loading = 'lazy';
+
+        avatar.src =
+            heartMomentProfilePictureUrl(
+                moment.author.profilePicture
             );
 
-        } else {
-            const fallback =
-                document.createElement(
-                    'span'
-                );
+        avatar.addEventListener(
+            'error',
+            () => {
+                if (
+                    !avatar.src.endsWith(
+                        '/api/v2/media/static/profile-placeholder.jpg'
+                    )
+                ) {
+                    avatar.src =
+                        '/api/v2/media/static/profile-placeholder.jpg';
+                }
+            }
+        );
 
-            fallback.className =
-                'heart-moment-author-fallback';
-
-            const icon =
-                document.createElement(
-                    'i'
-                );
-
-            icon.textContent = 'person';
-
-            fallback.appendChild(icon);
-
-            authorElement.appendChild(
-                fallback
-            );
-        }
+        authorElement.appendChild(
+            avatar
+        );
 
         const authorNameElement =
             document.createElement(

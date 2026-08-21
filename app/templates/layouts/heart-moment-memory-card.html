@@ -1,0 +1,112 @@
+<article class="primary-container heart-memory-card">
+    <div class="padding">
+
+        <div class="row">
+            <i class="circle">favorite</i>
+
+            <div class="max">
+                <h5 class="no-margin">
+                    {{ _('Do you remember?') }}
+                </h5>
+
+                <time
+                    class="heart-memory-date small-text"
+                    datetime="{{ heart_moment_memory.momentDate }}">
+                    {{ heart_moment_memory.momentDate }}
+                </time>
+            </div>
+        </div>
+
+
+        {% if heart_moment_memory.mediaFilename %}
+        <img
+            class="heart-memory-image"
+            src="/api/v2/heart-moments/{{ heart_moment_memory.id }}/image?v={{ heart_moment_memory.dateModified }}"
+            alt=""
+            loading="lazy">
+        {% endif %}
+
+
+        <p class="heart-memory-description">
+            {{ heart_moment_memory.description }}
+        </p>
+
+
+        {% if heart_moment_memory.author %}
+        <div class="heart-memory-author">
+
+            {% if heart_moment_memory.author.profilePicture
+                  and heart_moment_memory.author.profilePicture != 'profile-placeholder.jpg' %}
+
+            <img
+                class="heart-memory-avatar"
+                src="/api/v2/media/{{ heart_moment_memory.author.profilePicture|urlencode }}"
+                alt=""
+                loading="lazy"
+                onerror="
+                    this.onerror=null;
+                    this.src='/api/v2/media/static/profile-placeholder.jpg';
+                ">
+
+            {% else %}
+
+            <img
+                class="heart-memory-avatar"
+                src="/api/v2/media/static/profile-placeholder.jpg"
+                alt=""
+                loading="lazy">
+
+            {% endif %}
+
+            <span>
+                {{ _('Heart Moment from') }}
+                <strong>
+                    {{ heart_moment_memory.author.firstName }}
+                </strong>
+            </span>
+
+        </div>
+        {% endif %}
+
+
+        <nav class="right-align heart-memory-open">
+            <a
+                class="button border"
+                href="/heart-moments?highlight={{ heart_moment_memory.id }}">
+
+                <i>favorite</i>
+
+                <span>
+                    {{ _('Open Heart Moment') }}
+                </span>
+            </a>
+        </nav>
+
+    </div>
+</article>
+
+<script>
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+        document
+            .querySelectorAll('.heart-memory-date')
+            .forEach(element => {
+                const value =
+                    element.getAttribute('datetime');
+
+                if (!value) {
+                    return;
+                }
+
+                const parsed =
+                    new Date(`${value}T00:00:00`);
+
+                if (!Number.isNaN(parsed.getTime())) {
+                    element.textContent =
+                        parsed.toLocaleDateString();
+                }
+            });
+    }
+);
+</script>

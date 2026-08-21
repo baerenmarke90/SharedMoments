@@ -4518,5 +4518,29 @@
     "languageCode": "en-US",
     "entityType": "ui",
     "translatedText": "The photo could not be removed."
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Do you remember?",
+    "helpText": null,
+    "languageCode": "en-US",
+    "entityType": "ui",
+    "translatedText": "Do you remember?"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Heart Moment from",
+    "helpText": null,
+    "languageCode": "en-US",
+    "entityType": "ui",
+    "translatedText": "From"
+  },
+  {
+    "entityID": 0,
+    "fieldName": "Open Heart Moment",
+    "helpText": null,
+    "languageCode": "en-US",
+    "entityType": "ui",
+    "translatedText": "Open Heart Moment"
   }
 ]
