@@ -2,7 +2,7 @@ from sqlalchemy.exc import IntegrityError
 from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, Setting,
     UserSetting, Item, ItemShare, ListType, SessionLocal, RelationshipStatus, Translation,
     Reminder, ReminderMute, PushSubscription, NotificationLog, CoupleChapter,
-    CoupleChapterItem, CoupleChapterHeartMoment)
+    CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan)
 from sqlalchemy.orm import joinedload
 from datetime import date
 from sqlalchemy import desc, asc, and_, or_
@@ -1069,6 +1069,12 @@ def delete_couple_chapter(chapter_id):
         session.query(CoupleChapterHeartMoment).filter(
             CoupleChapterHeartMoment.chapterID == chapter_id
         ).delete()
+        session.query(CouplePlan).filter(
+            CouplePlan.chapterID == chapter_id
+        ).update(
+            {CouplePlan.chapterID: None},
+            synchronize_session=False,
+        )
         session.delete(chapter)
         session.commit()
         return True
@@ -1178,6 +1184,181 @@ def get_couple_chapter_link_map():
             'item_chapters': item_chapters,
             'heart_chapters': heart_chapters,
         }
+    finally:
+        session.close()
+
+
+# Couple Plans
+
+_PLAN_STATUSES = {'idea', 'planned', 'experienced'}
+
+
+def _serialize_couple_plan(plan, creator=None, chapter=None):
+    return {
+        'id': plan.id,
+        'title': plan.title,
+        'description': plan.description or '',
+        'status': plan.status,
+        'targetStartDate': plan.targetStartDate,
+        'targetEndDate': plan.targetEndDate,
+        'locationName': plan.locationName or '',
+        'createdByUser': plan.createdByUser,
+        'chapterID': plan.chapterID,
+        'dateCreated': plan.dateCreated,
+        'dateModified': plan.dateModified,
+        'creator': {
+            'id': creator.id,
+            'firstName': creator.firstName or '',
+            'profilePicture': creator.profilePicture,
+        } if creator else None,
+        'chapter': {
+            'id': chapter.id,
+            'title': chapter.title,
+        } if chapter else None,
+    }
+
+
+def get_couple_plans():
+    session = SessionLocal()
+    try:
+        rows = (
+            session.query(CouplePlan, User, CoupleChapter)
+            .join(User, CouplePlan.createdByUser == User.id)
+            .outerjoin(CoupleChapter, CouplePlan.chapterID == CoupleChapter.id)
+            .all()
+        )
+        return [
+            _serialize_couple_plan(plan, creator, chapter)
+            for plan, creator, chapter in rows
+        ]
+    finally:
+        session.close()
+
+
+def get_couple_plan(plan_id):
+    session = SessionLocal()
+    try:
+        row = (
+            session.query(CouplePlan, User, CoupleChapter)
+            .join(User, CouplePlan.createdByUser == User.id)
+            .outerjoin(CoupleChapter, CouplePlan.chapterID == CoupleChapter.id)
+            .filter(CouplePlan.id == plan_id)
+            .first()
+        )
+        if not row:
+            return None
+        return _serialize_couple_plan(row[0], row[1], row[2])
+    finally:
+        session.close()
+
+
+def create_couple_plan(
+    title,
+    description,
+    status,
+    target_start_date,
+    target_end_date,
+    location_name,
+    created_by_user,
+):
+    if status not in _PLAN_STATUSES:
+        raise ValueError('Invalid plan status')
+
+    session = SessionLocal()
+    try:
+        plan = CouplePlan(
+            title=title,
+            description=description or '',
+            status=status,
+            targetStartDate=target_start_date,
+            targetEndDate=target_end_date,
+            locationName=location_name or '',
+            createdByUser=created_by_user,
+        )
+        session.add(plan)
+        session.commit()
+        session.refresh(plan)
+        return plan.id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def update_couple_plan(
+    plan_id,
+    title,
+    description,
+    status,
+    target_start_date,
+    target_end_date,
+    location_name,
+):
+    if status not in _PLAN_STATUSES:
+        raise ValueError('Invalid plan status')
+
+    session = SessionLocal()
+    try:
+        plan = (
+            session.query(CouplePlan)
+            .filter(CouplePlan.id == plan_id)
+            .first()
+        )
+        if not plan:
+            return False
+
+        plan.title = title
+        plan.description = description or ''
+        plan.status = status
+        plan.targetStartDate = target_start_date
+        plan.targetEndDate = target_end_date
+        plan.locationName = location_name or ''
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def delete_couple_plan(plan_id):
+    session = SessionLocal()
+    try:
+        plan = (
+            session.query(CouplePlan)
+            .filter(CouplePlan.id == plan_id)
+            .first()
+        )
+        if not plan:
+            return False
+        session.delete(plan)
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def set_couple_plan_chapter(plan_id, chapter_id):
+    session = SessionLocal()
+    try:
+        plan = (
+            session.query(CouplePlan)
+            .filter(CouplePlan.id == plan_id)
+            .first()
+        )
+        if not plan:
+            return False
+        plan.chapterID = chapter_id
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
 

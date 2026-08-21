@@ -11,7 +11,9 @@ from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     ensure_notification_settings, get_passkeys_by_user, get_all_users,
     get_couple_chapters, get_couple_chapter, create_couple_chapter,
     update_couple_chapter, delete_couple_chapter, get_couple_chapter_links,
-    replace_couple_chapter_links, get_couple_chapter_link_map)
+    replace_couple_chapter_links, get_couple_chapter_link_map,
+    get_couple_plans, get_couple_plan, create_couple_plan,
+    update_couple_plan, delete_couple_plan, set_couple_plan_chapter)
 from app.logger import log
 import os
 from app.utils import generate_banner_text
@@ -778,6 +780,131 @@ def _chapter_form_values():
     }
 
 
+_PLAN_STATUS_META = {
+    'idea': {
+        'label': 'Idee',
+        'icon': 'lightbulb',
+    },
+    'planned': {
+        'label': 'Geplant',
+        'icon': 'event_available',
+    },
+    'experienced': {
+        'label': 'Erlebt',
+        'icon': 'done_all',
+    },
+}
+
+
+def _plan_date_label(plan):
+    start = plan.get('targetStartDate')
+    end = plan.get('targetEndDate')
+
+    if start and end:
+        if start == end:
+            return start.strftime('%d.%m.%Y')
+        return f"{start.strftime('%d.%m.%Y')} – {end.strftime('%d.%m.%Y')}"
+    if start:
+        return start.strftime('%d.%m.%Y')
+    if end:
+        return f"bis {end.strftime('%d.%m.%Y')}"
+    return ''
+
+
+def _present_couple_plan(plan, current_user_id=None):
+    presented = dict(plan)
+    meta = _PLAN_STATUS_META.get(
+        plan.get('status'),
+        _PLAN_STATUS_META['idea'],
+    )
+    presented.update({
+        'status_label': meta['label'],
+        'status_icon': meta['icon'],
+        'date_label': _plan_date_label(plan),
+        'start_input': (
+            plan['targetStartDate'].isoformat()
+            if plan.get('targetStartDate') else ''
+        ),
+        'end_input': (
+            plan['targetEndDate'].isoformat()
+            if plan.get('targetEndDate') else ''
+        ),
+        'is_owner': (
+            current_user_id is not None
+            and plan.get('createdByUser') == current_user_id
+        ),
+    })
+    return presented
+
+
+def _couple_home_plans(plans):
+    active = [
+        _present_couple_plan(plan)
+        for plan in plans
+        if plan.get('status') in ('idea', 'planned')
+    ]
+
+    def sort_key(plan):
+        target = plan.get('targetStartDate') or plan.get('targetEndDate')
+        created = plan.get('dateCreated')
+        created_date = (
+            created.date()
+            if created and hasattr(created, 'date')
+            else date.min
+        )
+        return (
+            0 if target else 1,
+            target or date.max,
+            -created_date.toordinal(),
+            -plan['id'],
+        )
+
+    active.sort(key=sort_key)
+    return active[:3]
+
+
+def _plan_form_values():
+    title = str(request.form.get('title', '')).strip()
+    description = str(request.form.get('description', '')).strip()
+    location_name = str(request.form.get('location_name', '')).strip()
+    status = str(request.form.get('status', 'idea')).strip()
+
+    if not title:
+        raise ValueError('Bitte gib dem Plan einen Titel.')
+    if len(title) > 255:
+        raise ValueError('Der Titel darf höchstens 255 Zeichen lang sein.')
+    if len(location_name) > 255:
+        raise ValueError('Der Ort darf höchstens 255 Zeichen lang sein.')
+    if status not in _PLAN_STATUS_META:
+        raise ValueError('Bitte wähle einen gültigen Status.')
+
+    try:
+        target_start_date = _parse_optional_form_date(
+            request.form.get('target_start_date')
+        )
+        target_end_date = _parse_optional_form_date(
+            request.form.get('target_end_date')
+        )
+    except ValueError as exc:
+        raise ValueError('Bitte verwende gültige Datumsangaben.') from exc
+
+    if (
+        target_start_date
+        and target_end_date
+        and target_end_date < target_start_date
+    ):
+        raise ValueError('Das Enddatum darf nicht vor dem Startdatum liegen.')
+
+    return {
+        'title': title,
+        'description': description,
+        'status': status,
+        'target_start_date': target_start_date,
+        'target_end_date': target_end_date,
+        'location_name': location_name,
+    }
+
+
 @pages_bp.route('/home')
 @jwt_required
 def home():
@@ -809,6 +936,7 @@ def home():
         couple_users = []
         couple_home_upcoming = []
         couple_home_recent = []
+        couple_home_plans = []
 
         if sm_edition == 'couples':
             from app.heart_moments import (
@@ -859,6 +987,10 @@ def home():
                 has_list_permission('View', 'Moments'),
             )
 
+            couple_home_plans = _couple_home_plans(
+                get_couple_plans()
+            )
+
         return render_template(
             'pages/home.html',
             items=items,
@@ -881,6 +1013,7 @@ def home():
             couple_users=couple_users,
             couple_home_upcoming=couple_home_upcoming,
             couple_home_recent=couple_home_recent,
+            couple_home_plans=couple_home_plans,
             page_title='Wir' if sm_edition == 'couples' else None,
             memories_page=False,
             milestones_page=False,
@@ -1005,6 +1138,224 @@ def milestones():
     except Exception as e:
         log('error', f'Error while rendering milestones page: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/plans')
+@jwt_required
+def plans():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        selected_status = str(
+            request.args.get('status', 'all')
+        ).strip()
+        allowed_statuses = {'all'} | set(_PLAN_STATUS_META)
+        if selected_status not in allowed_statuses:
+            selected_status = 'all'
+
+        all_plans = [
+            _present_couple_plan(plan, g.user_id)
+            for plan in get_couple_plans()
+        ]
+
+        status_rank = {
+            'planned': 0,
+            'idea': 1,
+            'experienced': 2,
+        }
+
+        def plan_sort_key(plan):
+            target = plan.get('targetStartDate') or plan.get('targetEndDate')
+            created = plan.get('dateCreated')
+            created_date = (
+                created.date()
+                if created and hasattr(created, 'date')
+                else date.min
+            )
+            return (
+                status_rank.get(plan.get('status'), 9),
+                0 if target else 1,
+                target or date.max,
+                -created_date.toordinal(),
+                -plan['id'],
+            )
+
+        all_plans.sort(key=plan_sort_key)
+
+        visible_plans = (
+            all_plans
+            if selected_status == 'all'
+            else [
+                plan for plan in all_plans
+                if plan.get('status') == selected_status
+            ]
+        )
+
+        title = get_display_title()
+        darkmode = get_user_setting(g.user_id, 'darkmode')
+        user_data = get_user_by_id(g.user_id)
+        list_types = get_all_list_types()
+
+        return render_template(
+            'pages/plans.html',
+            title=title,
+            darkmode=darkmode,
+            user_data=user_data,
+            list_types=list_types,
+            sm_edition=sm_edition,
+            page_title='Unsere Pläne',
+            plans=visible_plans,
+            selected_status=selected_status,
+            plan_statuses=_PLAN_STATUS_META,
+            plan_error=request.args.get('error', ''),
+        )
+    except Exception as e:
+        log('error', f'Error while rendering plans page: {e}')
+        return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/plans/create', methods=['POST'])
+@jwt_required
+def create_plan_page():
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    try:
+        values = _plan_form_values()
+        create_couple_plan(
+            title=values['title'],
+            description=values['description'],
+            status=values['status'],
+            target_start_date=values['target_start_date'],
+            target_end_date=values['target_end_date'],
+            location_name=values['location_name'],
+            created_by_user=g.user_id,
+        )
+        return redirect(url_for('pages.plans'))
+    except ValueError as exc:
+        return redirect(url_for('pages.plans', error=str(exc)))
+    except Exception as e:
+        log('error', f'Error while creating couple plan: {e}')
+        return redirect(url_for(
+            'pages.plans',
+            error='Der Plan konnte nicht erstellt werden.',
+        ))
+
+
+@pages_bp.route('/plans/<int:plan_id>/update', methods=['POST'])
+@jwt_required
+def update_plan_page(plan_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    plan = get_couple_plan(plan_id)
+    if not plan:
+        return redirect(url_for('pages.plans'))
+    if plan['createdByUser'] != g.user_id:
+        return redirect(url_for(
+            'pages.plans',
+            error='Du kannst nur deine eigenen Pläne bearbeiten.',
+        ))
+
+    try:
+        values = _plan_form_values()
+        update_couple_plan(
+            plan_id=plan_id,
+            title=values['title'],
+            description=values['description'],
+            status=values['status'],
+            target_start_date=values['target_start_date'],
+            target_end_date=values['target_end_date'],
+            location_name=values['location_name'],
+        )
+        return redirect(url_for('pages.plans') + f'#plan-{plan_id}')
+    except ValueError as exc:
+        return redirect(url_for(
+            'pages.plans',
+            error=str(exc),
+        ) + f'#plan-{plan_id}')
+    except Exception as e:
+        log('error', f'Error while updating couple plan {plan_id}: {e}')
+        return redirect(url_for(
+            'pages.plans',
+            error='Der Plan konnte nicht gespeichert werden.',
+        ) + f'#plan-{plan_id}')
+
+
+@pages_bp.route('/plans/<int:plan_id>/delete', methods=['POST'])
+@jwt_required
+def delete_plan_page(plan_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    plan = get_couple_plan(plan_id)
+    if not plan:
+        return redirect(url_for('pages.plans'))
+    if plan['createdByUser'] != g.user_id:
+        return redirect(url_for(
+            'pages.plans',
+            error='Du kannst nur deine eigenen Pläne löschen.',
+        ))
+
+    try:
+        delete_couple_plan(plan_id)
+        return redirect(url_for('pages.plans'))
+    except Exception as e:
+        log('error', f'Error while deleting couple plan {plan_id}: {e}')
+        return redirect(url_for(
+            'pages.plans',
+            error='Der Plan konnte nicht gelöscht werden.',
+        ))
+
+
+@pages_bp.route('/plans/<int:plan_id>/chapter', methods=['POST'])
+@jwt_required
+def plan_to_chapter_page(plan_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    plan = get_couple_plan(plan_id)
+    if not plan:
+        return redirect(url_for('pages.plans'))
+    if plan['createdByUser'] != g.user_id:
+        return redirect(url_for(
+            'pages.plans',
+            error='Du kannst nur deine eigenen Pläne in Kapitel umwandeln.',
+        ))
+    if plan.get('chapter'):
+        return redirect(url_for(
+            'pages.chapter',
+            chapter_id=plan['chapter']['id'],
+        ))
+    if plan.get('status') != 'experienced':
+        return redirect(url_for(
+            'pages.plans',
+            error='Markiere den Plan zuerst als „Erlebt“.',
+        ) + f'#plan-{plan_id}')
+
+    try:
+        chapter_id = create_couple_chapter(
+            title=plan['title'],
+            description=plan['description'],
+            start_date=plan['targetStartDate'],
+            end_date=plan['targetEndDate'],
+            location_name=plan['locationName'],
+            created_by_user=g.user_id,
+        )
+        set_couple_plan_chapter(plan_id, chapter_id)
+        return redirect(url_for('pages.chapter', chapter_id=chapter_id))
+    except Exception as e:
+        log('error', f'Error while converting plan {plan_id} to chapter: {e}')
+        return redirect(url_for(
+            'pages.plans',
+            error='Aus dem Plan konnte kein Kapitel erstellt werden.',
+        ) + f'#plan-{plan_id}')
 
 
 @pages_bp.route('/chapters')

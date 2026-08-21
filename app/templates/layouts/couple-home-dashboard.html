@@ -135,6 +135,41 @@
    flex: 0 0 22px;
    margin-left: 0.05rem;
 }
+.couple-plan-row {
+   display: flex;
+   align-items: center;
+   gap: 0.8rem;
+   padding: 0.8rem 0;
+   color: inherit;
+   text-decoration: none;
+}
+.couple-plan-row + .couple-plan-row {
+   border-top: 1px solid var(--outline-variant);
+}
+.couple-plan-icon {
+   width: 42px;
+   height: 42px;
+   border-radius: 50%;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   flex: 0 0 42px;
+   background: var(--primary-container);
+   color: var(--on-primary-container);
+}
+.couple-plan-meta {
+   display: flex;
+   gap: 0.45rem;
+   flex-wrap: wrap;
+   margin-top: 0.15rem;
+   font-size: 0.85rem;
+   opacity: 0.72;
+}
+.couple-plan-meta > span {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.2rem;
+}
 .couple-empty {
    text-align: center;
    padding: 1rem 0;
@@ -233,6 +268,62 @@
                <a href="/reminders">Alle Termine ansehen</a>
             </nav>
             {% endif %}
+         </div>
+      </article>
+   </section>
+
+   <section class="couple-section">
+      <h5 class="couple-section-title">
+         <i>explore</i>
+         <span>Das haben wir vor</span>
+      </h5>
+
+      <article class="surface-container">
+         <div class="padding">
+            {% if couple_home_plans|default([]) %}
+               {% for plan in couple_home_plans %}
+               <a class="couple-plan-row"
+                  href="/plans#plan-{{ plan.id }}">
+                  <i class="couple-plan-icon">{{ plan.status_icon }}</i>
+
+                  <div class="couple-row-main">
+                     <div class="couple-row-title">{{ plan.title }}</div>
+                     <div class="couple-plan-meta">
+                        {% if plan.date_label %}
+                        <span>
+                           <i>calendar_month</i>
+                           {{ plan.date_label }}
+                        </span>
+                        {% endif %}
+                        {% if plan.locationName %}
+                        <span>
+                           <i>location_on</i>
+                           {{ plan.locationName }}
+                        </span>
+                        {% endif %}
+                     </div>
+                  </div>
+
+                  <span class="chip small round">
+                     {{ plan.status_label }}
+                  </span>
+               </a>
+               {% endfor %}
+            {% else %}
+               <div class="couple-empty">
+                  Noch keine gemeinsamen Pläne. Was wollt ihr als Nächstes zusammen erleben?
+               </div>
+            {% endif %}
+
+            <nav class="right-align">
+               <a href="/plans">
+                  {% if couple_home_plans|default([]) %}
+                  Alle Pläne ansehen
+                  {% else %}
+                  Ersten Plan festhalten
+                  {% endif %}
+               </a>
+            </nav>
          </div>
       </article>
    </section>

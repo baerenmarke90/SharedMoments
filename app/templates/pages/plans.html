@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Unsere Pläne · {{ title.value }}</title>
+      {% include 'layouts/head.html' %}
+      <style>
+         .plans-page {
+            max-width: 820px;
+            margin: 0 auto;
+            padding-bottom: 6rem;
+         }
+
+         .plans-intro {
+            margin: 0.6rem 0 1rem;
+            opacity: 0.78;
+         }
+
+         .plans-filters {
+            display: flex;
+            gap: 0.45rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.65rem;
+         }
+
+         .plans-filters a {
+            flex: 0 0 auto;
+            text-decoration: none;
+         }
+
+         .plan-card {
+            margin-bottom: 0.9rem;
+            scroll-margin-top: 5rem;
+         }
+
+         .plan-card-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+         }
+
+         .plan-card-main {
+            flex: 1;
+            min-width: 0;
+         }
+
+         .plan-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 0.45rem;
+         }
+
+         .plan-title {
+            margin: 0;
+            overflow-wrap: anywhere;
+         }
+
+         .plan-author {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            font-size: 0.88rem;
+            opacity: 0.76;
+         }
+
+         .plan-author img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+         }
+
+         .plan-description {
+            margin: 0.65rem 0 0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+         }
+
+         .plan-meta {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.7rem;
+            font-size: 0.9rem;
+            opacity: 0.78;
+         }
+
+         .plan-meta > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+         }
+
+         .plan-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.85rem;
+         }
+
+         .plan-chapter-link {
+            margin-top: 0.75rem;
+         }
+
+         .plans-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+         }
+
+         .plans-empty > i {
+            font-size: 3rem;
+            opacity: 0.72;
+         }
+
+         .plan-error {
+            margin-bottom: 1rem;
+         }
+
+         @media (max-width: 600px) {
+            .plans-page {
+               padding-left: 0.2rem;
+               padding-right: 0.2rem;
+            }
+
+            .plan-card-head {
+               align-items: center;
+            }
+
+            .plan-author > span {
+               display: none;
+            }
+         }
+      </style>
+   </head>
+
+   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive plans-page">
+         <p class="plans-intro">
+            Sammelt Dinge, die ihr zusammen machen, besuchen oder erleben wollt. Aus einem erlebten Plan kann später direkt ein Kapitel eurer Geschichte werden.
+         </p>
+
+         {% if plan_error %}
+         <article class="error-container plan-error">
+            <div class="padding">{{ plan_error }}</div>
+         </article>
+         {% endif %}
+
+         <nav class="plans-filters">
+            <a class="chip round{% if selected_status == 'all' %} fill{% endif %}"
+               href="{{ url_for('pages.plans', status='all') }}">
+               <i>apps</i>
+               Alle
+            </a>
+            {% for status_key, status_meta in plan_statuses.items() %}
+            <a class="chip round{% if selected_status == status_key %} fill{% endif %}"
+               href="{{ url_for('pages.plans', status=status_key) }}">
+               <i>{{ status_meta.icon }}</i>
+               {{ status_meta.label }}
+            </a>
+            {% endfor %}
+         </nav>
+
+         {% if plans %}
+            {% for plan in plans %}
+            <article class="surface-container plan-card" id="plan-{{ plan.id }}">
+               <div class="padding">
+                  <div class="plan-card-head">
+                     <div class="plan-card-main">
+                        <span class="chip small round plan-status">
+                           <i>{{ plan.status_icon }}</i>
+                           {{ plan.status_label }}
+                        </span>
+                        <h5 class="plan-title">{{ plan.title }}</h5>
+                     </div>
+
+                     {% if plan.creator %}
+                     <span class="plan-author">
+                        <span>{{ plan.creator.firstName }}</span>
+                        <img src="/api/v2/media/static/{{ plan.creator.profilePicture or 'profile-placeholder.jpg' }}"
+                             alt=""
+                             loading="lazy">
+                     </span>
+                     {% endif %}
+                  </div>
+
+                  {% if plan.description %}
+                  <p class="plan-description">{{ plan.description }}</p>
+                  {% endif %}
+
+                  {% if plan.date_label or plan.locationName %}
+                  <div class="plan-meta">
+                     {% if plan.date_label %}
+                     <span>
+                        <i>calendar_month</i>
+                        {{ plan.date_label }}
+                     </span>
+                     {% endif %}
+                     {% if plan.locationName %}
+                     <span>
+                        <i>location_on</i>
+                        {{ plan.locationName }}
+                     </span>
+                     {% endif %}
+                  </div>
+                  {% endif %}
+
+                  {% if plan.chapter %}
+                  <div class="plan-chapter-link">
+                     <a class="chip round"
+                        href="{{ url_for('pages.chapter', chapter_id=plan.chapter.id) }}">
+                        <i>auto_stories</i>
+                        Kapitel „{{ plan.chapter.title }}“ ansehen
+                     </a>
+                  </div>
+                  {% endif %}
+
+                  {% if plan.is_owner %}
+                  <div class="plan-actions">
+                     <button class="transparent"
+                             type="button"
+                             onclick="callUi('#dialog-edit-plan-{{ plan.id }}')">
+                        <i>edit</i>
+                        Bearbeiten
+                     </button>
+
+                     {% if plan.status == 'experienced' and not plan.chapter %}
+                     <form method="post"
+                           action="{{ url_for('pages.plan_to_chapter_page', plan_id=plan.id) }}">
+                        <button class="transparent" type="submit">
+                           <i>auto_stories</i>
+                           Als Kapitel festhalten
+                        </button>
+                     </form>
+                     {% endif %}
+
+                     <form method="post"
+                           action="{{ url_for('pages.delete_plan_page', plan_id=plan.id) }}"
+                           onsubmit="return confirm('Diesen Plan wirklich löschen?');">
+                        <button class="transparent error" type="submit">
+                           <i>delete</i>
+                           Löschen
+                        </button>
+                     </form>
+                  </div>
+                  {% endif %}
+               </div>
+            </article>
+
+            {% if plan.is_owner %}
+            <div class="overlay"
+                 id="div-overlay-edit-plan-{{ plan.id }}"
+                 onclick="callUi('#dialog-edit-plan-{{ plan.id }}')"></div>
+
+            <dialog class="modal" id="dialog-edit-plan-{{ plan.id }}">
+               <form method="post"
+                     action="{{ url_for('pages.update_plan_page', plan_id=plan.id) }}">
+                  <h5>Plan bearbeiten</h5>
+
+                  <div class="field label border">
+                     <input type="text"
+                            name="title"
+                            value="{{ plan.title }}"
+                            maxlength="255"
+                            required>
+                     <label>Titel</label>
+                  </div>
+
+                  <div class="field label border extra">
+                     <textarea name="description">{{ plan.description }}</textarea>
+                     <label>Beschreibung (optional)</label>
+                  </div>
+
+                  <div class="field label border suffix">
+                     <select name="status">
+                        {% for status_key, status_meta in plan_statuses.items() %}
+                        <option value="{{ status_key }}"
+                                {% if plan.status == status_key %}selected{% endif %}>
+                           {{ status_meta.label }}
+                        </option>
+                        {% endfor %}
+                     </select>
+                     <label>Status</label>
+                     <i>arrow_drop_down</i>
+                  </div>
+
+                  <div class="grid">
+                     <div class="s12 m6">
+                        <div class="field label border">
+                           <input type="date"
+                                  name="target_start_date"
+                                  value="{{ plan.start_input }}">
+                           <label>Wunschdatum / Start (optional)</label>
+                        </div>
+                     </div>
+                     <div class="s12 m6">
+                        <div class="field label border">
+                           <input type="date"
+                                  name="target_end_date"
+                                  value="{{ plan.end_input }}">
+                           <label>Ende (optional)</label>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="field label border prefix">
+                     <i>location_on</i>
+                     <input type="text"
+                            name="location_name"
+                            value="{{ plan.locationName }}"
+                            maxlength="255">
+                     <label>Ort (optional)</label>
+                  </div>
+
+                  <nav class="right-align no-space">
+                     <button type="button"
+                             class="transparent link"
+                             onclick="callUi('#dialog-edit-plan-{{ plan.id }}')">
+                        Abbrechen
+                     </button>
+                     <button type="submit" class="transparent link">
+                        Speichern
+                     </button>
+                  </nav>
+               </form>
+            </dialog>
+            {% endif %}
+            {% endfor %}
+         {% else %}
+         <article class="surface-container plans-empty">
+            <i>explore</i>
+            <h5>Noch keine Pläne in dieser Ansicht</h5>
+            <p>
+               Haltet fest, was ihr unbedingt einmal zusammen machen wollt.
+            </p>
+            <button class="round" onclick="callUi('#dialog-create-plan')">
+               <i>add</i>
+               Plan festhalten
+            </button>
+         </article>
+         {% endif %}
+      </main>
+
+      <div class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index:90;">
+         <button class="square round extra"
+                 aria-label="Plan erstellen"
+                 onclick="callUi('#dialog-create-plan')"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
+
+      <div class="overlay"
+           id="div-overlay-create-plan"
+           onclick="callUi('#dialog-create-plan')"></div>
+
+      <dialog class="modal" id="dialog-create-plan">
+         <form method="post" action="{{ url_for('pages.create_plan_page') }}">
+            <h5>Neuer Plan</h5>
+            <p class="small">
+               Eine Idee reicht völlig – Datum und Ort könnt ihr später ergänzen.
+            </p>
+
+            <div class="field label border">
+               <input type="text" name="title" maxlength="255" required>
+               <label>Titel</label>
+            </div>
+
+            <div class="field label border extra">
+               <textarea name="description"></textarea>
+               <label>Beschreibung (optional)</label>
+            </div>
+
+            <div class="field label border suffix">
+               <select name="status">
+                  {% for status_key, status_meta in plan_statuses.items() %}
+                  <option value="{{ status_key }}"
+                          {% if status_key == 'idea' %}selected{% endif %}>
+                     {{ status_meta.label }}
+                  </option>
+                  {% endfor %}
+               </select>
+               <label>Status</label>
+               <i>arrow_drop_down</i>
+            </div>
+
+            <div class="grid">
+               <div class="s12 m6">
+                  <div class="field label border">
+                     <input type="date" name="target_start_date">
+                     <label>Wunschdatum / Start (optional)</label>
+                  </div>
+               </div>
+               <div class="s12 m6">
+                  <div class="field label border">
+                     <input type="date" name="target_end_date">
+                     <label>Ende (optional)</label>
+                  </div>
+               </div>
+            </div>
+
+            <div class="field label border prefix">
+               <i>location_on</i>
+               <input type="text" name="location_name" maxlength="255">
+               <label>Ort (optional)</label>
+            </div>
+
+            <nav class="right-align no-space">
+               <button type="button"
+                       class="transparent link"
+                       onclick="callUi('#dialog-create-plan')">
+                  Abbrechen
+               </button>
+               <button type="submit" class="transparent link">
+                  Speichern
+               </button>
+            </nav>
+         </form>
+      </dialog>
+
+      {% include 'layouts/footer.html' %}
+   </body>
+</html>

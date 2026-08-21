@@ -362,6 +362,29 @@ class CoupleChapterHeartMoment(Base):
     dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
 
 
+class CouplePlan(Base):
+    __tablename__ = 'couplePlans'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, default='')
+    status = Column(String(20), nullable=False, default='idea', index=True)
+    targetStartDate = Column(Date, nullable=True, index=True)
+    targetEndDate = Column(Date, nullable=True)
+    locationName = Column(String(255), nullable=True)
+    createdByUser = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    chapterID = Column(Integer, ForeignKey('coupleChapters.id'), nullable=True, index=True)
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    creator = relationship('User', foreign_keys=[createdByUser])
+    chapter = relationship('CoupleChapter', foreign_keys=[chapterID])
+
+
 class ListType(Base):
     __tablename__ = 'listTypes'
     id = Column(Integer, primary_key=True, autoincrement=True)
