@@ -4,8 +4,8 @@ from app.db_queries import get_user_by_credential_id, get_user_by_email, get_set
 from app.permissions import load_user_permissions, require_permission
 from datetime import datetime, timedelta
 from app.logger import log
-import json, jwt
-from app.models import Passkey, SessionLocal
+import hashlib, json, jwt, secrets
+from app.models import MobileOIDCCode, Passkey, SessionLocal
 from app.translation import _, set_locale
 from config import Config
 import os
@@ -404,6 +404,65 @@ def update_authentication_settings():
 # OPENID CONNECT / POCKET ID
 # ============================================================
 
+MOBILE_OIDC_CODE_TTL_SECONDS = 120
+
+
+def _create_mobile_oidc_code(user_id):
+    """Create a short-lived single-use handoff code for Android."""
+    raw_code = secrets.token_urlsafe(32)
+    code_hash = hashlib.sha256(raw_code.encode('utf-8')).hexdigest()
+    now = datetime.utcnow()
+
+    db = SessionLocal()
+    try:
+        db.query(MobileOIDCCode).filter(
+            MobileOIDCCode.expiresAt < now
+        ).delete(synchronize_session=False)
+
+        db.add(
+            MobileOIDCCode(
+                codeHash=code_hash,
+                userID=int(user_id),
+                expiresAt=now + timedelta(seconds=MOBILE_OIDC_CODE_TTL_SECONDS)
+            )
+        )
+        db.commit()
+        return raw_code
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+def _consume_mobile_oidc_code(raw_code):
+    """Consume a handoff code exactly once and return its user ID."""
+    if not raw_code:
+        return None
+
+    code_hash = hashlib.sha256(raw_code.encode('utf-8')).hexdigest()
+    now = datetime.utcnow()
+    db = SessionLocal()
+
+    try:
+        row = db.query(MobileOIDCCode).filter_by(codeHash=code_hash).first()
+        if not row or row.expiresAt < now:
+            if row:
+                db.delete(row)
+                db.commit()
+            return None
+
+        user_id = row.userID
+        db.delete(row)
+        db.commit()
+        return user_id
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
 @auth_bp.route('/oidc/login')
 def oidc_login():
     """Start normal Pocket ID authentication."""
@@ -429,6 +488,7 @@ def oidc_login():
         )
 
     session['oidc_action'] = 'login'
+    session.pop('oidc_mobile', None)
     session.pop('oidc_link_user_id', None)
 
     return client.authorize_redirect(
@@ -436,6 +496,31 @@ def oidc_login():
     )
 
 
+
+
+@auth_bp.route('/oidc/mobile/login')
+def oidc_mobile_login():
+    """Start Pocket ID in the external browser for the Android app."""
+    from app.oidc import get_pocketid_client
+
+    if not oidc_login_enabled():
+        return redirect(
+            url_for('auth.login', oidc_error='not_configured')
+        )
+
+    client = get_pocketid_client()
+    if client is None:
+        return redirect(
+            url_for('auth.login', oidc_error='not_configured')
+        )
+
+    session['oidc_action'] = 'login'
+    session['oidc_mobile'] = True
+    session.pop('oidc_link_user_id', None)
+
+    return client.authorize_redirect(
+        Config.OIDC_REDIRECT_URI
+    )
 @auth_bp.route('/oidc/link')
 @jwt_required
 def oidc_link():
@@ -465,6 +550,7 @@ def oidc_link():
         )
 
     session['oidc_action'] = 'link'
+    session.pop('oidc_mobile', None)
     session['oidc_link_user_id'] = g.user_id
 
     return client.authorize_redirect(
@@ -496,6 +582,8 @@ def oidc_callback():
         'oidc_link_user_id',
         None
     )
+
+    mobile_login = bool(session.pop('oidc_mobile', False))
 
     if not oidc_login_enabled():
         return redirect(
@@ -705,6 +793,16 @@ def oidc_callback():
             f'User {user.id} authenticated via Pocket ID'
         )
 
+        if mobile_login:
+            mobile_code = _create_mobile_oidc_code(user.id)
+            log(
+                'info',
+                f'Pocket ID mobile login completed for user {user.id}'
+            )
+            return redirect(
+                'sharedmoments://auth?code=' + mobile_code
+            )
+
         return login_jwt_redirect(
             user,
             remember_me=True
@@ -747,6 +845,35 @@ def oidc_callback():
                 oidc_error='failed'
             )
         )
+
+
+@auth_bp.route('/oidc/mobile/exchange')
+def oidc_mobile_exchange():
+    """Exchange the one-time browser handoff code for the normal JWT cookie."""
+    raw_code = request.args.get('code', '').strip()
+
+    try:
+        user_id = _consume_mobile_oidc_code(raw_code)
+    except Exception as exc:
+        log('error', f'Mobile OIDC exchange failed: {exc}')
+        user_id = None
+
+    if not user_id:
+        return redirect(
+            url_for('auth.login', oidc_error='mobile_expired')
+        )
+
+    user = get_user_by_id(user_id)
+    if not user:
+        return redirect(
+            url_for('auth.login', oidc_error='user_missing')
+        )
+
+    log('info', f'User {user.id} completed Pocket ID mobile exchange')
+    return login_jwt_redirect(
+        user,
+        remember_me=True
+    )
 
 
 @auth_bp.route(

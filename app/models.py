@@ -160,6 +160,31 @@ class AuthConfiguration(Base):
     )
 
 
+class MobileOIDCCode(Base):
+    """Short-lived one-time bridge from browser OIDC back to Android."""
+    __tablename__ = 'mobileOidcCodes'
+
+    codeHash = Column(
+        String(64),
+        primary_key=True
+    )
+    userID = Column(
+        Integer,
+        ForeignKey('users.id'),
+        nullable=False,
+        index=True
+    )
+    expiresAt = Column(
+        DateTime,
+        nullable=False,
+        index=True
+    )
+    dateCreated = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp()
+    )
+
+
 class Role(Base):
     __tablename__ = 'roles'
     id = Column(Integer, primary_key=True, autoincrement=True)

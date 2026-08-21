@@ -1,4 +1,5 @@
 from app.models import (
+    MobileOIDCCode,
     OIDCIdentity,
     SessionLocal,
 )
@@ -18,6 +19,11 @@ def ensure_oidc_schema():
         bind = db.get_bind()
 
         OIDCIdentity.__table__.create(
+            bind=bind,
+            checkfirst=True
+        )
+
+        MobileOIDCCode.__table__.create(
             bind=bind,
             checkfirst=True
         )
