@@ -127,6 +127,25 @@
             opacity: 0.72;
          }
 
+         .story-card-placeholder-heart > i {
+            color: #e56aa6;
+            opacity: 1;
+            font-variation-settings:
+               'FILL' 1,
+               'wght' 600,
+               'GRAD' 0,
+               'opsz' 24;
+         }
+
+         .story-card-type-heart > i {
+            color: #e56aa6;
+            font-variation-settings:
+               'FILL' 1,
+               'wght' 600,
+               'GRAD' 0,
+               'opsz' 24;
+         }
+
          .story-card-body {
             min-width: 0;
             padding: 1rem;
@@ -330,13 +349,13 @@
                              alt=""
                              loading="lazy">
                         {% else %}
-                        <div class="story-card-placeholder">
+                        <div class="story-card-placeholder story-card-placeholder-{{ entry.type }}">
                            <i>{{ entry.icon }}</i>
                         </div>
                         {% endif %}
 
                         <div class="story-card-body">
-                           <div class="story-card-type">
+                           <div class="story-card-type story-card-type-{{ entry.type }}">
                               <i>{{ entry.icon }}</i>
                               <span>{{ entry.type_label }}</span>
                               {% if entry.is_gallery %}
@@ -356,12 +375,6 @@
                            {% endif %}
 
                            <div class="story-card-meta">
-                              {% if entry.author_picture %}
-                              <img class="story-card-avatar"
-                                   src="/api/v2/media/static/{{ entry.author_picture }}"
-                                   alt="">
-                              {% endif %}
-
                               {% if entry.date_label %}
                               <span>{{ entry.date_label }}</span>
                               {% endif %}
@@ -369,6 +382,13 @@
                               {% if entry.author_name %}
                                  {% if entry.date_label %}<span>·</span>{% endif %}
                                  <span>{{ entry.author_name }}</span>
+
+                                 {% if entry.author_picture %}
+                                 <img class="story-card-avatar"
+                                      src="/api/v2/media/static/{{ entry.author_picture }}"
+                                      alt=""
+                                      loading="lazy">
+                                 {% endif %}
                               {% endif %}
                            </div>
                         </div>

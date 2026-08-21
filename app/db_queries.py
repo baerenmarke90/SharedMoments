@@ -890,11 +890,28 @@ def update_item(item_id, title=None, content=None, contentType=None, contentURL=
 def delete_item(item_id):
     session = SessionLocal()
     try:
+        # A Countdown is stored as an Item. Reminder rows may reference that
+        # Item via countdown_id. Remove those dependent rows first so deleting
+        # a countdown cannot leave a reminder orphan behind.
+        linked_reminders = session.query(Reminder).filter(
+            Reminder.countdown_id == item_id
+        ).all()
+
+        for reminder in linked_reminders:
+            session.query(ReminderMute).filter(
+                ReminderMute.reminder_id == reminder.id
+            ).delete()
+            session.delete(reminder)
+
         session.query(ItemShare).filter(ItemShare.itemID == item_id).delete()
+
         item = session.query(Item).filter(Item.id == item_id).first()
         if item:
             session.delete(item)
-            session.commit()
+
+        # Commit even when the Item itself is already gone: this also cleans
+        # a remaining linked reminder if delete_item() is called for that ID.
+        session.commit()
     finally:
         session.close()
 

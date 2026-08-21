@@ -253,7 +253,13 @@ def _build_couple_home_upcoming(
                 continue
 
             # Countdowns already appear from their Item, so never duplicate them.
-            if reminder.reminder_type == 'countdown':
+            # Also ignore any reminder linked to a countdown item even if older
+            # data used another reminder_type. This prevents orphaned countdown
+            # reminders from resurfacing in "Demnächst".
+            if (
+                reminder.reminder_type == 'countdown'
+                or reminder.countdown_id is not None
+            ):
                 continue
 
             target_date = None
