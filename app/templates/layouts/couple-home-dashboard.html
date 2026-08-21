@@ -77,10 +77,18 @@
 .couple-row-meta {
    display: flex;
    align-items: center;
-   flex-wrap: wrap;
    gap: 0.3rem;
    font-size: 0.85rem;
    opacity: 0.72;
+   min-width: 0;
+}
+.couple-row-author {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.3rem;
+   margin-left: auto;
+   white-space: nowrap;
+   flex: 0 0 auto;
 }
 .couple-recent-leading {
    width: 58px;
@@ -286,7 +294,7 @@
                         {% endif %}
 
                         {% if entry.author_name %}
-                           {% if entry.date_label %}<span>·</span>{% endif %}
+                        <span class="couple-row-author">
                            <span>{{ entry.author_name }}</span>
 
                            {% if entry.author_picture %}
@@ -295,6 +303,7 @@
                                 alt=""
                                 loading="lazy">
                            {% endif %}
+                        </span>
                         {% endif %}
                      </div>
                   </div>
