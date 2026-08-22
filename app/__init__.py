@@ -23,11 +23,6 @@ except Exception as exc:
     raise
 
 # SharedMoments laeuft nur noch als Couples-Edition
-try:
-    ensure_couples_edition()
-except Exception as exc:
-    log('error', f'Edition check failed: {exc}')
-
 # OIDC / Pocket ID schema initialization
 from app.oidc_schema import ensure_oidc_schema
 
