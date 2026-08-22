@@ -3654,7 +3654,7 @@ def couple_month(selected_year, selected_month):
 
         return render_template(
             'pages/month.html',
-            title=get_display_title(),
+            title=get_setting_by_name('title'),
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
