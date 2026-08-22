@@ -608,6 +608,115 @@
              }
           }
 
+       
+          /* daily-questions-layout-fix-v1 */
+
+          /* Alle drei Statistik-Karten exakt auf einer Linie und gleich hoch */
+          .questions-stats {
+             display: grid !important;
+             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+             align-items: stretch !important;
+             gap: .65rem !important;
+          }
+
+          .questions-stats > .questions-stat {
+             position: relative !important;
+             top: auto !important;
+             bottom: auto !important;
+             left: auto !important;
+             right: auto !important;
+             transform: none !important;
+             align-self: stretch !important;
+             justify-self: stretch !important;
+             height: auto !important;
+             min-height: 104px !important;
+             margin: 0 !important;
+             box-sizing: border-box !important;
+             display: flex !important;
+             flex-direction: column !important;
+             align-items: center !important;
+             justify-content: center !important;
+          }
+
+          /* Antwortbereich sauber voneinander trennen */
+          .question-archive-form {
+             display: block !important;
+             overflow: visible !important;
+          }
+
+          .question-archive-form .field {
+             position: relative !important;
+             display: block !important;
+             width: 100% !important;
+             margin: 0 0 1rem 0 !important;
+             box-sizing: border-box !important;
+          }
+
+          .question-archive-form textarea {
+             display: block !important;
+             width: 100% !important;
+             min-height: 82px !important;
+             box-sizing: border-box !important;
+          }
+
+          .question-archive-actions {
+             position: relative !important;
+             inset: auto !important;
+             clear: both !important;
+             display: flex !important;
+             align-items: center !important;
+             justify-content: space-between !important;
+             width: 100% !important;
+             min-height: 42px !important;
+             margin: 0 !important;
+             padding: 0 !important;
+             box-sizing: border-box !important;
+             z-index: 1 !important;
+          }
+
+          .question-archive-actions .question-count {
+             position: static !important;
+             flex: 1 1 auto !important;
+             margin: 0 !important;
+          }
+
+          .question-archive-actions button {
+             position: static !important;
+             inset: auto !important;
+             float: none !important;
+             transform: none !important;
+             flex: 0 0 auto !important;
+             align-self: center !important;
+             margin: 0 0 0 1rem !important;
+             z-index: 1 !important;
+          }
+
+          @media (max-width: 700px) {
+             .questions-stats > .questions-stat {
+                min-height: 92px !important;
+             }
+
+             .question-archive-form .field {
+                margin-bottom: .85rem !important;
+             }
+
+             .question-archive-actions {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                gap: .55rem !important;
+             }
+
+             .question-archive-actions button {
+                width: 100% !important;
+                margin: 0 !important;
+                justify-content: center !important;
+             }
+
+             .question-archive-actions .question-count {
+                order: 2 !important;
+             }
+          }
+
        </style>
    </head>
    <body class="couple-app couple-page-questions {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
