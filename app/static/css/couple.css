@@ -1050,8 +1050,30 @@ body.couple-app #dialog-nav-drawer .drawer > a {
    font-size: var(--sm-text-md);
 }
 
+/* Feste Symbolspalte. BeerCSS positioniert die Icons in manchen Kontexten
+   absolut, und ein Symbol, das breiter faellt als die anderen, verschiebt
+   sonst seine Beschriftung - "Admin" stand dadurch nicht in einer Flucht
+   mit den uebrigen Eintraegen. */
+body.couple-app #dialog-nav-drawer .drawer > a {
+   display: flex;
+   align-items: center;
+}
+
 body.couple-app #dialog-nav-drawer .drawer > a > i {
+   position: static !important;
+   flex: 0 0 1.5rem;
+   width: 1.5rem;
+   margin: 0;
+   text-align: center;
    font-size: var(--sm-text-lg);
+}
+
+body.couple-app #dialog-nav-drawer .drawer > a > span {
+   flex: 1 1 auto;
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
 }
 
 body.couple-app #dialog-nav-drawer .drawer > a:focus,
