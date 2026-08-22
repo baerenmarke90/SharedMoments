@@ -2519,4 +2519,119 @@ if (document.readyState === 'loading') {
 } else {
    initCoupleThinkingOfYou();
 }
+// ===== Couples: in-app delivery animation =====
+let coupleThinkingArrivalCheckInFlight = false;
+let coupleThinkingArrivalSignalId = null;
+
+function findCoupleAvatarWrap(userId) {
+   const wanted = String(userId || '');
+   return Array.from(document.querySelectorAll('.couple-avatar-wrap'))
+      .find((element) => String(element.dataset.userId || '') === wanted) || null;
+}
+
+async function acknowledgeCoupleThinkingArrival(signalId) {
+   try {
+      const response = await fetch('/couple/thinking-of-you/delivered', {
+         method: 'POST',
+         headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({ signal_id: signalId }),
+      });
+      if (!response.ok) {
+         throw new Error(`Delivery acknowledgement failed (${response.status})`);
+      }
+      return true;
+   } catch (error) {
+      console.warn('Could not acknowledge thinking-of-you delivery:', error);
+      return false;
+   }
+}
+
+function showCoupleThinkingArrival(signal) {
+   if (!signal || !signal.id || !signal.sender_user_id) return;
+   if (coupleThinkingArrivalSignalId === signal.id) return;
+
+   const avatarWrap = findCoupleAvatarWrap(signal.sender_user_id);
+   if (!avatarWrap) return;
+
+   const oldArrival = document.getElementById('couple-thinking-arrival');
+   if (oldArrival) oldArrival.remove();
+
+   const arrival = document.createElement('div');
+   arrival.id = 'couple-thinking-arrival';
+   arrival.className = 'couple-thinking-arrival';
+   arrival.setAttribute('role', 'status');
+   arrival.setAttribute('aria-live', 'polite');
+
+   const heart = document.createElement('i');
+   heart.setAttribute('aria-hidden', 'true');
+   heart.textContent = 'favorite';
+
+   const label = document.createElement('span');
+   label.textContent = 'Denkt an dich';
+
+   arrival.appendChild(heart);
+   arrival.appendChild(label);
+   avatarWrap.appendChild(arrival);
+   coupleThinkingArrivalSignalId = signal.id;
+
+   requestAnimationFrame(() => {
+      requestAnimationFrame(() => arrival.classList.add('is-active'));
+   });
+
+   // Reaching the visible "Wir" screen counts as delivered. A short delay lets
+   // the arrival become visible before the server acknowledgement is sent.
+   window.setTimeout(async () => {
+      const acknowledged = await acknowledgeCoupleThinkingArrival(signal.id);
+      if (!acknowledged) {
+         coupleThinkingArrivalSignalId = null;
+      }
+   }, 650);
+
+   window.setTimeout(() => {
+      if (arrival.isConnected) arrival.remove();
+   }, 3600);
+}
+
+async function checkCoupleThinkingArrival() {
+   if (document.hidden || coupleThinkingArrivalCheckInFlight) return;
+   if (!document.querySelector('.couple-avatars')) return;
+
+   coupleThinkingArrivalCheckInFlight = true;
+   try {
+      const response = await fetch('/couple/thinking-of-you/pending', {
+         headers: { 'Accept': 'application/json' },
+         cache: 'no-store',
+      });
+      if (!response.ok) return;
+
+      const result = await response.json().catch(() => ({}));
+      const signal = result && result.data ? result.data.signal : null;
+      if (signal) showCoupleThinkingArrival(signal);
+   } catch (error) {
+      console.warn('Could not check thinking-of-you delivery:', error);
+   } finally {
+      coupleThinkingArrivalCheckInFlight = false;
+   }
+}
+
+function initCoupleThinkingArrival() {
+   checkCoupleThinkingArrival();
+
+   window.addEventListener('pageshow', () => {
+      checkCoupleThinkingArrival();
+   });
+
+   document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkCoupleThinkingArrival();
+   });
+}
+
+if (document.readyState === 'loading') {
+   document.addEventListener('DOMContentLoaded', initCoupleThinkingArrival);
+} else {
+   initCoupleThinkingArrival();
+}
 

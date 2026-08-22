@@ -14,13 +14,96 @@
    gap: var(--sm-space-6);
    margin: var(--sm-space-3) 0 var(--sm-space-6);
 }
-.couple-avatars > .couple-avatar {
+
+/* ===== Couples: Thinking-of-you arrival ===== */
+.couple-avatar-wrap {
+   position: relative;
    width: 112px;
    height: 112px;
    flex: 0 0 112px;
+}
+.couple-avatar-wrap > .couple-avatar {
+   width: 100%;
+   height: 100%;
+   display: block;
    object-fit: cover;
    border-radius: 50%;
 }
+.couple-thinking-arrival {
+   position: absolute;
+   z-index: 4;
+   left: 50%;
+   top: 12%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 0.3rem;
+   pointer-events: none;
+   opacity: 0;
+   transform: translate(-50%, 28px) scale(0.72);
+   transform-origin: center;
+}
+.couple-thinking-arrival > i {
+   width: 46px;
+   height: 46px;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 50%;
+   background: #e56aa6;
+   color: white;
+   box-shadow: 0 8px 24px rgba(229, 106, 166, 0.35);
+   font-size: 1.65rem;
+   line-height: 1;
+   font-variation-settings: 'FILL' 1, 'wght' 650, 'GRAD' 0, 'opsz' 24;
+}
+.couple-thinking-arrival > span {
+   white-space: nowrap;
+   padding: 0.28rem 0.58rem;
+   border-radius: 999px;
+   background: var(--surface-container-high);
+   color: var(--on-surface);
+   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+   font-size: var(--sm-text-xxs);
+   font-weight: 700;
+   line-height: 1.2;
+}
+.couple-thinking-arrival.is-active {
+   animation: couple-thinking-arrival 3.2s cubic-bezier(.2,.75,.25,1) forwards;
+}
+@keyframes couple-thinking-arrival {
+   0% {
+      opacity: 0;
+      transform: translate(-50%, 30px) scale(0.68);
+   }
+   16% {
+      opacity: 1;
+      transform: translate(-50%, 4px) scale(1.12);
+   }
+   30% {
+      opacity: 1;
+      transform: translate(-50%, -6px) scale(1);
+   }
+   72% {
+      opacity: 1;
+      transform: translate(-50%, -14px) scale(1);
+   }
+   100% {
+      opacity: 0;
+      transform: translate(-50%, -38px) scale(0.92);
+   }
+}
+@media (prefers-reduced-motion: reduce) {
+   .couple-thinking-arrival.is-active {
+      animation: couple-thinking-arrival-reduced 2.6s ease forwards;
+   }
+   @keyframes couple-thinking-arrival-reduced {
+      0% { opacity: 0; transform: translate(-50%, 0) scale(1); }
+      15%, 78% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, 0) scale(1); }
+   }
+}
+
 .couple-heart {
    font-size: var(--sm-text-2xl);
    color: #e56aa6;
@@ -284,11 +367,11 @@
    .couple-avatars {
       gap: var(--sm-space-5);
    }
-   .couple-avatars > .couple-avatar {
-      width: 94px;
-      height: 94px;
-      flex-basis: 94px;
-   }
+   .couple-avatars > .couple-avatar-wrap {
+       width: 94px;
+       height: 94px;
+       flex-basis: 94px;
+    }
    .couple-home article {
       margin-left: 0;
       margin-right: 0;
@@ -374,9 +457,12 @@
       <div class="padding">
          <div class="couple-avatars">
             {% for couple_user in couple_users %}
-            <img class="couple-avatar"
-                 src="/api/v2/media/static/{{ couple_user.profilePicture or 'profile-placeholder.jpg' }}"
-                 alt="{{ couple_user.firstName or '' }}">
+            <div class="couple-avatar-wrap"
+                 data-user-id="{{ couple_user.id }}">
+               <img class="couple-avatar"
+                    src="/api/v2/media/static/{{ couple_user.profilePicture or 'profile-placeholder.jpg' }}"
+                    alt="{{ couple_user.firstName or '' }}">
+            </div>
             {% if not loop.last %}
             <i class="couple-heart">favorite</i>
             {% endif %}

@@ -26,6 +26,7 @@ from app.logger import log
 import os
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from uuid import uuid4
 from app.utils import generate_banner_text
 from app.translation import _, set_locale
 from app.routes.auth import jwt_required, login_jwt
@@ -1723,6 +1724,34 @@ _COUPLE_THINKING_SETTING = 'couple_thinking_of_you_last_sent_at'
 _COUPLE_THINKING_COOLDOWN_SECONDS = 30 * 60
 
 
+_COUPLE_THINKING_PENDING_SETTING = 'couple_thinking_of_you_pending'
+_COUPLE_THINKING_DELIVERED_SETTING = 'couple_thinking_of_you_last_delivered'
+
+
+def _couple_thinking_pending_signal(user_id):
+    """Return the pending Thinking-of-you signal for a user, if valid."""
+    setting = get_user_setting(user_id, _COUPLE_THINKING_PENDING_SETTING)
+    if not setting or not setting.value:
+        return None
+
+    try:
+        payload = json.loads(setting.value)
+        signal_id = str(payload.get('id') or '').strip()
+        sender_user_id = int(payload.get('sender_user_id'))
+        sent_at = str(payload.get('sent_at') or '').strip()
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return None
+
+    if not signal_id or sender_user_id <= 0 or not sent_at:
+        return None
+
+    return {
+        'id': signal_id,
+        'sender_user_id': sender_user_id,
+        'sent_at': sent_at,
+    }
+
+
 def _couple_partner_for_user(user_id):
     """Return the other account from the two-user Couples setup."""
     couple_users = sorted(
@@ -1917,7 +1946,7 @@ def home():
 @pages_bp.route('/couple/thinking-of-you', methods=['POST'])
 @jwt_required
 def couple_thinking_of_you():
-    """Send a lightweight one-tap signal to the other Couples user."""
+    """Store an in-app couple signal and optionally nudge the partner externally."""
     edition = get_setting_by_name('sm_edition')
     if not edition or edition.value != 'couples':
         return jsonify(
@@ -1925,7 +1954,6 @@ def couple_thinking_of_you():
             message='Diese Funktion ist nur in der Couples-Edition verfügbar.',
         ), 404
 
-    # Only accept JSON. A plain cross-site HTML form cannot submit this request.
     if not request.is_json:
         return jsonify(
             status='error',
@@ -1950,7 +1978,28 @@ def couple_thinking_of_you():
 
     sender_name = (sender.firstName or '').strip() or 'Dein Partner'
     partner_name = (partner.firstName or '').strip() or 'deinen Partner'
+    sent_at = datetime.now(timezone.utc)
+    signal_id = uuid4().hex
 
+    # The app itself is the reliable delivery path. This is intentionally stored
+    # before trying optional push/e-mail/Telegram channels, so a missing external
+    # channel never makes the signal fail.
+    update_user_setting(
+        partner.id,
+        _COUPLE_THINKING_PENDING_SETTING,
+        json.dumps({
+            'id': signal_id,
+            'sender_user_id': g.user_id,
+            'sent_at': sent_at.isoformat(timespec='seconds'),
+        }),
+    )
+    update_user_setting(
+        g.user_id,
+        _COUPLE_THINKING_SETTING,
+        sent_at.isoformat(timespec='seconds'),
+    )
+
+    external_notification_sent = False
     try:
         from app.notifications import send_notification
 
@@ -1960,32 +2009,109 @@ def couple_thinking_of_you():
             'Ein kleines Zeichen nur für dich.',
             url='/home',
         )
+        external_notification_sent = any(delivery_results.values())
     except Exception as exc:
-        log('error', f'Could not send thinking-of-you notification: {exc}')
-        return jsonify(
-            status='error',
-            message='Das Zeichen konnte gerade nicht gesendet werden.',
-        ), 500
+        # The in-app signal is already persisted. External delivery is only a
+        # best-effort nudge and must not turn a valid signal into an error.
+        log('warning', f'Could not send external thinking-of-you notification: {exc}')
 
-    if not any(delivery_results.values()):
-        return jsonify(
-            status='error',
-            message='Für deinen Partner ist aktuell kein erreichbarer Benachrichtigungskanal aktiv.',
-        ), 409
-
-    sent_at = datetime.now(timezone.utc)
-    update_user_setting(
-        g.user_id,
-        _COUPLE_THINKING_SETTING,
-        sent_at.isoformat(timespec='seconds'),
+    log(
+        'info',
+        'Thinking-of-you signal stored '
+        f'from user {g.user_id} to user {partner.id}; '
+        f'external_notification_sent={external_notification_sent}',
     )
-    log('info', f'Thinking-of-you signal sent from user {g.user_id} to user {partner.id}')
 
     return jsonify(
         status='success',
         message=f'Dein Zeichen an {partner_name} wurde gesendet.',
-        data={'cooldown_seconds': _COUPLE_THINKING_COOLDOWN_SECONDS},
+        data={
+            'cooldown_seconds': _COUPLE_THINKING_COOLDOWN_SECONDS,
+            'delivery_state': 'sent',
+            'external_notification_sent': external_notification_sent,
+        },
     )
+
+
+@pages_bp.route('/couple/thinking-of-you/pending', methods=['GET'])
+@jwt_required
+def couple_thinking_of_you_pending():
+    """Return the current user's pending in-app couple signal."""
+    edition = get_setting_by_name('sm_edition')
+    if not edition or edition.value != 'couples':
+        return jsonify(status='success', data={'signal': None})
+
+    partner = _couple_partner_for_user(g.user_id)
+    signal = _couple_thinking_pending_signal(g.user_id)
+    if not partner or not signal or signal['sender_user_id'] != partner.id:
+        return jsonify(status='success', data={'signal': None})
+
+    sender_name = (partner.firstName or '').strip() or 'Dein Partner'
+    return jsonify(
+        status='success',
+        data={
+            'signal': {
+                'id': signal['id'],
+                'sender_user_id': signal['sender_user_id'],
+                'sender_name': sender_name,
+                'sent_at': signal['sent_at'],
+            },
+        },
+    )
+
+
+@pages_bp.route('/couple/thinking-of-you/delivered', methods=['POST'])
+@jwt_required
+def couple_thinking_of_you_delivered():
+    """Acknowledge a signal after its in-app arrival animation has been shown."""
+    edition = get_setting_by_name('sm_edition')
+    if not edition or edition.value != 'couples':
+        return jsonify(status='error', message='Ungültige Anfrage.'), 404
+
+    if not request.is_json:
+        return jsonify(status='error', message='Ungültige Anfrage.'), 415
+
+    payload = request.get_json(silent=True) or {}
+    signal_id = str(payload.get('signal_id') or '').strip()
+    if not signal_id:
+        return jsonify(status='error', message='Signal-ID fehlt.'), 400
+
+    partner = _couple_partner_for_user(g.user_id)
+    signal = _couple_thinking_pending_signal(g.user_id)
+
+    # Idempotent acknowledgement: if the signal was already cleared by another
+    # page lifecycle event, there is nothing left to do.
+    if not signal or signal['id'] != signal_id:
+        return jsonify(status='success', data={'delivered': False})
+
+    if not partner or signal['sender_user_id'] != partner.id:
+        return jsonify(status='error', message='Ungültiges Signal.'), 409
+
+    delivered_at = datetime.now(timezone.utc)
+    update_user_setting(g.user_id, _COUPLE_THINKING_PENDING_SETTING, '')
+    update_user_setting(
+        signal['sender_user_id'],
+        _COUPLE_THINKING_DELIVERED_SETTING,
+        json.dumps({
+            'id': signal['id'],
+            'recipient_user_id': g.user_id,
+            'sent_at': signal['sent_at'],
+            'delivered_at': delivered_at.isoformat(timespec='seconds'),
+        }),
+    )
+
+    log(
+        'info',
+        f'Thinking-of-you signal {signal_id} delivered to user {g.user_id}',
+    )
+    return jsonify(
+        status='success',
+        data={
+            'delivered': True,
+            'delivered_at': delivered_at.isoformat(timespec='seconds'),
+        },
+    )
+
 
 @pages_bp.route('/memories')
 @jwt_required
