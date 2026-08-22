@@ -1066,9 +1066,15 @@ def _build_couple_year_snapshot(
     ):
         image_url = entry.get('image_url')
         if image_url and image_url not in seen_images:
-            cover_images.append(image_url)
+            cover_images.append({
+                'url': image_url,
+                'href': entry.get('href') or f'/story?year={selected_year}',
+                'title': entry.get('title') or entry.get('type_label') or 'Moment',
+            })
             seen_images.add(image_url)
-        if len(cover_images) >= 3:
+        # Keep the hero lively without turning the recap into a full gallery.
+        # Additional pictures stay available in the story/highlight sections.
+        if len(cover_images) >= 12:
             break
 
     stats = {

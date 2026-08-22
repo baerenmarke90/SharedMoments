@@ -62,10 +62,8 @@
             opacity: 0.76;
          }
 
-         .year-collage {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 4px;
+         .year-collage-shell {
+            position: relative;
             height: 280px;
             margin: 0 0.8rem 0.8rem;
             overflow: hidden;
@@ -73,20 +71,144 @@
             background: var(--surface-container-high);
          }
 
-         .year-collage[data-count="1"] {
-            grid-template-columns: 1fr;
+         .year-collage {
+            display: flex;
+            gap: 4px;
+            height: 100%;
+            margin: 0;
+            transform: translate3d(0, 0, 0);
+            transition: transform 560ms cubic-bezier(.22, .75, .24, 1);
+            will-change: transform;
          }
 
-         .year-collage[data-count="2"] {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+         .year-collage-item {
+            position: relative;
+            display: block;
+            flex: 0 0 calc((100% - 8px) / 3);
+            min-width: 0;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 0.9rem;
+            background: var(--surface-container-highest);
+            color: inherit;
+            text-decoration: none;
          }
 
-         .year-collage img {
+         .year-collage[data-count="1"] .year-collage-item {
+            flex-basis: 100%;
+         }
+
+         .year-collage[data-count="2"] .year-collage-item {
+            flex-basis: calc((100% - 4px) / 2);
+         }
+
+         .year-collage-item img {
             width: 100%;
             height: 100%;
             min-width: 0;
             object-fit: cover;
             display: block;
+            transition: transform 220ms ease;
+         }
+
+         .year-collage-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.11);
+         }
+
+         .year-collage-open {
+            position: absolute;
+            right: 0.55rem;
+            bottom: 0.55rem;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(20, 17, 24, 0.62);
+            color: white;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 160ms ease, transform 160ms ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+         }
+
+         .year-collage-open > i {
+            position: static !important;
+            font-size: 1rem;
+         }
+
+         @media (hover: hover) and (pointer: fine) {
+            .year-collage-item:hover img {
+               transform: scale(1.025);
+            }
+
+            .year-collage-item:hover .year-collage-open,
+            .year-collage-item:focus-visible .year-collage-open {
+               opacity: 1;
+               transform: translateY(0);
+            }
+         }
+
+         .year-collage-arrow {
+            position: absolute;
+            z-index: 4;
+            top: 50%;
+            width: 38px;
+            min-width: 38px;
+            height: 38px;
+            min-height: 38px;
+            margin: 0;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 50%;
+            background: rgba(20, 17, 24, 0.58);
+            color: white;
+            box-shadow: 0 5px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-50%);
+            backdrop-filter: blur(9px);
+            -webkit-backdrop-filter: blur(9px);
+         }
+
+         .year-collage-arrow > i {
+            position: static !important;
+            font-size: 1.3rem;
+         }
+
+         .year-collage-prev {
+            left: 0.55rem;
+         }
+
+         .year-collage-next {
+            right: 0.55rem;
+         }
+
+         .year-collage-status {
+            position: absolute;
+            z-index: 4;
+            left: 50%;
+            bottom: 0.5rem;
+            transform: translateX(-50%);
+            min-width: 58px;
+            padding: 0.22rem 0.55rem;
+            border-radius: 999px;
+            background: rgba(20, 17, 24, 0.58);
+            color: white;
+            font-size: 0.72rem;
+            line-height: 1.2;
+            text-align: center;
+            pointer-events: none;
+            backdrop-filter: blur(9px);
+            -webkit-backdrop-filter: blur(9px);
          }
 
          .year-stats {
@@ -371,10 +493,21 @@
                gap: 0.5rem;
             }
 
-            .year-collage {
+            .year-collage-shell {
                height: 200px;
                margin: 0 0.55rem 0.55rem;
                border-radius: 0.85rem;
+            }
+
+            .year-collage-item {
+               border-radius: 0.75rem;
+            }
+
+            .year-collage-arrow {
+               width: 34px;
+               min-width: 34px;
+               height: 34px;
+               min-height: 34px;
             }
 
             .year-highlight {
@@ -437,10 +570,40 @@
             </div>
 
             {% if year_snapshot.cover_images %}
-            <div class="year-collage" data-count="{{ year_snapshot.cover_images|length }}">
-               {% for image_url in year_snapshot.cover_images %}
-               <img src="{{ image_url }}" alt="" loading="lazy">
-               {% endfor %}
+            <div class="year-collage-shell" data-year-collage>
+               <div class="year-collage"
+                    data-count="{{ year_snapshot.cover_images|length }}">
+                  {% for image in year_snapshot.cover_images %}
+                  <a class="year-collage-item"
+                     href="{{ image.href }}"
+                     aria-label="Beitrag {{ image.title }} öffnen">
+                     <img src="{{ image.url }}"
+                          alt="{{ image.title }}"
+                          loading="{% if loop.index <= 3 %}eager{% else %}lazy{% endif %}">
+                     <span class="year-collage-open" aria-hidden="true">
+                        <i>open_in_new</i>
+                     </span>
+                  </a>
+                  {% endfor %}
+               </div>
+
+               {% if year_snapshot.cover_images|length > 3 %}
+               <button type="button"
+                       class="year-collage-arrow year-collage-prev"
+                       data-year-collage-prev
+                       aria-label="Vorherige Bilder">
+                  <i>chevron_left</i>
+               </button>
+               <button type="button"
+                       class="year-collage-arrow year-collage-next"
+                       data-year-collage-next
+                       aria-label="Nächste Bilder">
+                  <i>chevron_right</i>
+               </button>
+               <div class="year-collage-status"
+                    data-year-collage-status
+                    aria-live="polite"></div>
+               {% endif %}
             </div>
             {% endif %}
          </article>
@@ -616,5 +779,6 @@
       {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>
+      <script src="{{ static_versioned('js/year.js') }}"></script>
    </body>
 </html>
