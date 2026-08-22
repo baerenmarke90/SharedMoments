@@ -159,6 +159,16 @@
       </main>
 
       {% include 'layouts/footer.html' %}
+      <div class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index: 40;"
+           onclick="openCoupleCreateMenu()">
+         <button class="square round extra"
+                 aria-label="Moment festhalten"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
+
       {% set couple_nav_active = 'more' %}
       {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}

@@ -3,6 +3,7 @@
 <head>
     <title>SideBySide - {{ _('Admin') }}</title>
     {% include 'layouts/head.html' %}
+    <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
     <style>
         .user-roles-chips { display: flex; flex-wrap: wrap; gap: 4px; }
         .permission-matrix td, .permission-matrix th { padding: 6px 12px; }
@@ -158,7 +159,7 @@
         }
     </style>
 </head>
-<body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+<body class="couple-app couple-page-admin {% if darkmode.value == 'TRUE' %}dark{% endif %}">
     <!-- Header -->
     {% include 'layouts/header.html' %}
 
@@ -171,6 +172,12 @@
     </div>
 
     <main class="responsive">
+        {% include 'layouts/page-error.html' %}
+
+        <p class="settings-intro">
+            Konten, Rollen, geteilte Inhalte und Funktionsschalter. Diese
+            Einstellungen gelten für die ganze Instanz.
+        </p>
         <!-- Tabs -->
         <div class="tabs admin-tab-nav" role="tablist" aria-label="Admin">
             <a class="active" id="tab-users-btn" onclick="showAdminTab('users')">
@@ -221,6 +228,10 @@
 
         {% include 'layouts/footer.html' %}
     </main>
+
+    {% set couple_nav_active = 'more' %}
+    {% include 'layouts/couple-create-sheet.html' %}
+    {% include 'layouts/couple-bottom-nav.html' %}
 
     <!-- Dialog: Edit User (fullscreen) -->
     <dialog class="max" id="dialog-edit-user">

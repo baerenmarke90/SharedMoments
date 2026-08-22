@@ -3544,6 +3544,102 @@ body.couple-page-nav-hub .nav-hub-empty > i {
    opacity: 0.7;
 }
 
+/* Punkt 9: Die Knopfreihe sitzt in jedem Dialog gleich weit unten.
+   Vorher trugen zwei Dialoge ihren Abstand als inline-Angabe. */
+body.couple-app dialog nav.right-align.no-space {
+   margin-top: var(--sm-space-6);
+   gap: var(--sm-space-2);
+}
+
+/* Punkt 10: Die versteckte Checkbox war 1px gross. Sie bleibt unsichtbar,
+   ist aber jetzt so gross wie ihre Anzeige - falls sie je sichtbar wird
+   oder ein Screenreader den Fokus darauf setzt. */
+body.couple-app .list-circle-control > input[type="checkbox"] {
+   width: 40px !important;
+   height: 40px !important;
+}
+
+/* Punkt 7: Einstellungen und Admin waren optisch noch die alte App -
+   lilafarbene Bloecke ohne Abstand, andere Zeilenhoehe, kein Pfeil.
+   Das Markup bleibt unangetastet (die IDs haengen an der JS-Logik),
+   nur das Aussehen folgt jetzt den Karten der uebrigen Seiten. */
+body.couple-app.settings-page .row.padding.primary-container,
+body.couple-page-admin .row.padding.primary-container {
+   position: relative;
+   margin-bottom: var(--sm-space-2);
+   padding: var(--sm-space-5) 2.6rem var(--sm-space-5) var(--sm-space-5);
+   min-height: 3.6rem;
+   border-radius: var(--sm-radius-lg);
+   background: var(--surface-container);
+   color: var(--on-surface);
+   border: 1px solid color-mix(in srgb, var(--outline-variant) 46%, transparent);
+   text-decoration: none;
+   transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 160ms ease;
+}
+
+/* Ein Pfeil sagt, dass sich etwas oeffnet - nur bei anklickbaren Zeilen.
+   Bewusst aus zwei Raendern gezeichnet statt als Icon-Ligatur: faellt der
+   Symbol-Font aus, stuende dort sonst das Wort "chevron_right". */
+body.couple-app.settings-page a.row.padding.primary-container[onclick]::after,
+body.couple-page-admin a.row.padding.primary-container[onclick]::after {
+   content: '';
+   position: absolute;
+   right: var(--sm-space-5);
+   top: 50%;
+   width: 0.5rem;
+   height: 0.5rem;
+   border-top: 2px solid currentColor;
+   border-right: 2px solid currentColor;
+   transform: translateY(-50%) rotate(45deg);
+   opacity: 0.4;
+}
+
+body.couple-app.settings-page .row.padding.primary-container > i:first-child,
+body.couple-page-admin .row.padding.primary-container > i:first-child {
+   flex: 0 0 2.4rem;
+   width: 2.4rem;
+   height: 2.4rem;
+   display: inline-grid;
+   place-items: center;
+   border-radius: 50%;
+   background: color-mix(in srgb, var(--primary-container) 60%, transparent);
+   color: var(--primary);
+   font-size: var(--sm-text-lg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+   body.couple-app.settings-page a.row.padding.primary-container[onclick]:hover,
+   body.couple-page-admin a.row.padding.primary-container[onclick]:hover {
+      border-color: color-mix(in srgb, var(--primary) 30%, var(--outline-variant));
+   }
+}
+
+body.couple-app.settings-page a.row.padding.primary-container[onclick]:active,
+body.couple-page-admin a.row.padding.primary-container[onclick]:active {
+   transform: scale(0.99);
+}
+
+/* Abschnittsueberschriften bekommen dieselbe Sprache wie im Drawer. */
+body.couple-app.settings-page legend,
+body.couple-page-admin legend {
+   display: block;
+   margin: var(--sm-space-7) 0 var(--sm-space-3);
+   padding: 0;
+   font-size: var(--sm-text-xxs);
+   font-weight: 650;
+   letter-spacing: 0.06em;
+   text-transform: uppercase;
+   color: color-mix(in srgb, var(--on-surface) 55%, transparent);
+}
+
+body.couple-app.settings-page .settings-intro,
+body.couple-page-admin .settings-intro {
+   margin: 0 0 var(--sm-space-6);
+   line-height: 1.5;
+   opacity: 0.78;
+}
+
 body.couple-app .page-error {
    margin: 0 0 var(--sm-space-5);
    border-radius: var(--sm-radius-lg);
