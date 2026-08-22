@@ -3588,18 +3588,19 @@ def couple_year(selected_year=None):
 @pages_bp.route('/year/<int:selected_year>/month/<int:selected_month>')
 @jwt_required
 def couple_month(selected_year, selected_month):
-    """Magazine-style monthly recap derived entirely from existing couple data."""
+    """Render a monthly recap from the existing yearly relationship snapshot."""
     try:
         sm_edition = get_setting_by_name('sm_edition').value
         if sm_edition != 'couples':
             return redirect(url_for('pages.home'))
 
-        if selected_year < 1900 or selected_year > date.today().year + 2:
+        current_year = date.today().year
+        if selected_year < 1900 or selected_year > current_year + 2:
             return redirect(url_for(
                 'pages.couple_year',
-                selected_year=date.today().year,
+                selected_year=current_year,
             ))
-        if selected_month < 1 or selected_month > 12:
+        if not 1 <= selected_month <= 12:
             return redirect(url_for(
                 'pages.couple_year',
                 selected_year=selected_year,
@@ -3610,13 +3611,13 @@ def couple_month(selected_year, selected_month):
             sm_edition,
             g.user_id,
         )
-        month_snapshot = next(
-            (
-                group for group in snapshot['month_groups']
-                if group['month'] == selected_month
-            ),
-            None,
-        )
+
+        month_snapshot = None
+        for group in snapshot.get('month_groups', []):
+            if int(group.get('month', 0)) == selected_month:
+                month_snapshot = group
+                break
+
         if month_snapshot is None:
             month_snapshot = {
                 'month': selected_month,
@@ -3637,13 +3638,19 @@ def couple_month(selected_year, selected_month):
                 },
             }
 
-        available_months = [
-            {
-                'month': group['month'],
-                'label': group['label'],
-            }
-            for group in snapshot['month_groups']
-        ]
+        # Be defensive with recaps created by an older version of the snapshot
+        # builder. This keeps the page renderable during rolling deployments.
+        month_snapshot.setdefault('entries', [])
+        month_snapshot.setdefault('all_entries', month_snapshot['entries'])
+        month_snapshot.setdefault('cover_images', [])
+        month_snapshot.setdefault('places', [])
+        month_snapshot.setdefault('total', len(month_snapshot['all_entries']))
+        month_snapshot.setdefault('stats', {})
+        for key in (
+            'memories', 'hearts', 'milestones', 'chapters',
+            'bucket', 'plans', 'places',
+        ):
+            month_snapshot['stats'].setdefault(key, 0)
 
         return render_template(
             'pages/month.html',
@@ -3656,13 +3663,20 @@ def couple_month(selected_year, selected_month):
             selected_year=selected_year,
             selected_month=selected_month,
             month_snapshot=month_snapshot,
-            available_years=snapshot['available_years'],
-            available_months=available_months,
+            available_years=snapshot.get('available_years', [selected_year]),
         )
-    except Exception as e:
-        log('error', f'Error while rendering monthly couple recap: {e}')
+    except Exception as exc:
+        # Do not swallow the useful traceback. Log it both through the app logger
+        # and stderr so Docker/Gunicorn logs contain the actual root cause.
+        import traceback
+        trace = traceback.format_exc()
+        log(
+            'error',
+            f'Monthly recap failed for {selected_year}-{selected_month:02d}: '
+            f'{exc!r}\n{trace}',
+        )
+        print(trace, file=__import__('sys').stderr, flush=True)
         return "An error occurred while rendering the monthly recap.", 500
-
 
 @pages_bp.route('/story')
 @jwt_required

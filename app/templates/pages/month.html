@@ -1,324 +1,320 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>Unser {{ month_snapshot.label }} {{ selected_year }} · {{ title.value }}</title>
+      <title>Unser {{ month_snapshot['label'] }} {{ selected_year }} · {{ title.value }}</title>
       {% include 'layouts/head.html' %}
       <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <style>
          .month-page {
-            max-width: 940px;
+            max-width: 900px;
             margin: 0 auto;
-            padding-top: 0.9rem;
-            padding-bottom: 5.5rem;
+            padding-top: var(--sm-space-4);
+            padding-bottom: 7rem;
          }
          .month-toolbar {
             display: flex;
             align-items: center;
             gap: var(--sm-space-3);
-            margin-bottom: var(--sm-space-5);
+            margin-bottom: var(--sm-space-4);
          }
          .month-toolbar-back {
+            flex: 0 0 auto;
             color: inherit;
             text-decoration: none;
          }
-         .month-toolbar-spacer {
+         .month-toolbar-title {
+            min-width: 0;
             flex: 1;
+            font-weight: 650;
          }
          .month-pdf-button {
+            flex: 0 0 auto;
             white-space: nowrap;
          }
          .month-hero {
             overflow: hidden;
             border-radius: var(--sm-radius-lg);
-            margin-bottom: var(--sm-space-6);
+            margin-bottom: var(--sm-space-4);
          }
          .month-hero-copy {
-            padding: 1.5rem var(--sm-space-6) 1.25rem;
+            padding: 1.25rem var(--sm-space-5) 1rem;
             text-align: center;
          }
          .month-kicker {
             display: inline-flex;
             align-items: center;
             gap: var(--sm-space-2);
-            font-size: var(--sm-text-sm);
+            font-size: var(--sm-text-xs);
             font-weight: 600;
-            opacity: 0.78;
+            opacity: .72;
          }
-         .month-kicker > i {
+         .month-kicker i {
             position: static !important;
             color: #e56aa6;
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
          }
          .month-hero h2 {
-            margin: var(--sm-space-1) 0 0;
+            margin: .2rem 0 0;
             line-height: 1.08;
          }
          .month-subtitle {
-            max-width: 620px;
-            margin: var(--sm-space-3) auto 0;
-            opacity: 0.74;
+            max-width: 580px;
+            margin: var(--sm-space-2) auto 0;
+            font-size: var(--sm-text-sm);
+            line-height: 1.45;
+            opacity: .72;
          }
          .month-collage {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            grid-auto-rows: 120px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 3px;
-            margin: 0 var(--sm-space-5) var(--sm-space-5);
+            height: 260px;
+            margin: 0 var(--sm-space-4) var(--sm-space-4);
             overflow: hidden;
             border-radius: var(--sm-radius-md);
             background: var(--surface-container-high);
          }
-         .month-collage > a {
+         .month-collage a {
             display: block;
             min-width: 0;
             overflow: hidden;
          }
-         .month-collage > a:first-child {
+         .month-collage a:first-child {
             grid-column: span 2;
-            grid-row: span 2;
          }
          .month-collage img {
-            display: block;
             width: 100%;
             height: 100%;
+            display: block;
             object-fit: cover;
          }
-         .month-collage[data-count="1"] {
-            grid-template-columns: 1fr;
-            grid-auto-rows: 280px;
+         .month-collage.one-image {
+            display: block;
          }
-         .month-collage[data-count="1"] > a:first-child {
-            grid-column: auto;
-            grid-row: auto;
-         }
-         .month-collage[data-count="2"] {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            grid-auto-rows: 240px;
-         }
-         .month-collage[data-count="2"] > a:first-child {
-            grid-column: auto;
-            grid-row: auto;
+         .month-collage.one-image a,
+         .month-collage.one-image img {
+            width: 100%;
+            height: 100%;
          }
          .month-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
             gap: var(--sm-space-3);
             margin-bottom: 1.35rem;
          }
          .month-stat {
             min-width: 0;
-            padding: var(--sm-space-4);
+            padding: .8rem var(--sm-space-3);
             text-align: center;
             border-radius: var(--sm-radius-md);
          }
-         .month-stat > i {
+         .month-stat i {
             position: static !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            margin-bottom: var(--sm-space-1);
-            border-radius: 50%;
-            background: var(--primary-container);
-            color: var(--on-primary-container);
-         }
-         .month-stat-hearts > i {
-            color: #e56aa6;
-            background: rgba(229, 106, 166, 0.12);
-            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+            font-size: var(--sm-text-lg);
          }
          .month-stat-number {
             display: block;
-            font-size: var(--sm-text-xl);
+            margin-top: .15rem;
+            font-size: var(--sm-text-lg);
             font-weight: 700;
-            line-height: 1.15;
          }
          .month-stat-label {
             display: block;
-            margin-top: 0.15rem;
-            font-size: var(--sm-text-xs);
-            opacity: 0.7;
+            margin-top: .1rem;
+            font-size: var(--sm-text-xxs);
+            opacity: .68;
          }
          .month-section {
-            margin-top: 1.5rem;
+            margin-top: 1.35rem;
          }
          .month-section-title {
             display: flex;
             align-items: center;
-            gap: var(--sm-space-3);
-            margin: 0 0 var(--sm-space-4) var(--sm-space-1);
+            gap: var(--sm-space-2);
+            margin: 0 0 var(--sm-space-3) var(--sm-space-1);
          }
-         .month-section-title > i {
+         .month-section-title i {
             position: static !important;
          }
-         .month-magazine {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: var(--sm-space-4);
-         }
-         .month-story-card {
+         .month-list {
             display: flex;
             flex-direction: column;
-            min-width: 0;
             overflow: hidden;
             border-radius: var(--sm-radius-md);
+         }
+         .month-entry {
+            display: grid;
+            grid-template-columns: 84px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: var(--sm-space-4);
+            min-width: 0;
+            padding: var(--sm-space-3);
             color: inherit;
             text-decoration: none;
-            break-inside: avoid;
          }
-         .month-story-card.has-image:nth-child(5n + 1) {
-            grid-column: span 2;
+         .month-entry + .month-entry {
+            border-top: 1px solid var(--outline-variant);
          }
-         .month-story-image {
-            display: block;
-            width: 100%;
-            height: 210px;
+         .month-entry-media,
+         .month-entry-icon {
+            width: 84px;
+            height: 72px;
+            border-radius: var(--sm-radius-sm);
+         }
+         .month-entry-media {
             object-fit: cover;
+            display: block;
          }
-         .month-story-card.has-image:nth-child(5n + 1) .month-story-image {
-            height: 300px;
-         }
-         .month-story-body {
-            padding: var(--sm-space-5);
-         }
-         .month-story-type {
+         .month-entry-icon {
             display: flex;
             align-items: center;
-            gap: var(--sm-space-2);
-            font-size: var(--sm-text-xs);
-            font-weight: 600;
-            opacity: 0.7;
+            justify-content: center;
+            background: var(--surface-container-high);
+            font-size: var(--sm-text-2xl);
          }
-         .month-story-type > i,
-         .month-story-meta i {
-            position: static !important;
-            font-size: var(--sm-text-base);
-         }
-         .month-story-card.type-heart .month-story-type > i {
+         .month-entry.type-heart .month-entry-icon {
             color: #e56aa6;
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
          }
-         .month-story-title {
-            margin-top: var(--sm-space-1);
-            font-size: var(--sm-text-lg);
+         .month-entry-body {
+            min-width: 0;
+         }
+         .month-entry-type {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            font-size: var(--sm-text-xs);
+            font-weight: 600;
+            opacity: .68;
+         }
+         .month-entry-type i,
+         .month-entry-meta i {
+            position: static !important;
+            font-size: var(--sm-text-base);
+         }
+         .month-entry-title {
+            margin-top: .1rem;
             font-weight: 650;
-            line-height: 1.25;
+            line-height: 1.3;
             overflow-wrap: anywhere;
          }
-         .month-story-text {
-            margin-top: var(--sm-space-2);
+         .month-entry-text {
+            margin-top: .2rem;
             font-size: var(--sm-text-sm);
-            line-height: 1.5;
-            opacity: 0.8;
-            white-space: pre-line;
+            line-height: 1.35;
+            opacity: .75;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
          }
-         .month-story-meta {
+         .month-entry-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: var(--sm-space-1) var(--sm-space-3);
-            margin-top: var(--sm-space-3);
+            gap: .2rem var(--sm-space-2);
+            margin-top: .25rem;
             font-size: var(--sm-text-xs);
-            opacity: 0.65;
+            opacity: .62;
          }
-         .month-story-meta > span {
+         .month-entry-meta span {
             display: inline-flex;
             align-items: center;
-            gap: 0.2rem;
+            gap: .15rem;
          }
-         .month-place-card {
-            padding: var(--sm-space-5);
+         .month-entry-arrow {
+            opacity: .5;
+         }
+         .month-places {
+            padding: var(--sm-space-4);
             border-radius: var(--sm-radius-md);
          }
          .month-place-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: var(--sm-space-3);
+            gap: var(--sm-space-2);
          }
          .month-place-chip {
             display: inline-flex;
             align-items: center;
-            gap: var(--sm-space-1);
-            min-height: 38px;
-            padding: var(--sm-space-1) var(--sm-space-4);
+            gap: .25rem;
+            padding: .45rem .75rem;
             border-radius: var(--sm-radius-pill);
             background: var(--tertiary-container);
             color: var(--on-tertiary-container);
             text-decoration: none;
          }
-         .month-place-chip > i {
+         .month-place-chip i {
             position: static !important;
+            font-size: var(--sm-text-base);
          }
          .month-empty {
-            padding: 3rem var(--sm-space-6);
+            padding: 2.5rem var(--sm-space-5);
             text-align: center;
             border-radius: var(--sm-radius-md);
          }
-         .month-empty > i {
+         .month-empty i {
             position: static !important;
-            font-size: 2.8rem;
             color: #e56aa6;
-            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+            font-size: 2.5rem;
          }
          .month-footer-links {
             display: flex;
             justify-content: flex-end;
             gap: var(--sm-space-4);
             flex-wrap: wrap;
-            margin-top: var(--sm-space-6);
+            margin-top: var(--sm-space-5);
          }
-
          @media (max-width: 700px) {
             .month-page {
-               padding-top: var(--sm-space-4);
+               padding-top: var(--sm-space-3);
             }
             .month-toolbar {
-               flex-wrap: wrap;
+               margin-bottom: var(--sm-space-3);
             }
             .month-pdf-button span {
                display: none;
             }
             .month-hero-copy {
-               padding-left: var(--sm-space-4);
-               padding-right: var(--sm-space-4);
+               padding: 1rem var(--sm-space-4) .8rem;
             }
             .month-collage {
+               height: 205px;
                grid-template-columns: repeat(2, minmax(0, 1fr));
-               grid-auto-rows: 110px;
                margin: 0 var(--sm-space-3) var(--sm-space-3);
             }
-            .month-collage > a:first-child {
+            .month-collage a:first-child {
                grid-column: span 2;
             }
-            .month-magazine {
-               grid-template-columns: 1fr;
+            .month-stats {
+               grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-            .month-story-card.has-image:nth-child(5n + 1) {
-               grid-column: auto;
+            .month-entry {
+               grid-template-columns: 70px minmax(0, 1fr);
+               gap: var(--sm-space-3);
             }
-            .month-story-image,
-            .month-story-card.has-image:nth-child(5n + 1) .month-story-image {
-               height: 220px;
+            .month-entry-media,
+            .month-entry-icon {
+               width: 70px;
+               height: 64px;
+            }
+            .month-entry-arrow {
+               display: none;
             }
          }
-
          @media print {
-            @page {
-               margin: 12mm;
-            }
-            body {
-               background: #fff !important;
-               color: #111 !important;
-            }
             header,
             footer,
             #div-render-nav-drawer,
             #div-overlay-nav-drawer,
             .month-toolbar,
             .couple-bottom-nav,
-            dialog,
-            .overlay {
+            #dialog-couple-create,
+            #div-overlay-couple-create {
                display: none !important;
+            }
+            body {
+               background: #fff !important;
+               color: #111 !important;
             }
             .month-page {
                max-width: none;
@@ -326,29 +322,20 @@
             }
             .month-hero,
             .month-stat,
-            .month-story-card,
-            .month-place-card {
-               background: #fff !important;
-               color: #111 !important;
+            .month-list,
+            .month-places {
                box-shadow: none !important;
                border: 1px solid #ddd;
+               background: #fff !important;
+               color: #111 !important;
             }
-            .month-hero,
-            .month-stats,
-            .month-section,
-            .month-story-card {
+            .month-entry {
                break-inside: avoid;
-            }
-            .month-story-card {
-               text-decoration: none !important;
-            }
-            .month-footer-links {
-               display: none !important;
             }
          }
       </style>
    </head>
-   <body class="couple-app couple-page-month {% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="couple-app couple-page-month {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
       <div class="overlay"
            id="div-overlay-nav-drawer"
@@ -364,10 +351,7 @@
                aria-label="Zurück zum Jahresrückblick">
                <i>arrow_back</i>
             </a>
-            <div>
-               <strong>{{ month_snapshot.label }} {{ selected_year }}</strong>
-            </div>
-            <div class="month-toolbar-spacer"></div>
+            <div class="month-toolbar-title">{{ month_snapshot['label'] }} {{ selected_year }}</div>
             <button class="button round border month-pdf-button"
                     type="button"
                     onclick="window.print()">
@@ -378,110 +362,87 @@
 
          <article class="primary-container month-hero">
             <div class="month-hero-copy">
-               <div class="month-kicker">
-                  <i>favorite</i>
-                  <span>Unser Monatsrückblick</span>
-               </div>
-               <h2>{{ month_snapshot.label }} {{ selected_year }}</h2>
-               {% if month_snapshot.total %}
+               <div class="month-kicker"><i>favorite</i><span>Unser Monatsrückblick</span></div>
+               <h2>{{ month_snapshot['label'] }} {{ selected_year }}</h2>
+               {% if month_snapshot['total'] %}
                <p class="month-subtitle">
-                  {{ month_snapshot.total }} gemeinsame Momente – automatisch aus euren Erinnerungen, Herzmomenten, Kapiteln und Erlebnissen zusammengestellt.
+                  {{ month_snapshot['total'] }} {% if month_snapshot['total'] == 1 %}Moment{% else %}Momente{% endif %} aus eurer gemeinsamen Geschichte.
                </p>
                {% else %}
                <p class="month-subtitle">Ein Monat, der noch auf eure gemeinsamen Momente wartet.</p>
                {% endif %}
             </div>
-            {% if month_snapshot.cover_images %}
-            <div class="month-collage"
-                 data-count="{{ [month_snapshot.cover_images|length, 6]|min }}">
-               {% for image in month_snapshot.cover_images[:6] %}
-               <a href="{{ image.href }}" aria-label="{{ image.title }} öffnen">
-                  <img src="{{ image.url }}"
-                       alt="{{ image.title }}"
-                       loading="{% if loop.index <= 3 %}eager{% else %}lazy{% endif %}">
+
+            {% if month_snapshot['cover_images'] %}
+            <div class="month-collage {% if month_snapshot['cover_images']|length == 1 %}one-image{% endif %}">
+               {% for image in month_snapshot['cover_images'][:5] %}
+               <a href="{{ image['href'] }}" aria-label="{{ image['title'] }} öffnen">
+                  <img src="{{ image['url'] }}"
+                       alt="{{ image['title'] }}"
+                       loading="{% if loop.index <= 2 %}eager{% else %}lazy{% endif %}">
                </a>
                {% endfor %}
             </div>
             {% endif %}
          </article>
 
-         {% set month_stat_defs = [
-            ('memories',   'photo_library', 'Erinnerungen',    month_snapshot.stats.memories),
-            ('hearts',     'favorite',      'Herzmomente',     month_snapshot.stats.hearts),
-            ('milestones', 'star',          'Meilensteine',    month_snapshot.stats.milestones),
-            ('chapters',   'auto_stories',  'Kapitel',         month_snapshot.stats.chapters),
-            ('places',     'location_on',   'Orte',            month_snapshot.stats.places),
-            ('bucket',     'checklist',     'Wünsche erfüllt', month_snapshot.stats.bucket),
-            ('plans',      'done_all',      'Pläne erlebt',    month_snapshot.stats.plans)
-         ] %}
-         {% set month_stats_ns = namespace(tiles=[]) %}
-         {% for stat in month_stat_defs %}
-            {% if stat[3] %}{% set month_stats_ns.tiles = month_stats_ns.tiles + [stat] %}{% endif %}
-         {% endfor %}
-         {% if month_stats_ns.tiles %}
          <section class="month-stats">
-            {% for key, icon, label, value in month_stats_ns.tiles %}
-            <div class="surface-container month-stat month-stat-{{ key }}">
-               <i>{{ icon }}</i>
-               <span class="month-stat-number">{{ value }}</span>
-               <span class="month-stat-label">{{ label }}</span>
-            </div>
-            {% endfor %}
+            {% if month_snapshot['stats']['memories'] %}
+            <div class="surface-container month-stat"><i>photo_library</i><span class="month-stat-number">{{ month_snapshot['stats']['memories'] }}</span><span class="month-stat-label">Erinnerungen</span></div>
+            {% endif %}
+            {% if month_snapshot['stats']['hearts'] %}
+            <div class="surface-container month-stat"><i>favorite</i><span class="month-stat-number">{{ month_snapshot['stats']['hearts'] }}</span><span class="month-stat-label">Herzmomente</span></div>
+            {% endif %}
+            {% if month_snapshot['stats']['milestones'] %}
+            <div class="surface-container month-stat"><i>star</i><span class="month-stat-number">{{ month_snapshot['stats']['milestones'] }}</span><span class="month-stat-label">Meilensteine</span></div>
+            {% endif %}
+            {% if month_snapshot['stats']['chapters'] %}
+            <div class="surface-container month-stat"><i>auto_stories</i><span class="month-stat-number">{{ month_snapshot['stats']['chapters'] }}</span><span class="month-stat-label">Kapitel</span></div>
+            {% endif %}
+            {% if month_snapshot['stats']['places'] %}
+            <div class="surface-container month-stat"><i>location_on</i><span class="month-stat-number">{{ month_snapshot['stats']['places'] }}</span><span class="month-stat-label">Orte</span></div>
+            {% endif %}
+            {% if month_snapshot['stats']['bucket'] %}
+            <div class="surface-container month-stat"><i>checklist</i><span class="month-stat-number">{{ month_snapshot['stats']['bucket'] }}</span><span class="month-stat-label">Wünsche erfüllt</span></div>
+            {% endif %}
+            {% if month_snapshot['stats']['plans'] %}
+            <div class="surface-container month-stat"><i>done_all</i><span class="month-stat-number">{{ month_snapshot['stats']['plans'] }}</span><span class="month-stat-label">Pläne erlebt</span></div>
+            {% endif %}
          </section>
-         {% endif %}
 
-         {% if month_snapshot.all_entries %}
+         {% if month_snapshot['all_entries'] %}
          <section class="month-section">
-            <h5 class="month-section-title">
-               <i>auto_awesome</i>
-               <span>Dieser Monat in Momenten</span>
-            </h5>
-            <div class="month-magazine">
-               {% for entry in month_snapshot.all_entries %}
-               <a class="surface-container month-story-card type-{{ entry.type }} {% if entry.image_url %}has-image{% endif %}"
-                  href="{{ entry.href }}">
-                  {% if entry.image_url %}
-                  <img class="month-story-image"
-                       src="{{ entry.image_url }}"
-                       alt=""
-                       loading="lazy">
+            <h5 class="month-section-title"><i>auto_awesome</i><span>Dieser Monat in Momenten</span></h5>
+            <article class="surface-container month-list">
+               {% for entry in month_snapshot['all_entries'] %}
+               <a class="month-entry type-{{ entry['type'] }}" href="{{ entry['href'] }}">
+                  {% if entry['image_url'] %}
+                  <img class="month-entry-media" src="{{ entry['image_url'] }}" alt="" loading="lazy">
+                  {% else %}
+                  <i class="month-entry-icon">{{ entry['icon'] }}</i>
                   {% endif %}
-                  <div class="month-story-body">
-                     <div class="month-story-type">
-                        <i>{{ entry.icon }}</i>
-                        <span>{{ entry.type_label }}</span>
-                     </div>
-                     <div class="month-story-title">{{ entry.title }}</div>
-                     {% if entry.text %}
-                     <div class="month-story-text">{{ entry.text }}</div>
-                     {% endif %}
-                     <div class="month-story-meta">
-                        {% if entry.date_label %}
-                        <span><i>calendar_month</i>{{ entry.date_label }}</span>
-                        {% endif %}
-                        {% if entry.places %}
-                        <span><i>location_on</i>{{ entry.places[0].name }}</span>
-                        {% endif %}
+                  <div class="month-entry-body">
+                     <div class="month-entry-type"><i>{{ entry['icon'] }}</i><span>{{ entry['type_label'] }}</span></div>
+                     <div class="month-entry-title">{{ entry['title'] }}</div>
+                     {% if entry['text'] %}<div class="month-entry-text">{{ entry['text'] }}</div>{% endif %}
+                     <div class="month-entry-meta">
+                        {% if entry['date_label'] %}<span><i>calendar_month</i>{{ entry['date_label'] }}</span>{% endif %}
+                        {% if entry['places'] %}<span><i>location_on</i>{{ entry['places'][0]['name'] }}</span>{% endif %}
                      </div>
                   </div>
+                  <i class="month-entry-arrow">chevron_right</i>
                </a>
                {% endfor %}
-            </div>
+            </article>
          </section>
 
-         {% if month_snapshot.places %}
+         {% if month_snapshot['places'] %}
          <section class="month-section">
-            <h5 class="month-section-title">
-               <i>map</i>
-               <span>Unsere Orte im {{ month_snapshot.label }}</span>
-            </h5>
-            <article class="surface-container month-place-card">
+            <h5 class="month-section-title"><i>map</i><span>Unsere Orte im {{ month_snapshot['label'] }}</span></h5>
+            <article class="surface-container month-places">
                <div class="month-place-chips">
-                  {% for place in month_snapshot.places %}
-                  <a class="month-place-chip" href="/places/{{ place.id }}">
-                     <i>location_on</i>
-                     <span>{{ place.name }}</span>
-                  </a>
+                  {% for place in month_snapshot['places'] %}
+                  <a class="month-place-chip" href="/places/{{ place['id'] }}"><i>location_on</i><span>{{ place['name'] }}</span></a>
                   {% endfor %}
                </div>
             </article>
@@ -495,15 +456,9 @@
          {% else %}
          <article class="surface-container month-empty">
             <i>favorite</i>
-            <h5>Noch keine gemeinsamen Momente im {{ month_snapshot.label }}</h5>
+            <h5>Noch keine gemeinsamen Momente im {{ month_snapshot['label'] }}</h5>
             <p>Sobald ihr etwas festhaltet, entsteht dieser Monatsrückblick automatisch.</p>
-            <nav class="center-align" style="gap:var(--sm-space-3);flex-wrap:wrap;">
-               <button class="round" type="button" onclick="openCoupleCreateMenu()">
-                  <i>add</i>
-                  <span>Moment festhalten</span>
-               </button>
-               <a class="button round border" href="/year/{{ selected_year }}">Zum Jahresrückblick</a>
-            </nav>
+            <a class="button round border" href="/year/{{ selected_year }}">Zum Jahresrückblick</a>
          </article>
          {% endif %}
       </main>
