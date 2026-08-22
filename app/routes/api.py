@@ -2355,19 +2355,6 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
             finally:
                 us_session.close()
 
-            # Daily Questions import integration v1
-            daily_questions_imported = {
-                'questions': 0,
-                'assignments': 0,
-                'answers': 0,
-                'skips': 0,
-            }
-            if 'dailyQuestionsFeature' in data:
-                from app.daily_questions_backup import import_daily_questions_data
-                daily_questions_imported = import_daily_questions_data(
-                    data.get('dailyQuestionsFeature'),
-                    user_email_to_id,
-                    )
             # Import reminders
             reminders_imported = 0
             for r_data in data.get('reminders', []):
@@ -2505,8 +2492,7 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
                 'settings_updated': settings_updated,
                 'users_imported': users_imported,
                 'user_settings_imported': user_settings_imported,
-                'daily_questions_imported': daily_questions_imported,
-                'reminders_imported': reminders_imported,
+                'reminders_imported': reminders_imported
             }
 
             # If setup import, mark setup as complete
@@ -2581,9 +2567,6 @@ def _run_export(export_id, user_id, app_ref):
                 'reminders': []
             }
 
-            # Daily Questions export integration v1
-            from app.daily_questions_backup import export_daily_questions_data
-            export_data_json['dailyQuestionsFeature'] = export_daily_questions_data()
             for s in settings_all:
                 export_data_json['settings'].append({
                     'name': s.name,

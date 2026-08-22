@@ -134,13 +134,6 @@
           <i>calendar_view_month</i>
           <span>Unser Jahr</span>
        </a>
-        {# daily-questions-nav-complete-v1 #}
-        {% if daily_questions_nav_enabled %}
-        <a href="/questions"{{ nav_state('/questions') }}>
-           <i>local_florist</i>
-           <span>Unsere Fragen</span>
-        </a>
-        {% endif %}
        {% endif %}
        {% if feature_enabled('daily_questions') %}
        <a href="/questions"{{ nav_state('/questions') }}>
