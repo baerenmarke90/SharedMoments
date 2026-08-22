@@ -455,8 +455,11 @@ class PrivateEntry(Base):
     Bewusst getrennt von HeartMoment: dort steuert `visibility`, ob der
     Partner mitliest, und der Standard ist "geteilt". Hier gibt es diesen
     Schalter nicht - ein Eintrag ohne passende userID wird nie geladen.
-    Geschenkideen und Notizen teilen sich eine Tabelle, weil sie dieselbe
-    Liste, dieselbe Suche und dieselben Rechte haben; `kind` trennt sie.
+    Notizen, Geschenkideen und Geburtstage teilen sich eine Tabelle, weil sie
+    dieselbe Liste, dieselbe Suche und dieselben Rechte haben; `kind` trennt
+    sie. Geburtstage nutzen `recipient` fuer den Namen und `targetDate` fuer
+    den Tag - das Jahr darin ist das Geburtsjahr, die naechste Wiederkehr
+    rechnet die Anzeige aus.
     """
 
     __tablename__ = 'privateEntries'

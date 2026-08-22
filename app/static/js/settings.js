@@ -594,6 +594,7 @@ function uploadBannerSong(input) {
 }
 
 function deleteBannerSong(btn) {
+    if (!confirm(_('Delete this song?'))) return;
     if (!navigator.onLine) {
         showSnackbar('settings', true, 'error', _('You are offline'), null, false);
         return;

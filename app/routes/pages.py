@@ -236,6 +236,7 @@ def _build_couple_home_upcoming(
     can_view_countdowns,
     can_view_reminders,
     private_gifts=None,
+    private_birthdays=None,
 ):
     """Build a small, permission-aware list for the couple dashboard.
 
@@ -246,6 +247,23 @@ def _build_couple_home_upcoming(
     """
     today = date.today()
     upcoming = []
+
+    for birthday in private_birthdays or []:
+        next_date = birthday.get('next_date')
+        if not next_date:
+            continue
+
+        name = birthday.get('title') or 'Geburtstag'
+        upcoming.append({
+            'type': 'birthday',
+            'icon': 'cake',
+            'title': f'Geburtstag {name}',
+            'date': next_date,
+            'date_label': next_date.strftime('%d.%m.%Y'),
+            'relative_label': _relative_day_label(next_date, today),
+            'private': True,
+            'href': '/private?kind=birthday',
+        })
 
     for gift in private_gifts or []:
         target_date = gift.get('targetDate')
@@ -2003,11 +2021,14 @@ def home():
             else set()
         )
 
-        private_gifts = (
-            get_private_entries(g.user_id, 'gift')
-            if is_feature_enabled('private_gifts')
-            else []
-        )
+        private_gifts = []
+        private_birthdays = []
+        if is_feature_enabled('private_gifts'):
+            private_gifts = get_private_entries(g.user_id, 'gift')
+            private_birthdays = [
+                _present_private_entry(entry)
+                for entry in get_private_entries(g.user_id, 'birthday')
+            ]
 
         couple_home_upcoming = _build_couple_home_upcoming(
             countdowns,
@@ -2016,6 +2037,7 @@ def home():
             can_view_countdowns,
             can_view_reminders,
             private_gifts,
+            private_birthdays,
         )
 
         shared_heart_moments = list_heart_moments(
@@ -2334,7 +2356,7 @@ def moments_hub():
 
         return render_template(
             'pages/moments-hub.html',
-            title=get_display_title(),
+            title=None,
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
@@ -2367,7 +2389,7 @@ def more_hub():
 
         return render_template(
             'pages/more.html',
-            title=get_display_title(),
+            title=None,
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
@@ -4388,6 +4410,25 @@ def _private_form_values(kind):
         'status': 'idea',
     }
 
+    if kind == 'birthday':
+        recipient = str(request.form.get('recipient', '')).strip()
+        if len(recipient) > 255:
+            raise ValueError('Der Name darf höchstens 255 Zeichen lang sein.')
+
+        try:
+            target_date = _parse_optional_form_date(request.form.get('target_date'))
+        except ValueError as exc:
+            raise ValueError('Bitte verwende ein gültiges Datum.') from exc
+
+        if not target_date:
+            raise ValueError('Bitte gib das Geburtsdatum an.')
+
+        values.update({
+            'recipient': recipient or None,
+            'target_date': target_date,
+        })
+        return values
+
     if kind != 'gift':
         return values
 
@@ -4420,6 +4461,21 @@ def _private_form_values(kind):
     return values
 
 
+def _next_birthday(birth_date, today):
+    """Naechster Geburtstag ab heute - der 29.02. faellt auf den 28."""
+    if not birth_date:
+        return None
+
+    for year in (today.year, today.year + 1):
+        try:
+            candidate = birth_date.replace(year=year)
+        except ValueError:
+            candidate = birth_date.replace(year=year, day=28)
+        if candidate >= today:
+            return candidate
+    return None
+
+
 def _present_private_entry(entry):
     presented = dict(entry)
     meta = _PRIVATE_GIFT_STATUS_META.get(
@@ -4437,6 +4493,18 @@ def _present_private_entry(entry):
             if entry.get('targetDate') else ''
         ),
     })
+
+    if entry.get('kind') == 'birthday' and entry.get('targetDate'):
+        today = date.today()
+        next_date = _next_birthday(entry['targetDate'], today)
+        turning = next_date.year - entry['targetDate'].year if next_date else None
+        presented.update({
+            'next_date': next_date,
+            'next_label': next_date.strftime('%d.%m.') if next_date else '',
+            'relative_label': _relative_day_label(next_date, today) if next_date else '',
+            'age_label': f'wird {turning}' if turning and turning > 0 else '',
+        })
+
     return presented
 
 
@@ -4452,17 +4520,29 @@ def private_area():
             return redirect(url_for('pages.home'))
 
         kind = str(request.args.get('kind', 'note')).strip().lower()
-        if kind not in ('note', 'gift'):
+        if kind not in ('note', 'gift', 'birthday'):
             kind = 'note'
+        # Geburtstage haengen am selben Schalter wie die Geschenke: ohne
+        # Geschenkideen hat eine private Geburtstagsliste wenig Sinn.
         if kind == 'note' and not notes_on:
             kind = 'gift'
-        if kind == 'gift' and not gifts_on:
+        if kind in ('gift', 'birthday') and not gifts_on:
             kind = 'note'
 
         entries = [
             _present_private_entry(entry)
             for entry in get_private_entries(g.user_id, kind)
         ]
+
+        if kind == 'birthday':
+            # Nach naechster Wiederkehr statt nach Aenderungsdatum - eine
+            # Geburtstagsliste beantwortet die Frage "wer kommt als Naechstes".
+            entries.sort(
+                key=lambda item: (
+                    not item['pinned'],
+                    item.get('next_date') or date.max,
+                )
+            )
         counts = count_private_entries(g.user_id)
 
         return render_template(
@@ -4489,7 +4569,7 @@ def private_area():
 @jwt_required
 def create_private_entry_page():
     kind = str(request.form.get('kind', 'note')).strip().lower()
-    if kind not in ('note', 'gift'):
+    if kind not in ('note', 'gift', 'birthday'):
         kind = 'note'
     if not is_feature_enabled('private_notes' if kind == 'note' else 'private_gifts'):
         return redirect(url_for('pages.home'))

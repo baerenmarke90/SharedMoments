@@ -65,7 +65,7 @@
                    <div style="position:relative;aspect-ratio:1;background:var(--surface-variant);overflow:hidden;">
                        <img src="/api/v2/media/thumb/{{ url }}"
                             style="width:100%;height:100%;object-fit:cover;"
-                            loading="lazy">
+                            loading="lazy" alt="">
                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
                            <i style="font-size:3rem;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);">play_circle</i>
                        </div>
@@ -73,7 +73,7 @@
                </a>
                    {% else %}
                        <a href="/api/v2/media/{{ url }}" data-lg-size="150-100">
-                           <img src="/api/v2/media/{{ url }}">
+                           <img src="/api/v2/media/{{ url }}" alt="">
                        </a>
                    {% endif %}
                    {% endfor %}

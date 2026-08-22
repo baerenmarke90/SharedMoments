@@ -303,9 +303,31 @@ document.addEventListener('keydown', function(e) {
    submitBtn.click();
 });
 
+// <a onclick> ohne href ist fuer die Tastatur nicht erreichbar: kein Tab-Stopp,
+// keine Reaktion auf Enter, und Screenreader lesen es als Text statt als
+// Bedienelement. 44 solche Stellen stehen in Einstellungen, Admin und den
+// Dialogen - statt sie einzeln umzubauen, bekommen sie hier Rolle und Fokus.
+function makeClickableLinksAccessible(root) {
+   (root || document).querySelectorAll('a[onclick]:not([href])').forEach((element) => {
+      if (!element.hasAttribute('tabindex')) element.setAttribute('tabindex', '0');
+      if (!element.hasAttribute('role')) element.setAttribute('role', 'button');
+   });
+}
+
+document.addEventListener('keydown', (event) => {
+   if (event.key !== 'Enter' && event.key !== ' ') return;
+
+   const element = event.target.closest && event.target.closest('a[onclick]:not([href])');
+   if (!element) return;
+
+   event.preventDefault();
+   element.click();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
    observeLazyImages();
    syncDialogOpenState();
+   makeClickableLinksAccessible();
 });
 
 function showMoreInfo(element, result, mode) {

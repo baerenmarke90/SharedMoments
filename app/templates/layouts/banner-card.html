@@ -1,9 +1,9 @@
 {% if banner_text %}
 <article class="no-padding primary-container">
     {% if settings.banner_image.value %}
-    <img class="responsive" src="/api/v2/media/{{ settings.banner_image.value }}">
+    <img class="responsive" src="/api/v2/media/{{ settings.banner_image.value }}" alt="">
     {% else %}
-    <img class="responsive" src="/api/v2/media/static/setup-couples.jpg">
+    <img class="responsive" src="/api/v2/media/static/setup-couples.jpg" alt="">
     {% endif %}
     <div class="padding">
        <h5 class="middle-align center-align">

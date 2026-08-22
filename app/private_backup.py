@@ -81,7 +81,7 @@ def import_private_entries_data(feature_data, user_email_to_id):
                 continue
 
             kind = str(payload.get('kind') or 'note').strip().lower()
-            if kind not in ('note', 'gift'):
+            if kind not in ('note', 'gift', 'birthday'):
                 kind = 'note'
 
             status = str(payload.get('status') or 'idea').strip().lower()

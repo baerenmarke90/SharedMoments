@@ -21,7 +21,7 @@
       {% if item.contentType == 'image' or item.contentType == 'galleryStartWithImage' %}
       {% set contentURL = item.contentURL.split(';')[0] %}
       <div class="img-skeleton-wrapper"{% if item.blurPlaceholder %} data-lqip{% endif %} style="{% if item.mediaWidth and item.mediaHeight %}aspect-ratio:{{ item.mediaWidth }}/{{ item.mediaHeight }};{% endif %}{% if item.blurPlaceholder %}--lqip:url({{ item.blurPlaceholder }}){% endif %}">
-         <img class="responsive lazy" data-src="/api/v2/media/{{ contentURL }}" loading="lazy"{% if item.mediaWidth and item.mediaHeight %} width="{{ item.mediaWidth }}" height="{{ item.mediaHeight }}"{% endif %}>
+         <img class="responsive lazy" data-src="/api/v2/media/{{ contentURL }}" loading="lazy"{% if item.mediaWidth and item.mediaHeight %} width="{{ item.mediaWidth }}" height="{{ item.mediaHeight }}"{% endif %} alt="">
          {% if not item.blurPlaceholder %}
          <div class="skeleton skeleton-overlay skeleton-image"></div>
          {% endif %}
@@ -29,7 +29,7 @@
       {% elif item.contentType == 'video' or item.contentType == 'video-mov' or item.contentType == 'galleryStartWithVideo' %}
       {% set contentURL = item.contentURL.split(';')[0] %}
       <div class="img-skeleton-wrapper"{% if item.blurPlaceholder %} data-lqip{% endif %} style="position:relative;{% if item.mediaWidth and item.mediaHeight %}aspect-ratio:{{ item.mediaWidth }}/{{ item.mediaHeight }};{% endif %}{% if item.blurPlaceholder %}--lqip:url({{ item.blurPlaceholder }}){% endif %}">
-         <img class="responsive lazy" data-src="/api/v2/media/thumb/{{ contentURL }}" loading="lazy" style="width:100%;object-fit:cover;"{% if item.mediaWidth and item.mediaHeight %} width="{{ item.mediaWidth }}" height="{{ item.mediaHeight }}"{% endif %}>
+         <img class="responsive lazy" data-src="/api/v2/media/thumb/{{ contentURL }}" loading="lazy" style="width:100%;object-fit:cover;"{% if item.mediaWidth and item.mediaHeight %} width="{{ item.mediaWidth }}" height="{{ item.mediaHeight }}"{% endif %} alt="">
          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2">
             <i style="font-size:3rem;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);">play_circle</i>
          </div>
@@ -86,7 +86,7 @@
          <a class="chip no-border secondary small round">
          <span>{{ item.dateCreated|format_date_dmy }}<span>
          </a>
-         <img class="circle" src="/api/v2/media/static/{{ user.profilePicture or 'profile-placeholder.jpg' }}">
+         <img class="circle" src="/api/v2/media/static/{{ user.profilePicture or 'profile-placeholder.jpg' }}" alt="">
       </nav>
    </div>
 </article>

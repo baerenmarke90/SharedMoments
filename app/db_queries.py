@@ -2989,7 +2989,7 @@ def approve_new_translations_to_all_languages():
 # auch ohne Eigentuemer aufgerufen.
 # ---------------------------------------------------------------------------
 
-PRIVATE_KINDS = ('note', 'gift')
+PRIVATE_KINDS = ('note', 'gift', 'birthday')
 PRIVATE_GIFT_STATUSES = ('idea', 'reserved', 'bought', 'given')
 
 

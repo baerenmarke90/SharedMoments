@@ -77,6 +77,35 @@
             </div>
          </section>
 
+         {% if feature_enabled('private_notes') or feature_enabled('private_gifts') %}
+         <section class="nav-hub-section">
+            <div class="nav-hub-section-title"><span>Nur für mich</span></div>
+            <div class="nav-hub-grid">
+               {% if feature_enabled('private_notes') %}
+               <a class="surface-container nav-hub-card" href="{{ url_for('pages.private_area', kind='note') }}">
+                  <span class="nav-hub-card-icon"><i>sticky_note_2</i></span>
+                  <span class="nav-hub-card-copy"><strong>Meine Notizen</strong><span>Nur auf deinem Gerät sichtbar</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endif %}
+
+               {% if feature_enabled('private_gifts') %}
+               <a class="surface-container nav-hub-card" href="{{ url_for('pages.private_area', kind='gift') }}">
+                  <span class="nav-hub-card-icon"><i>card_giftcard</i></span>
+                  <span class="nav-hub-card-copy"><strong>Geschenkideen</strong><span>Anlass, Preisrahmen und Link</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+
+               <a class="surface-container nav-hub-card" href="{{ url_for('pages.private_area', kind='birthday') }}">
+                  <span class="nav-hub-card-icon"><i>cake</i></span>
+                  <span class="nav-hub-card-copy"><strong>Geburtstage</strong><span>Wer wann Geburtstag hat</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endif %}
+            </div>
+         </section>
+         {% endif %}
+
          {% if more_ns.extras %}
          <section class="nav-hub-section">
             <div class="nav-hub-section-title"><span>Unsere Listen</span></div>

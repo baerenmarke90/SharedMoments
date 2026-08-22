@@ -104,11 +104,13 @@
             opacity: 0.7;
          }
 
-         .private-gift-fields {
+         .private-gift-fields,
+         .private-birthday-fields {
             display: none;
          }
 
-         .private-gift-fields.active {
+         .private-gift-fields.active,
+         .private-birthday-fields.active {
             display: block;
          }
       </style>
@@ -154,6 +156,14 @@
                <i>card_giftcard</i>
                <span>Geschenke ({{ private_counts.gift }})</span>
             </a>
+
+            {% if private_gifts_enabled %}
+            <a class="chip round {% if private_kind == 'birthday' %}fill{% endif %}"
+               href="{{ url_for('pages.private_area', kind='birthday') }}">
+               <i>cake</i>
+               <span>Geburtstage ({{ private_counts.birthday }})</span>
+            </a>
+            {% endif %}
          </nav>
          {% endif %}
 
@@ -176,6 +186,23 @@
 
                {% if entry.content %}
                <p class="private-card-text">{{ entry.content }}</p>
+               {% endif %}
+
+               {% if entry.kind == 'birthday' %}
+               <div class="private-meta">
+                  {% if entry.next_label %}
+                  <span><i>cake</i>{{ entry.next_label }}</span>
+                  {% endif %}
+                  {% if entry.relative_label %}
+                  <span class="chip small round">{{ entry.relative_label }}</span>
+                  {% endif %}
+                  {% if entry.age_label %}
+                  <span><i>hourglass_top</i>{{ entry.age_label }}</span>
+                  {% endif %}
+                  {% if entry.date_label %}
+                  <span><i>event</i>geboren am {{ entry.date_label }}</span>
+                  {% endif %}
+               </div>
                {% endif %}
 
                {% if entry.kind == 'gift' %}
@@ -233,12 +260,33 @@
          <dialog class="bottom" id="dialog-edit-private-{{ entry.id }}">
             <form method="post"
                   action="{{ url_for('pages.update_private_entry_page', entry_id=entry.id) }}">
-               <h5>{% if entry.kind == 'gift' %}Geschenkidee bearbeiten{% else %}Notiz bearbeiten{% endif %}</h5>
+               <h5>
+                  {% if entry.kind == 'gift' %}Geschenkidee bearbeiten
+                  {% elif entry.kind == 'birthday' %}Geburtstag bearbeiten
+                  {% else %}Notiz bearbeiten{% endif %}
+               </h5>
 
                <div class="field label border">
                   <input type="text" name="title" maxlength="255" value="{{ entry.title }}" required>
-                  <label>Titel</label>
+                  <label>{% if entry.kind == 'birthday' %}Name{% else %}Titel{% endif %}</label>
                </div>
+
+               {% if entry.kind == 'birthday' %}
+               <div class="grid">
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="date" name="target_date" value="{{ entry.date_input }}" required>
+                        <label>Geburtsdatum</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="recipient" maxlength="255" value="{{ entry.recipient }}">
+                        <label>Beziehung (optional)</label>
+                     </div>
+                  </div>
+               </div>
+               {% endif %}
 
                <div class="field label border extra">
                   <textarea name="content">{{ entry.content }}</textarea>
@@ -324,8 +372,18 @@
 
          {% else %}
          <article class="surface-container private-empty">
-            <i>{% if private_kind == 'gift' %}card_giftcard{% else %}sticky_note_2{% endif %}</i>
-            {% if private_kind == 'gift' %}
+            <i>
+               {%- if private_kind == 'gift' %}card_giftcard
+               {%- elif private_kind == 'birthday' %}cake
+               {%- else %}sticky_note_2{% endif -%}
+            </i>
+            {% if private_kind == 'birthday' %}
+            <h5>Noch keine Geburtstage</h5>
+            <p>
+               Trag ein, wer wann Geburtstag hat. Die nächsten stehen dann oben,
+               und du siehst früh genug, wann du eine Idee brauchst.
+            </p>
+            {% elif private_kind == 'gift' %}
             <h5>Noch keine Geschenkideen</h5>
             <p>
                Halte fest, was du verschenken möchtest – mit Anlass, Preisrahmen
@@ -340,7 +398,9 @@
             {% endif %}
             <button class="round" type="button" onclick="openPrivateCreateDialog()">
                <i>add</i>
-               {% if private_kind == 'gift' %}Erste Geschenkidee{% else %}Erste Notiz{% endif %}
+               {% if private_kind == 'gift' %}Erste Geschenkidee
+               {%- elif private_kind == 'birthday' %}Ersten Geburtstag
+               {%- else %}Erste Notiz{% endif %}
             </button>
          </article>
          {% endif %}
@@ -366,12 +426,34 @@
             <input type="hidden" name="kind" id="private-create-kind" value="{{ private_kind }}">
 
             <h5 id="private-create-heading">
-               {% if private_kind == 'gift' %}Neue Geschenkidee{% else %}Neue Notiz{% endif %}
+               {% if private_kind == 'gift' %}Neue Geschenkidee
+               {%- elif private_kind == 'birthday' %}Neuer Geburtstag
+               {%- else %}Neue Notiz{% endif %}
             </h5>
 
             <div class="field label border">
                <input type="text" name="title" maxlength="255" required>
-               <label>Titel</label>
+               <label id="private-create-title-label">
+                  {% if private_kind == 'birthday' %}Name{% else %}Titel{% endif %}
+               </label>
+            </div>
+
+            <div class="private-birthday-fields{% if private_kind == 'birthday' %} active{% endif %}"
+                 id="private-create-birthday-fields">
+               <div class="grid">
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="date" name="target_date" id="private-create-birthdate">
+                        <label>Geburtsdatum</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="recipient" maxlength="255">
+                        <label>Beziehung (optional)</label>
+                     </div>
+                  </div>
+               </div>
             </div>
 
             <div class="field label border extra">
@@ -444,13 +526,26 @@
       <script>
          // Der Dialog bedient beide Arten; die Geschenkfelder blenden sich
          // nach der gerade offenen Registerkarte ein.
+         const PRIVATE_HEADINGS = {
+            gift: 'Neue Geschenkidee',
+            birthday: 'Neuer Geburtstag',
+            note: 'Neue Notiz',
+         };
+
          function openPrivateCreateDialog(kind) {
             const target = kind || '{{ private_kind }}';
             document.getElementById('private-create-kind').value = target;
             document.getElementById('private-create-heading').textContent =
-               target === 'gift' ? 'Neue Geschenkidee' : 'Neue Notiz';
+               PRIVATE_HEADINGS[target] || PRIVATE_HEADINGS.note;
+            document.getElementById('private-create-title-label').textContent =
+               target === 'birthday' ? 'Name' : 'Titel';
             document.getElementById('private-create-gift-fields')
                .classList.toggle('active', target === 'gift');
+            document.getElementById('private-create-birthday-fields')
+               .classList.toggle('active', target === 'birthday');
+            // Pflichtfeld nur, wenn es auch sichtbar ist.
+            document.getElementById('private-create-birthdate')
+               .required = target === 'birthday';
             callUi('#dialog-create-private');
          }
       </script>

@@ -67,7 +67,7 @@
                 {% endif %}
 
                 {% if local_login_enabled %}
-                <form id="loginForm">
+                <form id="loginForm" method="post" action="/login">
                     <div class="field label border">
                         <input type="email" name="email" id="email" onchange="emailVerification()">
                         <label>{{ _('E-Mail') }}</label>
