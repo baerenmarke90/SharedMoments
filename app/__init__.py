@@ -56,6 +56,16 @@ except Exception as exc:
     raise
 
 
+# Daily Questions schema initialization
+from app.daily_questions import ensure_daily_questions_schema
+
+try:
+    ensure_daily_questions_schema()
+    log('info', 'Daily Questions schema ready')
+except Exception as exc:
+    log('error', f'Daily Questions schema initialization failed: {exc}')
+    raise
+
 base_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Konfiguration der Sprache
@@ -97,6 +107,9 @@ app.register_blueprint(pages_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(ai_bp)
 app.register_blueprint(share_bp)
+
+from app.routes.daily_questions import daily_questions_bp
+app.register_blueprint(daily_questions_bp)
 
 from app.routes.admin import admin_bp
 app.register_blueprint(admin_bp)

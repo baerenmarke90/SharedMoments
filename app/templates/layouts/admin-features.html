@@ -1,0 +1,39 @@
+<section class="admin-auth-page">
+    <article class="surface-container admin-auth-card">
+        <div class="admin-auth-heading">
+            <div>
+                <h5>Funktionen</h5>
+                <p>Optionale Funktionen der Couples-App zentral verwalten.</p>
+            </div>
+            <i>extension</i>
+        </div>
+
+        <div class="admin-auth-row">
+            <i>local_florist</i>
+            <div class="max">
+                <h6>Frage des Tages</h6>
+                <p>
+                    Zeigt täglich eine gemeinsame Frage auf dem Wir-Bildschirm.
+                    Beide Antworten bleiben verborgen, bis beide geantwortet haben.
+                </p>
+            </div>
+            <label class="switch" title="Frage des Tages aktivieren oder deaktivieren">
+                <input
+                    id="admin-feature-daily-questions"
+                    type="checkbox"
+                    {% if daily_questions_enabled %}checked{% endif %}
+                    onchange="setDailyQuestionsFeature(this)"
+                >
+                <span></span>
+            </label>
+        </div>
+
+        <div class="admin-auth-warning surface-container-low padding">
+            <i>info</i>
+            <span>
+                Beim Deaktivieren bleiben vorhandene Fragen und Antworten erhalten.
+                Dashboard, Archiv und Antwortfunktion werden lediglich ausgeblendet.
+            </span>
+        </div>
+    </article>
+</section>

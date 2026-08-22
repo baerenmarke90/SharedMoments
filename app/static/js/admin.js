@@ -1,6 +1,6 @@
 // --- Tab Switching ---
 function showAdminTab(tab) {
-    const tabs = ['users', 'roles', 'shares', 'auth'];
+    const tabs = ['users', 'roles', 'shares', 'auth', 'features'];
     tabs.forEach(name => {
         const panel = document.getElementById('tab-' + name);
         const button = document.getElementById('tab-' + name + '-btn');
@@ -12,6 +12,35 @@ function showAdminTab(tab) {
     const roleFab = document.getElementById('fab-create-role');
     if (userFab) userFab.style.display = tab === 'users' ? '' : 'none';
     if (roleFab) roleFab.style.display = tab === 'roles' ? '' : 'none';
+}
+
+// --- Optional app features ---
+async function setDailyQuestionsFeature(input) {
+    const enabled = Boolean(input.checked);
+    input.disabled = true;
+
+    try {
+        const response = await fetch('/api/v2/admin/features/daily-questions', {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ enabled })
+        });
+        const result = await response.json();
+
+        if (!response.ok || result.status !== 'success') {
+            throw new Error(result.message || 'Einstellung konnte nicht gespeichert werden.');
+        }
+
+        showAdminSnackbar(result.message, false);
+    } catch (error) {
+        input.checked = !enabled;
+        showAdminSnackbar(error.message || _('Server not reachable'), true);
+    } finally {
+        input.disabled = false;
+    }
 }
 
 // --- User Create / Edit ---

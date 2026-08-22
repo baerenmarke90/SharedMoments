@@ -79,7 +79,7 @@
            Smartphone = kompaktes 2x2-Raster. */
         .admin-tab-nav {
             display: grid !important;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 0.5rem;
             width: min(100%, 960px);
             margin: 1rem auto 1.35rem;
@@ -189,6 +189,10 @@
                 <i>lock</i>
                 <span>{{ _('Authentication') }}</span>
             </a>
+            <a id="tab-features-btn" onclick="showAdminTab('features')">
+                <i>extension</i>
+                <span>Funktionen</span>
+            </a>
         </div>
 
         <!-- Tab: Users -->
@@ -209,6 +213,10 @@
         <!-- Tab: Authentication -->
         <div id="tab-auth" style="display: none;">
             {% include 'layouts/admin-authentication.html' %}
+        </div>
+        <!-- Tab: Features -->
+        <div id="tab-features" style="display: none;">
+            {% include 'layouts/admin-features.html' %}
         </div>
 
         {% include 'layouts/footer.html' %}

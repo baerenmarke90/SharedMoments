@@ -33,6 +33,12 @@ def admin_panel():
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings = get_all_settings()
+        daily_questions_setting = get_setting_by_name('daily_questions_enabled')
+        daily_questions_enabled = (
+            daily_questions_setting.value is None
+            or str(daily_questions_setting.value).strip().lower()
+            in {'true', '1', 'yes', 'on'}
+        )
         active_shares = get_all_active_shares()
 
         from app.auth_settings import get_auth_settings, get_effective_auth_settings
@@ -56,6 +62,7 @@ def admin_panel():
                                darkmode=darkmode,
                                user_data=user_data,
                                settings=settings,
+                               daily_questions_enabled=daily_questions_enabled,
                                active_shares=active_shares,
                                auth_settings=auth_settings,
                                auth_effective_settings=auth_effective_settings,
@@ -436,6 +443,50 @@ def delete_share_admin(share_id):
     except Exception as e:
         log('error', f'Error revoking share {share_id}: {e}')
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@admin_bp.route('/api/v2/admin/features/daily-questions', methods=['PUT'])
+@jwt_required
+@require_permission('Access Admin Panel')
+def update_daily_questions_feature():
+    try:
+        payload = request.get_json(silent=True) or {}
+        enabled = payload.get('enabled')
+        if not isinstance(enabled, bool):
+            return jsonify({
+                'status': 'error',
+                'message': 'Ungültiger Wert für die Funktion.',
+            }), 400
+
+        from app.db_queries import create_setting, update_setting
+
+        value = 'True' if enabled else 'False'
+        current = get_setting_by_name('daily_questions_enabled')
+        if current is None or current.value is None:
+            create_setting('daily_questions_enabled', value)
+        else:
+            update_setting('daily_questions_enabled', value)
+
+        log(
+            'info',
+            f"Daily Questions feature {'enabled' if enabled else 'disabled'} "
+            f"by admin user {g.user_id}",
+        )
+        return jsonify({
+            'status': 'success',
+            'enabled': enabled,
+            'message': (
+                'Frage des Tages wurde aktiviert.'
+                if enabled
+                else 'Frage des Tages wurde deaktiviert.'
+            ),
+        }), 200
+    except Exception as exc:
+        log('error', f'Error updating Daily Questions feature: {exc}')
+        return jsonify({
+            'status': 'error',
+            'message': 'Die Funktionseinstellung konnte nicht gespeichert werden.',
+        }), 500
 
 
 def _get_admin_role_id():
