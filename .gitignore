@@ -43,3 +43,6 @@ gunicorn.ctl
 
 # Flask instance folder
 instance/
+
+# lokale Patch-Dateien
+sharedmoments-ux-*.patch
