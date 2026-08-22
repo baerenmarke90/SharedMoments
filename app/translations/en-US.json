@@ -441,11 +441,11 @@
     },
     {
         "entityID": 0,
-        "fieldName": "SharedMoments Setup",
+        "fieldName": "SideBySide Setup",
         "helpText": "",
         "languageCode": "en-US",
         "entityType": "static",
-        "translatedText": "SharedMoments Setup"
+        "translatedText": "SideBySide Setup"
     },
     {
         "entityID": 0,
@@ -457,35 +457,35 @@
     },
     {
         "entityID": 0,
-        "fieldName": "SharedMoments Couples is designed for couples who want to store their shared experiences and wish lists",
+        "fieldName": "SideBySide Couples is designed for couples who want to store their shared experiences and wish lists",
         "helpText": "",
         "languageCode": "en-US",
         "entityType": "static",
-        "translatedText": "SharedMoments Couples is designed for couples who want to store their shared experiences and wish lists"
+        "translatedText": "SideBySide Couples is designed for couples who want to store their shared experiences and wish lists"
     },
     {
         "entityID": 0,
-        "fieldName": "SharedMoments Family is designed for families who want to store their shared experiences and wish lists",
+        "fieldName": "SideBySide Family is designed for families who want to store their shared experiences and wish lists",
         "helpText": "",
         "languageCode": "en-US",
         "entityType": "static",
-        "translatedText": "SharedMoments Family is designed for families who want to store their shared experiences and wish lists"
+        "translatedText": "SideBySide Family is designed for families who want to store their shared experiences and wish lists"
     },
     {
         "entityID": 0,
-        "fieldName": "SharedMoments Friends is designed for friend groups who want to store their shared experiences and wish lists",
+        "fieldName": "SideBySide Friends is designed for friend groups who want to store their shared experiences and wish lists",
         "helpText": "",
         "languageCode": "en-US",
         "entityType": "static",
-        "translatedText": "SharedMoments Friends is designed for friend groups who want to store their shared experiences and wish lists"
+        "translatedText": "SideBySide Friends is designed for friend groups who want to store their shared experiences and wish lists"
     },
     {
         "entityID": 0,
-        "fieldName": "Please select an edition of SharedMoments to continue",
+        "fieldName": "Please select an edition of SideBySide to continue",
         "helpText": "",
         "languageCode": "en-US",
         "entityType": "static",
-        "translatedText": "Please select an edition of SharedMoments to continue"
+        "translatedText": "Please select an edition of SideBySide to continue"
     },
     {
         "entityID": 0,
@@ -497,11 +497,11 @@
     },
     {
         "entityID": 0,
-        "fieldName": "Add users who will use SharedMoments",
+        "fieldName": "Add users who will use SideBySide",
         "helpText": "",
         "languageCode": "en-US",
         "entityType": "static",
-        "translatedText": "Add users who will use SharedMoments"
+        "translatedText": "Add users who will use SideBySide"
     },
     {
         "entityID": 0,
@@ -1450,7 +1450,7 @@
     {
         "entityID": 0,
         "fieldName": "Birthday of {name}",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "Birthday of {name}"
@@ -1458,7 +1458,7 @@
     {
         "entityID": 0,
         "fieldName": "{n}-Year Milestone",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "We have been together for {n} years"
@@ -1466,7 +1466,7 @@
     {
         "entityID": 0,
         "fieldName": "{n}-Day Milestone",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "{n}-Day Milestone"
@@ -1474,7 +1474,7 @@
     {
         "entityID": 0,
         "fieldName": "Countdown: {title}",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "Countdown: {title}"
@@ -1482,7 +1482,7 @@
     {
         "entityID": 0,
         "fieldName": "Countdown \"{title}\" reached!",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "Countdown \"{title}\" reached!"
@@ -1490,7 +1490,7 @@
     {
         "entityID": 0,
         "fieldName": "Today is {title}!",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "Today is {title}!"
@@ -1498,7 +1498,7 @@
     {
         "entityID": 0,
         "fieldName": "{title} in 1 day",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "{title} in 1 day"
@@ -1506,7 +1506,7 @@
     {
         "entityID": 0,
         "fieldName": "{title} in {days} days",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "{title} in {days} days"
@@ -1514,7 +1514,7 @@
     {
         "entityID": 0,
         "fieldName": "{title} is on {date}",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a description of the available variables.",
         "languageCode": "en-US",
         "entityType": "ui",
         "translatedText": "{title} is on {date}"
@@ -3194,7 +3194,7 @@
     {
         "entityID": 0,
         "fieldName": "banner_text_family",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a detailed description of how to enter this translation.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a detailed description of how to enter this translation.",
         "languageCode": "en-US",
         "entityType": "static",
         "translatedText": "Our family — {years_count}, {months_count}, and {days_count} of shared memories. That's {diffInMonthsTotal} months, {diffInWeeksTotal} weeks, or {diffInDays} days of growing together."
@@ -3202,7 +3202,7 @@
     {
         "entityID": 0,
         "fieldName": "banner_text_friends",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a detailed description of how to enter this translation.",
+        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SideBySide/wiki/Translation#special-strings-with-variables\">wiki</a> for a detailed description of how to enter this translation.",
         "languageCode": "en-US",
         "entityType": "static",
         "translatedText": "Friends for {years_count}, {months_count}, and {days_count}. That's {diffInMonthsTotal} months, {diffInWeeksTotal} weeks, or {diffInDays} days of unforgettable moments."

@@ -495,10 +495,12 @@
          {% endif %}
 
          {% if settings.banner_song.value %}
-         <button class="round"
+         <button class="couple-song-pill"
                  id="btn-play-song"
+                 type="button"
                  data-song="/api/v2/media/{{ settings.banner_song.value }}"
-                 onclick="toggleSong()">
+                 onclick="toggleSong()"
+                 aria-label="Unser Song abspielen">
             <i>play_arrow</i>
             <span>Unser Song</span>
          </button>

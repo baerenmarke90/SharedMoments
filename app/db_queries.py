@@ -2252,21 +2252,105 @@ def ensure_countdown_list_type():
 
 # Per-list permission lifecycle functions
 
+def _ensure_default_role_permissions_for_list_type(
+    session,
+    list_type_id,
+    title,
+):
+    # Give a newly created shared list sensible default role access.
+    # Admin and Adult receive CRUD. Child and any additional non-System role
+    # receive View/Create so an admin-created shared list is visible and usable
+    # by every normal SideBySide user by default.
+    roles = (
+        session.query(Role)
+        .filter(Role.roleName != 'System')
+        .all()
+    )
+
+    for action in ('View', 'Create', 'Update', 'Delete'):
+        permission_name = f'{action} {title}'
+        permission = (
+            session.query(Permission)
+            .filter(
+                Permission.listTypeID == list_type_id,
+                Permission.permissionName == permission_name,
+            )
+            .first()
+        )
+
+        if permission is None:
+            permission = Permission(
+                permissionName=permission_name,
+                listTypeID=list_type_id,
+            )
+            session.add(permission)
+            session.flush()
+
+        for role in roles:
+            allow = (
+                role.roleName in {'Admin', 'Adult'}
+                or action in {'View', 'Create'}
+            )
+            if not allow:
+                continue
+
+            existing = (
+                session.query(RolePermission)
+                .filter(
+                    RolePermission.roleID == role.id,
+                    RolePermission.permissionID == permission.id,
+                )
+                .first()
+            )
+            if existing is None:
+                session.add(
+                    RolePermission(
+                        roleID=role.id,
+                        permissionID=permission.id,
+                    )
+                )
+
+
 def create_permissions_for_list_type(list_type_id, title):
-    """Creates View/Create/Update/Delete permissions for a list type and assigns them to the Admin role."""
+    # Create per-list permissions with shared-list defaults.
     session = SessionLocal()
     try:
-        admin_role = session.query(Role).filter(Role.roleName == 'Admin').first()
-        for action in ('View', 'Create', 'Update', 'Delete'):
-            perm = Permission(permissionName=f'{action} {title}', listTypeID=list_type_id)
-            session.add(perm)
-            session.flush()
-            if admin_role:
-                session.add(RolePermission(roleID=admin_role.id, permissionID=perm.id))
+        _ensure_default_role_permissions_for_list_type(
+            session,
+            list_type_id,
+            title,
+        )
         session.commit()
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
 
+
+def ensure_custom_list_role_permissions():
+    # Backfill default permissions for existing admin/user-created lists.
+    session = SessionLocal()
+    try:
+        custom_lists = (
+            session.query(ListType)
+            .filter(ListType.createdByUser != 1)
+            .all()
+        )
+
+        for list_type in custom_lists:
+            _ensure_default_role_permissions_for_list_type(
+                session,
+                list_type.id,
+                list_type.title,
+            )
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 def delete_permissions_for_list_type(list_type_id):
     """Deletes all permissions (and their RolePermissions) linked to a list type."""

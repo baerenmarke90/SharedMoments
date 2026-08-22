@@ -66,6 +66,16 @@ except Exception as exc:
     log('error', f'Daily Questions schema initialization failed: {exc}')
     raise
 
+# Custom Lists: permissions for every normal user role
+from app.db_queries import ensure_custom_list_role_permissions
+
+try:
+    ensure_custom_list_role_permissions()
+    log('info', 'Custom List role permissions ready')
+except Exception as exc:
+    log('error', f'Custom List permission initialization failed: {exc}')
+    raise
+
 base_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Konfiguration der Sprache

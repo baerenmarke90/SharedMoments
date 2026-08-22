@@ -3245,7 +3245,7 @@ def user_profile_picture(user_id):
         ).strip()
 
         # Kein eigenes Profilbild:
-        # offiziellen SharedMoments-Placeholder verwenden.
+        # offiziellen SideBySide-Placeholder verwenden.
         if (
             not filename
             or filename == 'profile-placeholder.jpg'

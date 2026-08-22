@@ -219,7 +219,7 @@
                   <i>error</i>
 
                   {% if oidc_error == 'already_linked' %}
-                  {{ _('This Pocket ID account is already linked to another SharedMoments account.') | replace('SharedMoments', 'SideBySide') }}
+                  {{ _('This Pocket ID account is already linked to another SideBySide account.')  }}
                   {% elif oidc_error == 'link_session' %}
                   {{ _('The Pocket ID linking session is no longer valid. Please try again.') }}
                   {% else %}

@@ -140,7 +140,7 @@ def login_jwt_redirect(
     remember_me=True
 ):
     """
-    Create the normal SharedMoments JWT cookie and
+    Create the normal SideBySide JWT cookie and
     return an HTTP redirect.
 
     Used after successful external OIDC authentication.
@@ -187,7 +187,7 @@ def login_jwt_redirect(
 
 def _jwt_user_id_from_cookie():
     """
-    Return the currently logged-in SharedMoments user
+    Return the currently logged-in SideBySide user
     without causing a redirect.
 
     This is used to verify OIDC account-link callbacks.
@@ -525,7 +525,7 @@ def oidc_mobile_login():
 @jwt_required
 def oidc_link():
     """
-    Link the currently logged-in SharedMoments account
+    Link the currently logged-in SideBySide account
     to a Pocket ID identity.
     """
 
@@ -630,7 +630,7 @@ def oidc_callback():
         )
 
         # -------------------------------------------------
-        # Existing SharedMoments account -> Pocket ID link
+        # Existing SideBySide account -> Pocket ID link
         # -------------------------------------------------
 
         if action == 'link':
@@ -647,7 +647,7 @@ def oidc_callback():
                 log(
                     'warning',
                     'OIDC account-link callback without '
-                    'matching SharedMoments session'
+                    'matching SideBySide session'
                 )
 
                 return redirect(
@@ -670,7 +670,7 @@ def oidc_callback():
             log(
                 'info',
                 'Pocket ID linked to '
-                f'SharedMoments user {link_user_id}'
+                f'SideBySide user {link_user_id}'
             )
 
             return redirect(
@@ -736,7 +736,7 @@ def oidc_callback():
                 log(
                     'info',
                     'Pocket ID automatically linked '
-                    f'to SharedMoments user {user.id} '
+                    f'to SideBySide user {user.id} '
                     'using verified e-mail'
                 )
 
@@ -940,7 +940,7 @@ def oidc_unlink():
     log(
         'info',
         'Pocket ID unlinked from '
-        f'SharedMoments user {g.user_id}'
+        f'SideBySide user {g.user_id}'
     )
 
     return jsonify({
@@ -1067,7 +1067,7 @@ def forgot_password():
             reset_url = f"{request.scheme}://{request.host}/reset-password/{token}"
 
             from app.notifications import send_email_notification
-            subject = _('Password Reset') + ' — SharedMoments'
+            subject = _('Password Reset') + ' — SideBySide'
             body = (
                 f"{_('Hello')} {user.firstName or ''},\n\n"
                 f"{_('A password reset was requested for your account.')}\n"
@@ -1075,7 +1075,7 @@ def forgot_password():
                 f"{reset_url}\n\n"
                 f"{_('This link is valid for 1 hour.')}\n"
                 f"{_('If you did not request this, you can ignore this e-mail.')}\n\n"
-                f"SharedMoments"
+                f"SideBySide"
             )
             send_email_notification(user.email, subject, body)
             log('info', f'Password reset email sent to {user.email}')

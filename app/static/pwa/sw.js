@@ -1,4 +1,4 @@
-// SharedMoments Service Worker
+// SideBySide Service Worker
 const SW_VERSION = '1.9.0';
 
 // Cache names
@@ -144,11 +144,11 @@ self.addEventListener('push', (event) => {
     try {
       data = event.data.json();
     } catch (e) {
-      data = { title: 'SharedMoments', body: event.data.text() };
+      data = { title: 'SideBySide', body: event.data.text() };
     }
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'SharedMoments', {
+    self.registration.showNotification(data.title || 'SideBySide', {
       body: data.body || '',
       icon: '/static/pwa/sm-icon-192.png',
       badge: '/static/pwa/sm-icon-192.png',

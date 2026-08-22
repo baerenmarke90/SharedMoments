@@ -2197,7 +2197,7 @@ async function exportBannerCard() {
       if (playBtn) playBtn.style.display = '';
 
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-      const file = new File([blob], 'sharedmoments.png', { type: 'image/png' });
+      const file = new File([blob], 'sidebyside.png', { type: 'image/png' });
 
       // Mobile: Native Share Sheet, Desktop: Download
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -2206,7 +2206,7 @@ async function exportBannerCard() {
          const url = URL.createObjectURL(blob);
          const a = document.createElement('a');
          a.href = url;
-         a.download = 'sharedmoments.png';
+         a.download = 'sidebyside.png';
          a.click();
          URL.revokeObjectURL(url);
       }
@@ -2707,4 +2707,3 @@ if (document.readyState === 'loading') {
 } else {
    initCoupleThinkingArrival();
 }
-

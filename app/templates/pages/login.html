@@ -35,7 +35,7 @@
 
                     {% if oidc_error == 'not_linked' %}
                     <span>
-                        {{ _('This Pocket ID account is not linked to a SharedMoments account yet. Please sign in with your existing account and link Pocket ID in the user settings.') | replace('SharedMoments', 'SideBySide') }}
+                        {{ _('This Pocket ID account is not linked to a SideBySide account yet. Please sign in with your existing account and link Pocket ID in the user settings.')  }}
                     </span>
 
                     {% elif oidc_error == 'not_configured' %}
@@ -45,12 +45,12 @@
 
                     {% elif oidc_error == 'already_linked' %}
                     <span>
-                        {{ _('This Pocket ID account is already linked to another SharedMoments account.') | replace('SharedMoments', 'SideBySide') }}
+                        {{ _('This Pocket ID account is already linked to another SideBySide account.')  }}
                     </span>
 
                     {% elif oidc_error == 'user_missing' %}
                     <span>
-                        {{ _('The SharedMoments account linked to this Pocket ID account no longer exists.') | replace('SharedMoments', 'SideBySide') }}
+                        {{ _('The SideBySide account linked to this Pocket ID account no longer exists.')  }}
                     </span>
 
                     {% elif oidc_error == 'link_session' %}

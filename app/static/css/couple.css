@@ -1203,13 +1203,6 @@ body.couple-page-home .couple-hero-meta i {
    font-size: var(--sm-text-md);
 }
 
-body.couple-page-home #btn-play-song {
-   min-height: 36px;
-   margin-top: 0.65rem;
-   padding-inline: 0.85rem;
-   font-size: var(--sm-text-xs);
-   box-shadow: 0 7px 18px color-mix(in srgb, var(--primary) 20%, transparent);
-}
 
 body.couple-page-home #btn-play-song > i {
    font-size: var(--sm-text-lg);
@@ -2677,5 +2670,82 @@ body.couple-app.settings-page dialog {
       min-height: 4rem;
       padding: 0.72rem 0.75rem !important;
       border-radius: 0.95rem;
+   }
+}
+
+/* Unser Song: unaufdringlich in den Hero integriert statt als grosser Button. */
+body.couple-page-home .couple-hero {
+   position: relative;
+}
+
+body.couple-page-home .couple-song-pill {
+   position: absolute;
+   top: 0.8rem;
+   right: 0.85rem;
+   z-index: 2;
+
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 0.34rem;
+
+   width: auto;
+   min-width: 0;
+   min-height: 32px;
+   height: 32px;
+
+   margin: 0;
+   padding: 0 0.72rem;
+
+   border: 1px solid color-mix(
+      in srgb,
+      var(--on-primary-container) 14%,
+      transparent
+   );
+   border-radius: 999px;
+
+   background: color-mix(
+      in srgb,
+      var(--surface) 58%,
+      transparent
+   );
+   color: var(--on-primary-container);
+   box-shadow: 0 5px 16px rgba(35, 24, 54, 0.08);
+   backdrop-filter: blur(10px);
+   -webkit-backdrop-filter: blur(10px);
+
+   font-size: var(--sm-text-xs);
+   font-weight: 650;
+   letter-spacing: 0;
+}
+
+body.couple-page-home .couple-song-pill > i {
+   position: static !important;
+   width: auto;
+   margin: 0;
+   font-size: 1rem;
+   line-height: 1;
+}
+
+body.couple-page-home .couple-song-pill > span {
+   line-height: 1;
+   white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+   body.couple-page-home .couple-song-pill:hover {
+      background: color-mix(
+         in srgb,
+         var(--surface) 76%,
+         transparent
+      );
+      transform: translateY(-1px);
+   }
+}
+
+@media (max-width: 520px) {
+   body.couple-page-home .couple-song-pill {
+      position: static;
+      margin: 0.55rem auto 0;
    }
 }
