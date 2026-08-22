@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>{{ _('SharedMoments Setup') }}</title>
+      <title>{{ _('SharedMoments Setup') | replace('SharedMoments', 'SideBySide') }}</title>
       {% include 'layouts/head.html' %}
    </head>
    <style>
@@ -33,7 +33,7 @@
                 <div class="page left active" id="info-couples">
                     <img class="circle setup-image center" src="/api/v2/media/static/setup-couples.jpg">
                     <br>
-                    <p>{{ _('SharedMoments Couples is designed for couples who want to store their shared experiences and wish lists') }}</p>
+                    <p>{{ _('SharedMoments Couples is designed for couples who want to store their shared experiences and wish lists') | replace('SharedMoments', 'SideBySide') }}</p>
                 </div>
 
                 <div class="">
@@ -69,7 +69,7 @@
                         style="width: 100%; height: 100%;">
                     <br>
                     <br>
-                    <p id="p-add-user-text">{{ _('Add users who will use SharedMoments') }}.</p>
+                    <p id="p-add-user-text">{{ _('Add users who will use SharedMoments') | replace('SharedMoments', 'SideBySide') }}.</p>
                     <p style="display: none;" id="p-added-users">{{ _('Added users') }}:</p>
 
                     <div id="users">

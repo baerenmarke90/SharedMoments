@@ -1897,21 +1897,21 @@ def test_notification():
             subs = get_push_subscriptions_for_user(g.user_id)
             if not subs:
                 return jsonify({'status': 'error', 'message': _('No push subscription found. Please allow notifications first.')}), 400
-            result = send_push_notification(g.user_id, 'SharedMoments Test', _('This is a test notification!'))
+            result = send_push_notification(g.user_id, 'SideBySide Test', _('This is a test notification!'))
         elif channel == 'email':
             user = get_user_by_id(g.user_id)
             if not user or not user.email:
                 return jsonify({'status': 'error', 'message': _('No email address in your profile')}), 400
             if not os.environ.get('SMTP_HOST'):
                 return jsonify({'status': 'error', 'message': _('SMTP server not configured')}), 400
-            result = send_email_notification(user.email, 'SharedMoments Test', _('This is a test notification!'))
+            result = send_email_notification(user.email, 'SideBySide Test', _('This is a test notification!'))
         elif channel == 'telegram':
             chat_id_setting = get_user_setting(g.user_id, 'notification_telegram_chat_id')
             if not chat_id_setting or not chat_id_setting.value:
                 return jsonify({'status': 'error', 'message': _('No Telegram Chat-ID configured')}), 400
             if not os.environ.get('TELEGRAM_BOT_TOKEN'):
                 return jsonify({'status': 'error', 'message': _('Telegram bot not configured')}), 400
-            result = send_telegram_notification(chat_id_setting.value, '<b>SharedMoments Test</b>\n' + _('This is a test notification!'))
+            result = send_telegram_notification(chat_id_setting.value, '<b>SideBySide Test</b>\n' + _('This is a test notification!'))
         else:
             return jsonify({'status': 'error', 'message': 'Unknown channel'}), 400
 

@@ -2,14 +2,14 @@
 <html>
 
 <head>
-    <title>SharedMoments {{ _('Login') }}</title>
+    <title>SideBySide {{ _('Login') }}</title>
     {% include 'layouts/head.html' %}
 </head>
 
 <body>
     <header>
         <nav>
-            <h6 class="max center-align">SharedMoments</h6>
+            <h6 class="max center-align">SideBySide</h6>
         </nav>
     </header>
 
@@ -35,7 +35,7 @@
 
                     {% if oidc_error == 'not_linked' %}
                     <span>
-                        {{ _('This Pocket ID account is not linked to a SharedMoments account yet. Please sign in with your existing account and link Pocket ID in the user settings.') }}
+                        {{ _('This Pocket ID account is not linked to a SharedMoments account yet. Please sign in with your existing account and link Pocket ID in the user settings.') | replace('SharedMoments', 'SideBySide') }}
                     </span>
 
                     {% elif oidc_error == 'not_configured' %}
@@ -45,12 +45,12 @@
 
                     {% elif oidc_error == 'already_linked' %}
                     <span>
-                        {{ _('This Pocket ID account is already linked to another SharedMoments account.') }}
+                        {{ _('This Pocket ID account is already linked to another SharedMoments account.') | replace('SharedMoments', 'SideBySide') }}
                     </span>
 
                     {% elif oidc_error == 'user_missing' %}
                     <span>
-                        {{ _('The SharedMoments account linked to this Pocket ID account no longer exists.') }}
+                        {{ _('The SharedMoments account linked to this Pocket ID account no longer exists.') | replace('SharedMoments', 'SideBySide') }}
                     </span>
 
                     {% elif oidc_error == 'link_session' %}

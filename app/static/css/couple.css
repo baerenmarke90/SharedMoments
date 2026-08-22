@@ -2647,3 +2647,31 @@ body.couple-app .list-circle-control:focus-within .list-circle-indicator {
         min-height: 34px;
     }
 }
+/* SideBySide: final Admin drawer alignment
+   Der Text war nie das Problem. Das alte Material-Symbol
+   admin_panel_settings ist innerhalb seiner Glyphenbox optisch asymmetrisch.
+   Deshalb bekommt Admin ein symmetrisches shield und exakt dieselbe feste
+   Iconbox wie alle anderen Drawer-Eintraege. */
+body.couple-app #dialog-nav-drawer .drawer > a.nav-admin-link {
+   grid-template-columns: 2rem minmax(0, 1fr) !important;
+   column-gap: 0.8rem !important;
+}
+body.couple-app #dialog-nav-drawer .drawer > a.nav-admin-link > i {
+   position: static !important;
+   inset: auto !important;
+   display: grid !important;
+   place-items: center !important;
+   justify-self: center !important;
+   align-self: center !important;
+   width: 2rem !important;
+   min-width: 2rem !important;
+   max-width: 2rem !important;
+   height: 2rem !important;
+   min-height: 2rem !important;
+   margin: 0 !important;
+   padding: 0 !important;
+   transform: none !important;
+   text-indent: 0 !important;
+   letter-spacing: 0 !important;
+   line-height: 1 !important;
+}

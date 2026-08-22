@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>SharedMoments </title>
+      <title>SideBySide </title>
       {% include 'layouts/head.html' %}
    </head>
    <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
@@ -65,7 +65,7 @@
                 </div>
               </a>
               {% elif setting.name == 'sm_edition' %}
-              {# Nur noch Anzeige: SharedMoments gibt es nur als Couples-Edition. #}
+              {# Nur noch Anzeige: SideBySide gibt es nur als Couples-Edition. #}
               <a class="row padding primary-container">
                 <i>{{ setting.icon }}</i>
                 <div class="max">
@@ -226,7 +226,7 @@
                   <i>error</i>
 
                   {% if oidc_error == 'already_linked' %}
-                  {{ _('This Pocket ID account is already linked to another SharedMoments account.') }}
+                  {{ _('This Pocket ID account is already linked to another SharedMoments account.') | replace('SharedMoments', 'SideBySide') }}
                   {% elif oidc_error == 'link_session' %}
                   {{ _('The Pocket ID linking session is no longer valid. Please try again.') }}
                   {% else %}
