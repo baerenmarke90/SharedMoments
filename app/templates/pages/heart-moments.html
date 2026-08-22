@@ -4,18 +4,19 @@
 <head>
     <title>{{ title.value }}</title>
     {% include 'layouts/head.html' %}
+    <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
 
     <style>
         .heart-moments-header {
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--sm-space-7);
         }
 
         .heart-moments-filters {
             display: grid;
             grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: 0.5rem;
-            padding-bottom: 0.75rem;
-            margin-bottom: 1rem;
+            gap: var(--sm-space-3);
+            padding-bottom: var(--sm-space-5);
+            margin-bottom: var(--sm-space-6);
         }
 
         .heart-moments-filters button {
@@ -54,28 +55,28 @@
         }
 
         .heart-moment-card {
-            margin-bottom: 1rem;
+            margin-bottom: var(--sm-space-6);
         }
 
         .heart-moment-description {
             white-space: pre-wrap;
             overflow-wrap: anywhere;
-            margin-top: 0.75rem;
-            margin-bottom: 0.75rem;
+            margin-top: var(--sm-space-5);
+            margin-bottom: var(--sm-space-5);
         }
 
         .heart-moment-meta {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 0.75rem;
+            gap: var(--sm-space-5);
             opacity: 0.8;
         }
 
         .heart-moment-author {
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
+            gap: var(--sm-space-2);
         }
 
         .heart-moment-author-avatar {
@@ -103,16 +104,16 @@
         }
 
         .heart-moment-author-fallback i {
-            font-size: 18px;
+            font-size: var(--sm-text-lg);
         }
 
         .heart-moment-actions {
             display: flex;
-            gap: 0.25rem;
+            gap: var(--sm-space-1);
         }
 
         .heart-moment-empty {
-            padding: 2rem 0;
+            padding: var(--sm-space-8) 0;
         }
 
         .heart-moment-image {
@@ -120,18 +121,18 @@
             width: 100%;
             max-height: 480px;
             object-fit: cover;
-            border-radius: 1rem;
-            margin-top: 0.75rem;
+            border-radius: var(--sm-radius-md);
+            margin-top: var(--sm-space-5);
         }
 
         .heart-image-picker {
-            margin-top: 0.5rem;
+            margin-top: var(--sm-space-3);
         }
 
         .heart-image-picker-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: var(--sm-space-3);
         }
 
         .heart-image-preview {
@@ -139,8 +140,8 @@
             width: 100%;
             max-height: 280px;
             object-fit: cover;
-            border-radius: 1rem;
-            margin-top: 0.75rem;
+            border-radius: var(--sm-radius-md);
+            margin-top: var(--sm-space-5);
         }
 
 
@@ -170,12 +171,12 @@
         .heart-moment-card > .row {
             order: 1;
             margin: 0;
-            padding: 1rem 1rem 0;
+            padding: var(--sm-space-6) var(--sm-space-6) 0;
         }
 
         .heart-moment-card > .heart-moment-description {
             order: 2;
-            margin: 1rem 1rem 0;
+            margin: var(--sm-space-6) var(--sm-space-6) 0;
             padding: 0;
         }
 
@@ -184,10 +185,10 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 0.55rem;
+            gap: var(--sm-space-3);
 
-            margin-top: 0.85rem;
-            padding: 0 1rem 1rem;
+            margin-top: var(--sm-space-5);
+            padding: 0 var(--sm-space-6) var(--sm-space-6);
 
             opacity: 1;
         }
@@ -217,7 +218,7 @@
 
         @media (max-width: 600px) {
             .heart-moment-card > .heart-moment-footer {
-                gap: 0.45rem;
+                gap: var(--sm-space-3);
             }
         }
 
@@ -246,7 +247,7 @@
 </style>
 </head>
 
-<body class="{% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
+<body class="couple-app couple-page-hearts {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
 
     {% include 'layouts/header.html' %}
 
@@ -337,6 +338,10 @@
         {% include 'layouts/footer.html' %}
 
     </main>
+
+    {% set couple_nav_active = 'more' %}
+    {% include 'layouts/couple-create-sheet.html' %}
+    {% include 'layouts/couple-bottom-nav.html' %}
 
 
     <!-- Create Heart Moment -->

@@ -226,8 +226,7 @@ async function saveHomeItemToOutbox(uploadedContentURL) {
       const content = document.getElementById("textarea-create-home-item-content").value;
       const listType = window.listType;
       const dateCreated = document.getElementById("div-create-home-item-date-created").value;
-      const allEditionsChecked = document.getElementById("checkbox-create-home-item-all-editions").checked;
-      const edition = allEditionsChecked ? 'all' : (window.currentEdition || 'all');
+      const edition = window.currentEdition || 'couples';
 
       // Wenn Dateien bereits hochgeladen wurden, keine rohen Dateien speichern
       const files = [];
@@ -422,8 +421,7 @@ async function saveNewHomeItem(btn) {
       }
    }
 
-   var allEditionsChecked = document.getElementById("checkbox-create-home-item-all-editions").checked;
-   var edition = allEditionsChecked ? 'all' : (window.currentEdition || 'all');
+   var edition = window.currentEdition || 'couples';
 
    var formData = new FormData();
    formData.append("title", document.getElementById("div-create-home-item-title").value);
@@ -557,8 +555,7 @@ async function saveEditedHomeItem(btn) {
       }
    }
 
-   var allEditionsChecked = document.getElementById("checkbox-edit-home-item-all-editions").checked;
-   var edition = allEditionsChecked ? 'all' : (window.currentEdition || 'all');
+   var edition = window.currentEdition || 'couples';
 
    const formData = new FormData();
    formData.append("title", document.getElementById("edit-home-item-title").value);

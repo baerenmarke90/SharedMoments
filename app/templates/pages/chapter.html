@@ -13,7 +13,7 @@
 
          .chapter-hero {
             overflow: hidden;
-            margin-bottom: 1rem;
+            margin-bottom: var(--sm-space-6);
          }
 
          .chapter-hero-cover {
@@ -37,27 +37,27 @@
          }
 
          .chapter-hero-body {
-            padding: 1rem;
+            padding: var(--sm-space-6);
          }
 
          .chapter-meta {
             display: flex;
-            gap: 0.85rem;
+            gap: var(--sm-space-5);
             flex-wrap: wrap;
-            margin-top: 0.45rem;
+            margin-top: var(--sm-space-3);
             opacity: 0.75;
          }
 
          .chapter-meta > span {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: var(--sm-space-1);
          }
 
          .chapter-place-link {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: var(--sm-space-1);
             color: inherit;
             text-decoration: none;
             font-weight: 500;
@@ -76,7 +76,7 @@
          .chapter-author {
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
+            gap: var(--sm-space-2);
          }
 
          .chapter-author img {
@@ -89,20 +89,20 @@
          .chapter-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.45rem;
-            margin-top: 1rem;
+            gap: var(--sm-space-3);
+            margin-top: var(--sm-space-6);
          }
 
          .chapter-section-title {
             display: flex;
             align-items: center;
-            gap: 0.55rem;
-            margin: 1.4rem 0 0.65rem 0.2rem;
+            gap: var(--sm-space-3);
+            margin: 1.4rem 0 var(--sm-space-4) var(--sm-space-1);
          }
 
          .chapter-entry {
             overflow: hidden;
-            margin-bottom: 0.75rem;
+            margin-bottom: var(--sm-space-5);
          }
 
          .chapter-entry-link {
@@ -143,24 +143,24 @@
 
          .chapter-entry-body {
             min-width: 0;
-            padding: 0.85rem;
+            padding: var(--sm-space-5);
          }
 
          .chapter-entry-type {
             display: flex;
             align-items: center;
-            gap: 0.35rem;
-            font-size: 0.82rem;
+            gap: var(--sm-space-2);
+            font-size: var(--sm-text-xs);
             font-weight: 600;
             opacity: 0.75;
          }
 
          .chapter-entry-title {
-            margin: 0.25rem 0 0;
+            margin: var(--sm-space-1) 0 0;
          }
 
          .chapter-entry-text {
-            margin: 0.4rem 0 0;
+            margin: var(--sm-space-2) 0 0;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
@@ -171,10 +171,10 @@
          .chapter-entry-meta {
             display: flex;
             align-items: center;
-            gap: 0.35rem;
+            gap: var(--sm-space-2);
             flex-wrap: wrap;
-            margin-top: 0.55rem;
-            font-size: 0.82rem;
+            margin-top: var(--sm-space-3);
+            font-size: var(--sm-text-xs);
             opacity: 0.72;
          }
 
@@ -187,27 +187,27 @@
 
          .chapter-empty {
             text-align: center;
-            padding: 2rem 1rem;
+            padding: var(--sm-space-8) var(--sm-space-6);
          }
 
          .chapter-link-search {
             position: sticky;
             top: 0;
             z-index: 3;
-            padding-top: 0.25rem;
+            padding-top: var(--sm-space-1);
             background: var(--surface);
          }
 
          .chapter-link-section {
-            margin-top: 1rem;
+            margin-top: var(--sm-space-6);
          }
 
          .chapter-link-option {
             display: grid;
             grid-template-columns: 42px minmax(0, 1fr) auto;
             align-items: center;
-            gap: 0.7rem;
-            padding: 0.65rem 0;
+            gap: var(--sm-space-4);
+            padding: var(--sm-space-4) 0;
          }
 
          .chapter-link-option + .chapter-link-option {
@@ -217,14 +217,14 @@
          .chapter-link-thumb {
             width: 42px;
             height: 42px;
-            border-radius: 0.65rem;
+            border-radius: var(--sm-radius-sm);
             object-fit: cover;
          }
 
          .chapter-link-icon {
             width: 42px;
             height: 42px;
-            border-radius: 0.65rem;
+            border-radius: var(--sm-radius-sm);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -237,13 +237,13 @@
          }
 
          .chapter-error {
-            margin-bottom: 1rem;
+            margin-bottom: var(--sm-space-6);
          }
 
          @media (max-width: 600px) {
             .chapter-page {
-               padding-left: 0.2rem;
-               padding-right: 0.2rem;
+               padding-left: var(--sm-space-1);
+               padding-right: var(--sm-space-1);
             }
 
             .chapter-entry-link {

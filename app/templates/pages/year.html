@@ -17,7 +17,7 @@
             align-items: center;
             justify-content: flex-end;
             min-height: 52px;
-            margin: 0 0 0.85rem;
+            margin: 0 0 var(--sm-space-5);
          }
 
          .year-select {
@@ -27,20 +27,20 @@
 
          .year-hero {
             overflow: hidden;
-            border-radius: 1.2rem;
-            margin-bottom: 1rem;
+            border-radius: var(--sm-radius-lg);
+            margin-bottom: var(--sm-space-6);
          }
 
          .year-hero-main {
             text-align: center;
-            padding: 1.3rem 1rem 1.1rem;
+            padding: 1.3rem var(--sm-space-6) 1.1rem;
          }
 
          .year-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
-            font-size: 0.88rem;
+            gap: var(--sm-space-2);
+            font-size: var(--sm-text-sm);
             font-weight: 600;
             opacity: 0.78;
          }
@@ -52,12 +52,12 @@
          }
 
          .year-hero h2 {
-            margin: 0.25rem 0 0;
+            margin: var(--sm-space-1) 0 0;
             line-height: 1.05;
          }
 
          .year-hero-subtitle {
-            margin: 0.45rem auto 0;
+            margin: var(--sm-space-3) auto 0;
             max-width: 620px;
             opacity: 0.76;
          }
@@ -65,15 +65,15 @@
          .year-collage-shell {
             position: relative;
             height: 280px;
-            margin: 0 0.8rem 0.8rem;
+            margin: 0 var(--sm-space-5) var(--sm-space-5);
             overflow: hidden;
-            border-radius: 1rem;
+            border-radius: var(--sm-radius-md);
             background: var(--surface-container-high);
          }
 
          .year-collage {
             display: flex;
-            gap: 4px;
+            gap: var(--sm-space-1);
             height: 100%;
             margin: 0;
             transform: translate3d(0, 0, 0);
@@ -88,7 +88,7 @@
             min-width: 0;
             height: 100%;
             overflow: hidden;
-            border-radius: 0.9rem;
+            border-radius: var(--sm-radius-md);
             background: var(--surface-container-highest);
             color: inherit;
             text-decoration: none;
@@ -141,7 +141,7 @@
 
          .year-collage-open > i {
             position: static !important;
-            font-size: 1rem;
+            font-size: var(--sm-text-base);
          }
 
          @media (hover: hover) and (pointer: fine) {
@@ -181,7 +181,7 @@
 
          .year-collage-arrow > i {
             position: static !important;
-            font-size: 1.3rem;
+            font-size: var(--sm-text-xl);
          }
 
          .year-collage-prev {
@@ -199,11 +199,11 @@
             bottom: 0.5rem;
             transform: translateX(-50%);
             min-width: 58px;
-            padding: 0.22rem 0.55rem;
-            border-radius: 999px;
+            padding: var(--sm-space-1) var(--sm-space-3);
+            border-radius: var(--sm-radius-pill);
             background: rgba(20, 17, 24, 0.58);
             color: white;
-            font-size: 0.72rem;
+            font-size: var(--sm-text-xxs);
             line-height: 1.2;
             text-align: center;
             pointer-events: none;
@@ -214,15 +214,15 @@
          .year-stats {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 0.65rem;
-            margin: 1rem 0 1.35rem;
+            gap: var(--sm-space-4);
+            margin: var(--sm-space-6) 0 1.35rem;
          }
 
          .year-stat {
             min-width: 0;
             text-align: center;
-            border-radius: 1rem;
-            padding: 0.9rem 0.45rem 0.75rem;
+            border-radius: var(--sm-radius-md);
+            padding: 0.9rem var(--sm-space-3) var(--sm-space-5);
          }
 
          .year-stat > i {
@@ -233,7 +233,7 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            margin-bottom: 0.2rem;
+            margin-bottom: var(--sm-space-1);
             background: var(--primary-container);
             color: var(--on-primary-container);
          }
@@ -246,7 +246,7 @@
 
          .year-stat-number {
             display: block;
-            font-size: 1.35rem;
+            font-size: var(--sm-text-xl);
             font-weight: 700;
             line-height: 1.15;
          }
@@ -254,7 +254,7 @@
          .year-stat-label {
             display: block;
             margin-top: 0.15rem;
-            font-size: 0.8rem;
+            font-size: var(--sm-text-xs);
             opacity: 0.72;
             overflow-wrap: anywhere;
          }
@@ -266,8 +266,8 @@
          .year-section-title {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin: 0 0 0.65rem 0.2rem;
+            gap: var(--sm-space-3);
+            margin: 0 0 var(--sm-space-4) var(--sm-space-1);
          }
 
          .year-section-title > i {
@@ -281,8 +281,8 @@
          .year-month-title {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            margin: 0 0 0.55rem 0.15rem;
+            gap: var(--sm-space-4);
+            margin: 0 0 var(--sm-space-3) 0.15rem;
          }
 
          .year-month-title::after {
@@ -296,17 +296,17 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border-radius: 1rem;
+            border-radius: var(--sm-radius-md);
          }
 
          .year-highlight {
             display: grid;
             grid-template-columns: 72px minmax(0, 1fr) auto;
-            gap: 0.8rem;
+            gap: var(--sm-space-5);
             align-items: center;
             color: inherit;
             text-decoration: none;
-            padding: 0.7rem;
+            padding: var(--sm-space-4);
             min-width: 0;
          }
 
@@ -318,7 +318,7 @@
          .year-highlight-icon {
             width: 72px;
             height: 72px;
-            border-radius: 0.85rem;
+            border-radius: var(--sm-radius-sm);
          }
 
          .year-highlight-media {
@@ -331,7 +331,7 @@
             align-items: center;
             justify-content: center;
             background: var(--surface-container-high);
-            font-size: 1.8rem;
+            font-size: var(--sm-text-2xl);
          }
 
          .year-highlight-heart .year-highlight-icon {
@@ -346,15 +346,15 @@
          .year-highlight-type {
             display: flex;
             align-items: center;
-            gap: 0.3rem;
-            font-size: 0.78rem;
+            gap: var(--sm-space-1);
+            font-size: var(--sm-text-xs);
             font-weight: 600;
             opacity: 0.72;
          }
 
          .year-highlight-type > i {
             position: static !important;
-            font-size: 1rem;
+            font-size: var(--sm-text-base);
          }
 
          .year-highlight-title {
@@ -365,8 +365,8 @@
          }
 
          .year-highlight-text {
-            margin-top: 0.2rem;
-            font-size: 0.88rem;
+            margin-top: var(--sm-space-1);
+            font-size: var(--sm-text-sm);
             opacity: 0.78;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -377,9 +377,9 @@
          .year-highlight-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.3rem 0.55rem;
-            margin-top: 0.25rem;
-            font-size: 0.78rem;
+            gap: var(--sm-space-1) var(--sm-space-3);
+            margin-top: var(--sm-space-1);
+            font-size: var(--sm-text-xs);
             opacity: 0.68;
          }
 
@@ -391,7 +391,7 @@
 
          .year-highlight-meta i {
             position: static !important;
-            font-size: 0.95rem;
+            font-size: var(--sm-text-md);
          }
 
          .year-highlight-arrow {
@@ -399,29 +399,29 @@
          }
 
          .year-more-note {
-            margin: 0.4rem 0.2rem 0;
-            font-size: 0.8rem;
+            margin: var(--sm-space-2) var(--sm-space-1) 0;
+            font-size: var(--sm-text-xs);
             opacity: 0.62;
          }
 
          .year-place-card,
          .year-achievement-card {
-            border-radius: 1rem;
+            border-radius: var(--sm-radius-md);
          }
 
          .year-place-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: var(--sm-space-3);
          }
 
          .year-place-chip {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: var(--sm-space-1);
             min-height: 38px;
-            padding: 0.3rem 0.7rem;
-            border-radius: 999px;
+            padding: var(--sm-space-1) var(--sm-space-4);
+            border-radius: var(--sm-radius-pill);
             background: var(--tertiary-container);
             color: var(--on-tertiary-container);
             text-decoration: none;
@@ -429,23 +429,23 @@
 
          .year-place-chip > i {
             position: static !important;
-            font-size: 1.05rem;
+            font-size: var(--sm-text-base);
          }
 
          .year-achievement-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.65rem;
+            gap: var(--sm-space-4);
          }
 
          .year-achievement {
             display: flex;
             align-items: flex-start;
-            gap: 0.7rem;
+            gap: var(--sm-space-4);
             color: inherit;
             text-decoration: none;
-            padding: 0.8rem;
-            border-radius: 0.9rem;
+            padding: var(--sm-space-5);
+            border-radius: var(--sm-radius-md);
             background: var(--surface-container-high);
          }
 
@@ -461,14 +461,14 @@
 
          .year-achievement-label {
             margin-top: 0.12rem;
-            font-size: 0.78rem;
+            font-size: var(--sm-text-xs);
             opacity: 0.68;
          }
 
          .year-empty {
             text-align: center;
-            padding: 2.5rem 1rem;
-            border-radius: 1rem;
+            padding: 2.5rem var(--sm-space-6);
+            border-radius: var(--sm-radius-md);
          }
 
          .year-empty > i {
@@ -480,27 +480,27 @@
 
          @media (max-width: 700px) {
             .year-page {
-               padding-top: 0.65rem;
+               padding-top: var(--sm-space-4);
             }
 
             .year-toolbar {
                min-height: 48px;
-               margin-bottom: 0.65rem;
+               margin-bottom: var(--sm-space-4);
             }
 
             .year-stats {
                grid-template-columns: repeat(2, minmax(0, 1fr));
-               gap: 0.5rem;
+               gap: var(--sm-space-3);
             }
 
             .year-collage-shell {
                height: 200px;
-               margin: 0 0.55rem 0.55rem;
-               border-radius: 0.85rem;
+               margin: 0 var(--sm-space-3) var(--sm-space-3);
+               border-radius: var(--sm-radius-sm);
             }
 
             .year-collage-item {
-               border-radius: 0.75rem;
+               border-radius: var(--sm-radius-sm);
             }
 
             .year-collage-arrow {
@@ -512,14 +512,14 @@
 
             .year-highlight {
                grid-template-columns: 58px minmax(0, 1fr);
-               gap: 0.65rem;
+               gap: var(--sm-space-4);
             }
 
             .year-highlight-media,
             .year-highlight-icon {
                width: 58px;
                height: 58px;
-               border-radius: 0.75rem;
+               border-radius: var(--sm-radius-sm);
             }
 
             .year-highlight-arrow {

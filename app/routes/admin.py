@@ -36,7 +36,6 @@ def admin_panel():
         user_data = get_user_by_id(g.user_id)
         settings = get_all_settings()
         active_shares = get_all_active_shares()
-        sm_edition = get_setting_by_name('sm_edition').value
 
         return render_template('pages/admin.html',
                                users=users,
@@ -49,8 +48,7 @@ def admin_panel():
                                darkmode=darkmode,
                                user_data=user_data,
                                settings=settings,
-                               active_shares=active_shares,
-                               sm_edition=sm_edition)
+                               active_shares=active_shares)
     except Exception as e:
         log('error', f'Error while rendering the admin panel: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500

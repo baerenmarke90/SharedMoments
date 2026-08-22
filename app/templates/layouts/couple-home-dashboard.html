@@ -11,8 +11,8 @@
    display: flex;
    align-items: center;
    justify-content: center;
-   gap: 1rem;
-   margin: 0.45rem 0 1rem;
+   gap: var(--sm-space-6);
+   margin: var(--sm-space-3) 0 var(--sm-space-6);
 }
 .couple-avatars > .couple-avatar {
    width: 112px;
@@ -22,7 +22,7 @@
    border-radius: 50%;
 }
 .couple-heart {
-   font-size: 1.8rem;
+   font-size: var(--sm-text-2xl);
    color: #e56aa6;
    display: inline-flex;
    align-items: center;
@@ -35,27 +35,27 @@
    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 .couple-names {
-   margin-bottom: 0.25rem;
+   margin-bottom: var(--sm-space-1);
 }
 .couple-duration {
    margin-top: 0;
    opacity: 0.8;
 }
 .couple-section {
-   margin-top: 1rem;
+   margin-top: var(--sm-space-6);
 }
 .couple-section-title {
    display: flex;
    align-items: center;
-   gap: 0.5rem;
-   margin: 0 0 0.5rem 0.25rem;
+   gap: var(--sm-space-3);
+   margin: 0 0 var(--sm-space-3) var(--sm-space-1);
 }
 .couple-upcoming-row,
 .couple-recent-row {
    display: flex;
    align-items: center;
-   gap: 0.8rem;
-   padding: 0.8rem 0;
+   gap: var(--sm-space-5);
+   padding: var(--sm-space-5) 0;
 }
 .couple-upcoming-row + .couple-upcoming-row,
 .couple-recent-row + .couple-recent-row {
@@ -78,15 +78,15 @@
 .couple-row-meta {
    display: flex;
    align-items: center;
-   gap: 0.3rem;
-   font-size: 0.85rem;
+   gap: var(--sm-space-1);
+   font-size: var(--sm-text-sm);
    opacity: 0.72;
    min-width: 0;
 }
 .couple-row-author {
    display: inline-flex;
    align-items: center;
-   gap: 0.3rem;
+   gap: var(--sm-space-1);
    margin-left: auto;
    white-space: nowrap;
    flex: 0 0 auto;
@@ -102,7 +102,7 @@
 .couple-recent-leading > i {
    width: 58px;
    height: 58px;
-   border-radius: 0.8rem;
+   border-radius: var(--sm-radius-sm);
    display: inline-flex;
    align-items: center;
    justify-content: center;
@@ -117,7 +117,7 @@
 .couple-recent-thumb {
    width: 58px;
    height: 58px;
-   border-radius: 0.8rem;
+   border-radius: var(--sm-radius-sm);
    object-fit: cover;
    display: block;
 }
@@ -126,7 +126,7 @@
    -webkit-line-clamp: 2;
    -webkit-box-orient: vertical;
    overflow: hidden;
-   margin-top: 0.2rem;
+   margin-top: var(--sm-space-1);
 }
 .couple-recent-avatar {
    width: 22px;
@@ -139,8 +139,8 @@
 .couple-plan-row {
    display: flex;
    align-items: center;
-   gap: 0.8rem;
-   padding: 0.8rem 0;
+   gap: var(--sm-space-5);
+   padding: var(--sm-space-5) 0;
    color: inherit;
    text-decoration: none;
 }
@@ -160,20 +160,20 @@
 }
 .couple-plan-meta {
    display: flex;
-   gap: 0.45rem;
+   gap: var(--sm-space-3);
    flex-wrap: wrap;
    margin-top: 0.15rem;
-   font-size: 0.85rem;
+   font-size: var(--sm-text-sm);
    opacity: 0.72;
 }
 .couple-plan-meta > span {
    display: inline-flex;
    align-items: center;
-   gap: 0.2rem;
+   gap: var(--sm-space-1);
 }
 .couple-empty {
    text-align: center;
-   padding: 1rem 0;
+   padding: var(--sm-space-6) 0;
    opacity: 0.75;
 }
 .couple-clickable {
@@ -187,19 +187,19 @@
 .couple-year-card-inner {
    display: flex;
    align-items: center;
-   gap: 1rem;
+   gap: var(--sm-space-6);
 }
 .couple-year-badge {
    width: 58px;
    height: 58px;
    flex: 0 0 58px;
-   border-radius: 1rem;
+   border-radius: var(--sm-radius-md);
    display: inline-flex;
    align-items: center;
    justify-content: center;
    background: var(--primary-container);
    color: var(--on-primary-container);
-   font-size: 1.85rem;
+   font-size: var(--sm-text-2xl);
 }
 .couple-year-main {
    flex: 1;
@@ -207,28 +207,28 @@
 }
 .couple-year-title {
    font-weight: 650;
-   font-size: 1.08rem;
+   font-size: var(--sm-text-lg);
 }
 .couple-year-stats {
    display: flex;
    flex-wrap: wrap;
-   gap: 0.35rem 0.65rem;
-   margin-top: 0.25rem;
-   font-size: 0.84rem;
+   gap: var(--sm-space-2) var(--sm-space-4);
+   margin-top: var(--sm-space-1);
+   font-size: var(--sm-text-xs);
    opacity: 0.75;
 }
 .couple-year-stats > span {
    display: inline-flex;
    align-items: center;
-   gap: 0.2rem;
+   gap: var(--sm-space-1);
 }
 .couple-year-stats i {
    position: static !important;
-   font-size: 1rem;
+   font-size: var(--sm-text-base);
 }
 @media (max-width: 600px) {
    .couple-avatars {
-      gap: 0.75rem;
+      gap: var(--sm-space-5);
    }
    .couple-avatars > .couple-avatar {
       width: 94px;

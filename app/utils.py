@@ -53,12 +53,7 @@ def generate_lqip(image_path):
 
 def generate_banner_text(edition='couples'):
     try:
-        if edition == 'family':
-            return _generate_banner_text_family()
-        elif edition == 'friends':
-            return _generate_banner_text_friends()
-        else:
-            return _generate_banner_text_couples()
+        return _generate_banner_text_couples()
     except Exception as e:
         log('error', f'Failed to generate banner text: {e}')
         return None
@@ -131,41 +126,6 @@ def _generate_banner_text_couples():
 
     return banner_text
 
-
-def _generate_banner_text_family():
-    founding_date_setting = get_setting_by_name('family_founding_date')
-    if not founding_date_setting or not founding_date_setting.value:
-        return None
-
-    years_count, months_count, days_count, diffInMonthsTotal, diffInWeeksTotal, diffInDays = calculate_banner_diff(founding_date_setting.value)
-    translated_text = _('banner_text_family')
-
-    return translated_text.format(
-        years_count=years_count,
-        months_count=months_count,
-        days_count=days_count,
-        diffInMonthsTotal=diffInMonthsTotal,
-        diffInWeeksTotal=diffInWeeksTotal,
-        diffInDays=diffInDays
-    )
-
-
-def _generate_banner_text_friends():
-    founding_date_setting = get_setting_by_name('friend_group_founding_date')
-    if not founding_date_setting or not founding_date_setting.value:
-        return None
-
-    years_count, months_count, days_count, diffInMonthsTotal, diffInWeeksTotal, diffInDays = calculate_banner_diff(founding_date_setting.value)
-    translated_text = _('banner_text_friends')
-
-    return translated_text.format(
-        years_count=years_count,
-        months_count=months_count,
-        days_count=days_count,
-        diffInMonthsTotal=diffInMonthsTotal,
-        diffInWeeksTotal=diffInWeeksTotal,
-        diffInDays=diffInDays
-    )
 
 def calculate_banner_diff(date):
     try:

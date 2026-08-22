@@ -15,7 +15,7 @@
          }
 
          .places-intro {
-            margin: 0.55rem 0.2rem 1rem;
+            margin: var(--sm-space-3) var(--sm-space-1) var(--sm-space-6);
             max-width: 760px;
             line-height: 1.45;
             opacity: 0.75;
@@ -26,8 +26,8 @@
             z-index: 0;
             isolation: isolate;
             overflow: hidden;
-            margin-bottom: 1rem;
-            border-radius: 1rem;
+            margin-bottom: var(--sm-space-6);
+            border-radius: var(--sm-radius-md);
          }
 
          #couple-places-map {
@@ -40,9 +40,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.8rem;
-            padding: 0.7rem 0.9rem;
-            font-size: 0.85rem;
+            gap: var(--sm-space-5);
+            padding: var(--sm-space-4) 0.9rem;
+            font-size: var(--sm-text-sm);
             opacity: 0.75;
          }
 
@@ -50,8 +50,8 @@
             display: grid;
             grid-template-columns: minmax(0, 1fr) auto;
             align-items: center;
-            gap: 0.65rem;
-            margin: 0.8rem 0 0.7rem;
+            gap: var(--sm-space-4);
+            margin: var(--sm-space-5) 0 var(--sm-space-4);
          }
 
          .places-toolbar .field {
@@ -61,12 +61,12 @@
          .places-list {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.75rem;
+            gap: var(--sm-space-5);
          }
 
          .place-card {
             overflow: hidden;
-            border-radius: 1rem;
+            border-radius: var(--sm-radius-md);
             min-width: 0;
          }
 
@@ -105,19 +105,19 @@
 
          .place-card-body {
             min-width: 0;
-            padding: 0.8rem 0.85rem;
+            padding: var(--sm-space-5) var(--sm-space-5);
          }
 
          .place-card-top {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 0.5rem;
+            gap: var(--sm-space-3);
          }
 
          .place-card-title {
             margin: 0;
-            font-size: 1.1rem;
+            font-size: var(--sm-text-lg);
             line-height: 1.25;
             overflow-wrap: anywhere;
          }
@@ -125,59 +125,59 @@
          .place-card-state {
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: var(--sm-space-1);
             flex: 0 0 auto;
-            font-size: 0.75rem;
+            font-size: var(--sm-text-xxs);
             opacity: 0.72;
          }
 
          .place-card-state > i {
             position: static !important;
-            font-size: 1rem;
+            font-size: var(--sm-text-base);
          }
 
          .place-card-address {
-            margin-top: 0.3rem;
+            margin-top: var(--sm-space-1);
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            font-size: 0.83rem;
+            font-size: var(--sm-text-xs);
             line-height: 1.35;
             opacity: 0.68;
          }
 
          .place-card-description {
-            margin: 0.4rem 0 0;
+            margin: var(--sm-space-2) 0 0;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            font-size: 0.88rem;
+            font-size: var(--sm-text-sm);
             line-height: 1.4;
          }
 
          .place-card-counts {
             display: flex;
-            gap: 0.3rem;
+            gap: var(--sm-space-1);
             flex-wrap: wrap;
-            margin-top: 0.55rem;
+            margin-top: var(--sm-space-3);
          }
 
          .place-card-counts .chip {
             min-height: 28px;
-            font-size: 0.75rem;
+            font-size: var(--sm-text-xxs);
          }
 
          .place-card-counts .chip > i {
             position: static !important;
-            font-size: 0.95rem;
+            font-size: var(--sm-text-md);
          }
 
          .places-empty {
             text-align: center;
-            padding: 2.6rem 1rem;
-            border-radius: 1rem;
+            padding: 2.6rem var(--sm-space-6);
+            border-radius: var(--sm-radius-md);
          }
 
          .places-empty > i {
@@ -187,7 +187,7 @@
          }
 
          .place-error {
-            margin-bottom: 1rem;
+            margin-bottom: var(--sm-space-6);
          }
 
          .place-editor-map {
@@ -196,8 +196,8 @@
             isolation: isolate;
             width: 100%;
             height: 260px;
-            margin-top: 0.65rem;
-            border-radius: 0.9rem;
+            margin-top: var(--sm-space-4);
+            border-radius: var(--sm-radius-md);
             overflow: hidden;
             background: var(--surface-container-high);
          }
@@ -209,82 +209,6 @@
 
          #div-overlay-create-place {
             z-index: 1190 !important;
-         }
-
-         .place-editor-tools {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            margin-top: 0.4rem;
-            flex-wrap: wrap;
-         }
-
-         .place-editor-tools .field {
-            flex: 1 1 260px;
-            margin: 0;
-         }
-
-         .place-search-results {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            margin-top: 0.35rem;
-         }
-
-         .place-search-result {
-            display: grid;
-            grid-template-columns: 28px minmax(0, 1fr);
-            align-items: center;
-            gap: 0.45rem;
-            width: 100%;
-            min-height: 44px;
-            padding: 0.45rem 0.6rem;
-            border: 0;
-            border-radius: 0.7rem;
-            background: var(--surface-container-high);
-            color: inherit;
-            text-align: left;
-            cursor: pointer;
-         }
-
-         .place-search-result > i {
-            position: static !important;
-         }
-
-         .place-search-message {
-            padding: 0.4rem 0.2rem;
-            opacity: 0.72;
-         }
-
-         .place-coordinate-line {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            margin-top: 0.45rem;
-            font-size: 0.82rem;
-            opacity: 0.7;
-         }
-
-         .place-coordinate-line > i {
-            position: static !important;
-            font-size: 1rem;
-         }
-
-         .place-map-fallback {
-            min-height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            text-align: center;
-            opacity: 0.7;
-         }
-
-         .leaflet-container {
-            position: relative;
-            z-index: 0;
-            isolation: isolate;
-            font: inherit;
          }
 
          @media (max-width: 720px) {
@@ -323,7 +247,7 @@
             }
 
             .place-card-body {
-               padding: 0.7rem 0.75rem;
+               padding: var(--sm-space-4) var(--sm-space-5);
             }
          }
       </style>

@@ -3,6 +3,41 @@
  * so Family/Friends editions keep their existing appearance.
  */
 
+/* Mass- und Schriftskala. Steht bewusst auf :root und nicht auf
+   body.couple-app - die Templates benutzen die Tokens in ihren eigenen
+   <style>-Bloecken, und die duerfen nicht davon abhaengen, welche Klasse
+   gerade am body haengt. */
+:root {
+   /* Vorher standen in den Templates 17 Radien, 44 Schriftgroessen und
+      26 gap-Werte nebeneinander - es gab nichts, worauf man haette
+      vereinheitlichen koennen. */
+   --sm-space-1: 0.25rem;
+   --sm-space-2: 0.35rem;
+   --sm-space-3: 0.5rem;
+   --sm-space-4: 0.65rem;
+   --sm-space-5: 0.8rem;
+   --sm-space-6: 1rem;
+   --sm-space-7: 1.5rem;
+   --sm-space-8: 2rem;
+
+   --sm-text-xxs: 0.72rem;
+   --sm-text-xs: 0.8rem;
+   --sm-text-sm: 0.88rem;
+   --sm-text-md: 0.95rem;
+   --sm-text-base: 1rem;
+   --sm-text-lg: 1.1rem;
+   --sm-text-xl: 1.3rem;
+   --sm-text-2xl: 1.8rem;
+   --sm-text-3xl: 2.7rem;
+
+   --sm-radius-xs: 0.5rem;
+   --sm-radius-sm: 0.75rem;
+   --sm-radius-md: 1rem;
+   --sm-radius-lg: 1.3rem;
+   --sm-radius-xl: 1.6rem;
+   --sm-radius-pill: 999px;
+}
+
 body.couple-app {
    /* Feste Paar-Palette. Ersetzt die frueher per material-dynamic-colors
       zur Laufzeit erzeugte Akzentfarbe: das Design ist damit planbar und die
@@ -138,7 +173,7 @@ body.couple-app #header-profile-picture {
 
 /* Shared page rhythm */
 body.couple-app main.responsive {
-   padding-top: 1rem;
+   padding-top: var(--sm-space-6);
 }
 
 body.couple-app article.surface-container,
@@ -203,7 +238,7 @@ body.couple-app .story-intro,
 body.couple-app .places-intro {
    position: relative;
    margin: 0 0 1.1rem;
-   padding: 1rem 1.15rem;
+   padding: var(--sm-space-6) 1.15rem;
    border-radius: var(--couple-radius);
    background:
       linear-gradient(135deg,
@@ -313,7 +348,7 @@ body.couple-page-home .couple-plan-icon {
 /* Story */
 body.couple-page-story .story-controls {
    border-radius: var(--couple-radius);
-   padding: 0.85rem;
+   padding: var(--sm-space-5);
    background: color-mix(in srgb, var(--surface-container) 82%, transparent);
    border: 1px solid color-mix(in srgb, var(--outline-variant) 62%, transparent);
 }
@@ -353,7 +388,7 @@ body.couple-page-story .story-card-type-milestone {
 /* Plans */
 body.couple-page-plans .plans-filters,
 body.couple-page-bucket .bucket-filters {
-   padding: 0.15rem 0 0.35rem;
+   padding: 0.15rem 0 var(--sm-space-2);
 }
 
 body.couple-page-plans .plan-card {
@@ -393,7 +428,7 @@ body.couple-page-bucket .bucket-progress-bar {
 }
 
 body.couple-page-bucket .bucket-quick-add {
-   padding: 0.75rem;
+   padding: var(--sm-space-5);
    border-radius: var(--couple-radius);
    background: color-mix(in srgb, var(--surface-container) 72%, transparent);
    border: 1px solid color-mix(in srgb, var(--outline-variant) 58%, transparent);
@@ -525,7 +560,7 @@ body.couple-page-year .year-highlight-list {
 /* Zentrales Erstellen-Menue (layouts/couple-create-sheet.html) */
 body.couple-app #dialog-couple-create {
    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-   border-radius: 1.9rem 1.9rem 0 0;
+   border-radius: var(--sm-radius-xl) var(--sm-radius-xl) 0 0;
    /* Das Sheet ist laenger als der Viewport: scrollen statt abschneiden. */
    max-height: min(84vh, 46rem);
    overflow-y: auto;
@@ -556,8 +591,8 @@ body.couple-app .couple-create-drag-zone:active {
 body.couple-app .couple-create-drag-handle {
    width: 46px;
    height: 5px;
-   border-radius: 999px;
-   margin: 0 auto 0.35rem;
+   border-radius: var(--sm-radius-pill);
+   margin: 0 auto var(--sm-space-2);
    background: var(--outline-variant);
    pointer-events: none;
 }
@@ -569,7 +604,7 @@ body.couple-app .couple-create-title {
 }
 
 body.couple-app .couple-create-item {
-   border-radius: 1rem;
+   border-radius: var(--sm-radius-md);
    color: inherit;
    text-decoration: none;
 }
@@ -586,8 +621,8 @@ body.couple-app .couple-create-item > i:first-child {
    display: flex;
    align-items: center;
    justify-content: center;
-   border-radius: 0.85rem;
-   font-size: 1.25rem;
+   border-radius: var(--sm-radius-sm);
+   font-size: var(--sm-text-xl);
 }
 
 body.couple-app .couple-create-item > i:last-child {
@@ -627,6 +662,84 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
    background: var(--couple-place-soft);
 }
 
+/* Kartenbereich: identisch auf /places und der Ortsdetailseite -
+   stand vorher zweimal wortgleich in den beiden Templates. */
+body.couple-app .place-editor-tools {
+   display: flex;
+   align-items: center;
+   gap: var(--sm-space-2);
+   margin-top: var(--sm-space-2);
+   flex-wrap: wrap;
+}
+
+body.couple-app .place-editor-tools .field {
+   flex: 1 1 260px;
+   margin: 0;
+}
+
+body.couple-app .place-search-results {
+   display: flex;
+   flex-direction: column;
+   gap: var(--sm-space-1);
+   margin-top: var(--sm-space-2);
+}
+
+body.couple-app .place-search-result {
+   display: grid;
+   grid-template-columns: 28px minmax(0, 1fr);
+   align-items: center;
+   gap: var(--sm-space-3);
+   width: 100%;
+   min-height: 44px;
+   padding: var(--sm-space-3) var(--sm-space-4);
+   border: 0;
+   border-radius: var(--sm-radius-sm);
+   background: var(--surface-container-high);
+   color: inherit;
+   text-align: left;
+   cursor: pointer;
+}
+
+body.couple-app .place-search-result > i {
+   position: static !important;
+}
+
+body.couple-app .place-search-message {
+   padding: var(--sm-space-2) var(--sm-space-1);
+   opacity: 0.72;
+}
+
+body.couple-app .place-coordinate-line {
+   display: flex;
+   align-items: center;
+   gap: var(--sm-space-2);
+   margin-top: var(--sm-space-3);
+   font-size: var(--sm-text-xs);
+   opacity: 0.7;
+}
+
+body.couple-app .place-coordinate-line > i {
+   position: static !important;
+   font-size: var(--sm-text-base);
+}
+
+body.couple-app .place-map-fallback {
+   min-height: 180px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   padding: var(--sm-space-6);
+   text-align: center;
+   opacity: 0.7;
+}
+
+body.couple-app .leaflet-container {
+   position: relative;
+   z-index: 0;
+   isolation: isolate;
+   font: inherit;
+}
+
 /* Mobile relationship navigation */
 .couple-bottom-nav {
    display: none;
@@ -637,8 +750,8 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
       width: 100%;
       max-width: none;
       margin: 0;
-      padding-left: 0.55rem;
-      padding-right: 0.55rem;
+      padding-left: var(--sm-space-3);
+      padding-right: var(--sm-space-3);
       box-sizing: border-box;
    }
 
@@ -658,19 +771,22 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
       bottom: calc(4.7rem + env(safe-area-inset-bottom)) !important;
    }
 
-   .couple-bottom-nav {
+   /* body.couple-app davor, damit keine BeerCSS-nav-Regel den Radius kippt. */
+   body.couple-app .couple-bottom-nav {
       position: fixed;
       z-index: 950;
       left: 0.9rem;
       right: 0.9rem;
       bottom: calc(0.85rem + env(safe-area-inset-bottom));
-      min-height: 66px;
+      max-width: 30rem;
+      margin: 0 auto;
+      min-height: 64px;
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       align-items: end;
-      padding: 0.4rem 0.45rem 0.45rem;
+      padding: var(--sm-space-2) var(--sm-space-3) var(--sm-space-2);
       /* Voller Pillenradius: die Leiste soll schweben, nicht kleben. */
-      border-radius: 999px;
+      border-radius: var(--sm-radius-pill);
       background: color-mix(in srgb, var(--surface-container) 82%, transparent);
       border: 1px solid color-mix(in srgb, var(--outline-variant) 45%, transparent);
       box-shadow:
@@ -707,7 +823,7 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
       color: color-mix(in srgb, var(--on-surface) 68%, transparent);
       min-width: 0;
       min-height: 52px;
-      padding: 0.2rem 0.15rem;
+      padding: var(--sm-space-1) 0.15rem;
       margin: 0;
       display: flex;
       flex-direction: column;
@@ -717,7 +833,7 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
       text-decoration: none;
       font: inherit;
       cursor: pointer;
-      border-radius: 999px;
+      border-radius: var(--sm-radius-pill);
       transition: color 160ms ease, background 160ms ease, transform 160ms ease;
    }
 
@@ -729,12 +845,12 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
    .couple-bottom-nav > a > i,
    .couple-bottom-nav > button > i {
       position: static !important;
-      font-size: 1.35rem;
+      font-size: var(--sm-text-xl);
    }
 
    .couple-bottom-nav-label {
       max-width: 100%;
-      font-size: 0.67rem;
+      font-size: var(--sm-text-xxs);
       line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
@@ -769,7 +885,7 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
    }
 
    .couple-bottom-nav > .couple-bottom-add > i {
-      font-size: 1.8rem;
+      font-size: var(--sm-text-2xl);
    }
 
    .couple-bottom-nav > .couple-bottom-add .couple-bottom-nav-label {
@@ -777,7 +893,7 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
    }
 
    body.couple-page-home .couple-hero {
-      border-radius: 1.35rem;
+      border-radius: var(--sm-radius-lg);
    }
 
    body.couple-page-home .couple-section {
@@ -787,8 +903,8 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
 
 @media (max-width: 600px) {
    body.couple-app main.responsive {
-      padding-left: 0.8rem;
-      padding-right: 0.8rem;
+      padding-left: var(--sm-space-5);
+      padding-right: var(--sm-space-5);
    }
 
    body.couple-app .plans-intro,
@@ -798,14 +914,14 @@ body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child 
    body.couple-app .places-intro {
       margin-left: 0;
       margin-right: 0;
-      padding: 0.8rem 0.85rem 0.8rem 1rem;
+      padding: var(--sm-space-5) var(--sm-space-5) var(--sm-space-5) var(--sm-space-6);
    }
 
    body.couple-page-home .couple-avatars > .couple-avatar {
       border-width: 3px;
    }
 
-   .couple-bottom-nav {
+   body.couple-app .couple-bottom-nav {
       left: 0.7rem;
       right: 0.7rem;
       bottom: calc(0.7rem + env(safe-area-inset-bottom));
@@ -817,13 +933,13 @@ body.couple-app #dialog-nav-drawer a.nav-current {
    background: color-mix(in srgb, var(--primary-container) 55%, transparent);
    color: var(--primary);
    font-weight: 650;
-   border-radius: 999px;
+   border-radius: var(--sm-radius-pill);
 }
 
 body.couple-app #dialog-nav-drawer .nav-drawer-group {
-   margin: 0.9rem 0 0.2rem;
-   padding: 0 0.75rem;
-   font-size: 0.72rem;
+   margin: 0.9rem 0 var(--sm-space-1);
+   padding: 0 var(--sm-space-5);
+   font-size: var(--sm-text-xxs);
    font-weight: 650;
    letter-spacing: 0.06em;
    text-transform: uppercase;
@@ -834,9 +950,9 @@ body.couple-app #dialog-nav-drawer .nav-drawer-group {
 @media (max-width: 900px) {
    body.couple-app footer.fixed {
       position: static;
-      padding: 0.4rem 0 0;
+      padding: var(--sm-space-2) 0 0;
       opacity: 0.55;
-      font-size: 0.72rem;
+      font-size: var(--sm-text-xxs);
    }
 
    body.couple-app #btn-back-to-top {

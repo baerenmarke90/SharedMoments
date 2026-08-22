@@ -7,8 +7,8 @@
           <nav>
              <img class="circle"
                 alt=""
-                src="/api/v2/media/static/setup-{{ nav_edition }}.jpg">
-             <h6 class="small no-margin">SharedMoments {{ nav_edition|capitalize }}</h6>
+                src="/api/v2/media/static/setup-couples.jpg">
+             <h6 class="small no-margin">SharedMoments</h6>
           </nav>
        </header>
 
@@ -122,7 +122,7 @@
        {% if has_permission('View Reminders') %}
        <a href="/reminders">
        <i>notifications_active</i>
-       <span>{% if nav_edition == 'couples' %}Termine &amp; Benachrichtigungen{% else %}{{ _('Reminders') }}{% endif %}</span>
+       <span>Termine &amp; Benachrichtigungen</span>
        </a>
        {% endif %}
 
@@ -196,7 +196,6 @@
              <h6 class="small" style="margin-bottom:.1rem;">{{ _(list_type.title) }}</h6>
              <div class="small" style="opacity:.62;">
                 {% if list_type.navbar %}Im Menü{% else %}Nicht im Menü{% endif %}
-                · {{ list_type.edition|capitalize }}
              </div>
           </div>
           <i class="check" onclick="openEditListTypeFromElement(this.closest('a'))">edit</i>
@@ -234,16 +233,7 @@
        <div class="icon-suggestions" id="manage-list-type-icon-suggestions" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 10; max-height: 200px; overflow-y: auto; background: var(--surface-container); border-radius: 0 0 8px 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); padding: 8px;">
        </div>
     </div>
-    <div class="field label border suffix">
-       <select id="manage-list-type-edition">
-          <option value="all">{{ _('All editions') }}</option>
-          <option value="couples">Couples</option>
-          <option value="family">Family</option>
-          <option value="friends">Friends</option>
-       </select>
-       <label>{{ _('Edition') }}</label>
-       <i>arrow_drop_down</i>
-    </div>
+    <input type="hidden" id="manage-list-type-edition" value="all">
     <nav class="right-align no-space">
        <button class="transparent link" id="manage-list-type-delete-btn" onclick="deleteListTypeFromDialog()" style="display: none; margin-right: auto;"><i>delete</i></button>
        <button class="transparent link" onclick="callUi('#dialog-manage-list-type');">{{ _('Cancel') }}</button>

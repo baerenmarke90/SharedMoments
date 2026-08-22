@@ -22,6 +22,14 @@ except Exception as exc:
     log('error', f'Heart Moments schema initialization failed: {exc}')
     raise
 
+# SharedMoments laeuft nur noch als Couples-Edition
+from app.db_queries import ensure_couples_edition
+
+try:
+    ensure_couples_edition()
+except Exception as exc:
+    log('error', f'Edition check failed: {exc}')
+
 # OIDC / Pocket ID schema initialization
 from app.oidc_schema import ensure_oidc_schema
 

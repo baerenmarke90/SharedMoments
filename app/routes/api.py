@@ -83,24 +83,19 @@ def setup_complete():
 
     try:
         set_locale()
-        sm_edition = setup_data['sm_edition']
         users = setup_data['users']
         settings = setup_data['settings']
 
-        # Save edition to DB
+        # SharedMoments gibt es nur als Couples-Edition.
         sm_edition_setting = db_session.query(Setting).filter_by(name='sm_edition').first()
         if sm_edition_setting:
-            sm_edition_setting.value = sm_edition.lower()
+            sm_edition_setting.value = 'couples'
 
         title = settings[0]['title']
         relationship_status = settings[0]['relationshipStatus']
         anniversary_date = settings[0]['anniversary']
-        family_name = settings[0]['familyName']
-        friend_group_name = settings[0]['friendGroupName']
         wedding_date = settings[0]['weddingAnniversary']
         engaged_date = settings[0]['engagement']
-        family_founding_date = settings[0].get('familyFoundingDate', '')
-        friend_group_founding_date = settings[0].get('friendGroupFoundingDate', '')
 
         title_setting = db_session.query(Setting).filter_by(name='title').first()
         if title_setting:
@@ -114,14 +109,6 @@ def setup_complete():
         if anniversary_date_setting:
             anniversary_date_setting.value = anniversary_date
 
-        family_name_setting = db_session.query(Setting).filter_by(name='family_name').first()
-        if family_name_setting:
-            family_name_setting.value = family_name
-
-        friend_group_name_setting = db_session.query(Setting).filter_by(name='friend_group_name').first()
-        if friend_group_name_setting:
-            friend_group_name_setting.value = friend_group_name
-
         wedding_date_setting = db_session.query(Setting).filter_by(name='wedding_date').first()
         if wedding_date_setting:
             wedding_date_setting.value = wedding_date
@@ -129,14 +116,6 @@ def setup_complete():
         engaged_date_setting = db_session.query(Setting).filter_by(name='engaged_date').first()
         if engaged_date_setting:
             engaged_date_setting.value = engaged_date
-
-        family_founding_date_setting = db_session.query(Setting).filter_by(name='family_founding_date').first()
-        if family_founding_date_setting:
-            family_founding_date_setting.value = family_founding_date
-
-        friend_group_founding_date_setting = db_session.query(Setting).filter_by(name='friend_group_founding_date').first()
-        if friend_group_founding_date_setting:
-            friend_group_founding_date_setting.value = friend_group_founding_date
 
         db_session.flush()
 
@@ -321,14 +300,6 @@ def update_settings():
         update_setting(setting, value)
 
         log('info', f'Setting updated: {setting}')
-
-        # Trigger reminder sync when edition changes
-        if setting == 'sm_edition':
-            try:
-                from app.scheduler import sync_auto_reminders
-                sync_auto_reminders()
-            except Exception as e:
-                log('warning', f'Failed to sync reminders after edition change: {e}')
 
         return jsonify({
             'status': 'success',

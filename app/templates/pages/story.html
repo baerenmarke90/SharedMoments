@@ -12,21 +12,21 @@
          }
 
          .story-intro {
-            margin: 0.5rem 0 1.2rem;
+            margin: var(--sm-space-3) 0 1.2rem;
             opacity: 0.78;
          }
 
          .story-controls {
             position: relative;
             z-index: 2;
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--sm-space-7);
          }
 
          .story-filter-row {
             display: flex;
-            gap: 0.5rem;
+            gap: var(--sm-space-3);
             overflow-x: auto;
-            padding-bottom: 0.35rem;
+            padding-bottom: var(--sm-space-2);
             scrollbar-width: none;
          }
 
@@ -42,9 +42,9 @@
          .story-search-row {
             display: grid;
             grid-template-columns: minmax(0, 1fr) 150px;
-            gap: 0.75rem;
+            gap: var(--sm-space-5);
             align-items: start;
-            margin-top: 0.8rem;
+            margin-top: var(--sm-space-5);
          }
 
          .story-search-row > .field {
@@ -79,8 +79,8 @@
          .story-month-title {
             display: flex;
             align-items: center;
-            gap: 0.65rem;
-            margin: 0 0 0.7rem 0.2rem;
+            gap: var(--sm-space-4);
+            margin: 0 0 var(--sm-space-4) var(--sm-space-1);
          }
 
          .story-month-title::after {
@@ -92,7 +92,7 @@
 
          .story-card {
             overflow: hidden;
-            margin-bottom: 0.8rem;
+            margin-bottom: var(--sm-space-5);
          }
 
          .story-card-link {
@@ -149,21 +149,21 @@
 
          .story-card-body {
             min-width: 0;
-            padding: 1rem;
+            padding: var(--sm-space-6);
          }
 
          .story-card-type {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
-            margin-bottom: 0.35rem;
-            font-size: 0.85rem;
+            gap: var(--sm-space-2);
+            margin-bottom: var(--sm-space-2);
+            font-size: var(--sm-text-sm);
             font-weight: 600;
             opacity: 0.78;
          }
 
          .story-card-type > i {
-            font-size: 1.15rem;
+            font-size: var(--sm-text-lg);
          }
 
          .story-card-title {
@@ -174,50 +174,50 @@
          .story-chapter-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.35rem;
-            margin-top: 0.55rem;
+            gap: var(--sm-space-2);
+            margin-top: var(--sm-space-3);
          }
 
          .story-chapter-tag {
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
-            padding: 0.18rem 0.5rem;
-            border-radius: 999px;
+            gap: var(--sm-space-1);
+            padding: 0.18rem var(--sm-space-3);
+            border-radius: var(--sm-radius-pill);
             background: var(--secondary-container);
             color: var(--on-secondary-container);
-            font-size: 0.78rem;
+            font-size: var(--sm-text-xs);
          }
 
          .story-chapter-tag > i {
-            font-size: 0.95rem;
+            font-size: var(--sm-text-md);
          }
 
          .story-place-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.35rem;
-            margin-top: 0.45rem;
+            gap: var(--sm-space-2);
+            margin-top: var(--sm-space-3);
          }
 
          .story-place-tag {
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
-            padding: 0.18rem 0.5rem;
-            border-radius: 999px;
+            gap: var(--sm-space-1);
+            padding: 0.18rem var(--sm-space-3);
+            border-radius: var(--sm-radius-pill);
             background: var(--tertiary-container);
             color: var(--on-tertiary-container);
-            font-size: 0.78rem;
+            font-size: var(--sm-text-xs);
          }
 
          .story-place-tag > i {
             position: static !important;
-            font-size: 0.95rem;
+            font-size: var(--sm-text-md);
          }
 
          .story-card-text {
-            margin: 0.55rem 0 0;
+            margin: var(--sm-space-3) 0 0;
             white-space: pre-wrap;
             overflow-wrap: anywhere;
          }
@@ -225,9 +225,9 @@
          .story-card-meta {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.8rem;
-            font-size: 0.85rem;
+            gap: var(--sm-space-3);
+            margin-top: var(--sm-space-5);
+            font-size: var(--sm-text-sm);
             opacity: 0.74;
          }
 
@@ -241,8 +241,8 @@
          .story-gallery-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            margin-left: 0.35rem;
+            gap: var(--sm-space-1);
+            margin-left: var(--sm-space-2);
          }
 
          .story-empty {
@@ -256,15 +256,15 @@
          }
 
          .story-result-count {
-            margin: 0.7rem 0.2rem 0;
-            font-size: 0.85rem;
+            margin: var(--sm-space-4) var(--sm-space-1) 0;
+            font-size: var(--sm-text-sm);
             opacity: 0.68;
          }
 
          @media (max-width: 600px) {
             .story-page {
-               padding-left: 0.2rem;
-               padding-right: 0.2rem;
+               padding-left: var(--sm-space-1);
+               padding-right: var(--sm-space-1);
             }
 
             .story-search-row {
@@ -282,7 +282,7 @@
             }
 
             .story-card-body {
-               padding: 0.85rem;
+               padding: var(--sm-space-5);
             }
          }
       </style>

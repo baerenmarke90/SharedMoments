@@ -142,13 +142,7 @@ def _get_target_dates(reminder, today):
 
     elif reminder.reminder_type == 'milestone':
         if reminder.milestone_days:
-            # Determine start date based on auto_source prefix
-            if reminder.auto_source and reminder.auto_source.startswith('family_milestone_'):
-                date_setting = get_setting_by_name('family_founding_date')
-            elif reminder.auto_source and reminder.auto_source.startswith('friends_milestone_'):
-                date_setting = get_setting_by_name('friend_group_founding_date')
-            else:
-                date_setting = get_setting_by_name('anniversary_date')
+            date_setting = get_setting_by_name('anniversary_date')
             if date_setting and date_setting.value:
                 try:
                     start_date = datetime.strptime(date_setting.value, '%Y-%m-%d').date()
@@ -269,68 +263,30 @@ def sync_auto_reminders():
 
     log('info', 'Syncing auto-reminders...')
 
-    edition = get_setting_by_name('sm_edition').value
-
-    # --- Couples-Reminder ---
-    if edition == 'couples':
-        date_settings = {
-            'anniversary_date': 'Anniversary',
-            'wedding_date': 'Wedding Day',
-            'engaged_date': 'Engagement Day',
-        }
-        for setting_name, label in date_settings.items():
-            setting = get_setting_by_name(setting_name)
-            if setting and setting.value:
-                try:
-                    d = datetime.strptime(setting.value, '%Y-%m-%d').date()
-                    _ensure_auto_annual_reminder(setting_name, label, d.month, d.day)
-                    if setting_name == 'anniversary_date':
-                        _ensure_milestone_reminders(d)
-                except (ValueError, TypeError):
-                    delete_auto_reminders_by_source(setting_name)
-            else:
+    # SharedMoments ist eine reine Couples-App; Family/Friends gibt es nicht mehr.
+    date_settings = {
+        'anniversary_date': 'Anniversary',
+        'wedding_date': 'Wedding Day',
+        'engaged_date': 'Engagement Day',
+    }
+    for setting_name, label in date_settings.items():
+        setting = get_setting_by_name(setting_name)
+        if setting and setting.value:
+            try:
+                d = datetime.strptime(setting.value, '%Y-%m-%d').date()
+                _ensure_auto_annual_reminder(setting_name, label, d.month, d.day)
+                if setting_name == 'anniversary_date':
+                    _ensure_milestone_reminders(d)
+            except (ValueError, TypeError):
                 delete_auto_reminders_by_source(setting_name)
-    else:
-        # Clean up Couples-Reminder when edition changed
-        for source in ('anniversary_date', 'wedding_date', 'engaged_date'):
-            delete_auto_reminders_by_source(source)
-        _cleanup_milestones_by_prefix('milestone_')
-
-    # --- Family-Reminder ---
-    if edition == 'family':
-        setting = get_setting_by_name('family_founding_date')
-        if setting and setting.value:
-            try:
-                d = datetime.strptime(setting.value, '%Y-%m-%d').date()
-                _ensure_auto_annual_reminder('family_founding_date', 'Family Day', d.month, d.day)
-                _ensure_milestone_reminders(d, prefix='family_milestone_')
-            except (ValueError, TypeError):
-                delete_auto_reminders_by_source('family_founding_date')
-                _cleanup_milestones_by_prefix('family_milestone_')
         else:
-            delete_auto_reminders_by_source('family_founding_date')
-            _cleanup_milestones_by_prefix('family_milestone_')
-    else:
-        delete_auto_reminders_by_source('family_founding_date')
-        _cleanup_milestones_by_prefix('family_milestone_')
+            delete_auto_reminders_by_source(setting_name)
 
-    # --- Friends-Reminder ---
-    if edition == 'friends':
-        setting = get_setting_by_name('friend_group_founding_date')
-        if setting and setting.value:
-            try:
-                d = datetime.strptime(setting.value, '%Y-%m-%d').date()
-                _ensure_auto_annual_reminder('friend_group_founding_date', 'Friendship Day', d.month, d.day)
-                _ensure_milestone_reminders(d, prefix='friends_milestone_')
-            except (ValueError, TypeError):
-                delete_auto_reminders_by_source('friend_group_founding_date')
-                _cleanup_milestones_by_prefix('friends_milestone_')
-        else:
-            delete_auto_reminders_by_source('friend_group_founding_date')
-            _cleanup_milestones_by_prefix('friends_milestone_')
-    else:
-        delete_auto_reminders_by_source('friend_group_founding_date')
-        _cleanup_milestones_by_prefix('friends_milestone_')
+    # Altlasten aus frueheren Editionen einmalig aufraeumen.
+    for source in ('family_founding_date', 'friend_group_founding_date'):
+        delete_auto_reminders_by_source(source)
+    _cleanup_milestones_by_prefix('family_milestone_')
+    _cleanup_milestones_by_prefix('friends_milestone_')
 
     # User birthdays
     session = SessionLocal()

@@ -27,41 +27,17 @@
         <div class="overlay" id="div-overlay-setup-edit-settings" onclick="callUi('#edit-settings');"></div>
         <div>
             <div class="page padding active" id="setup-tab-1">
-                <h5>{{ _('Select edition') }}</h5>
+                <h5>{{ _('Welcome') }}</h5>
                 <br>
-    
+
                 <div class="page left active" id="info-couples">
-    
                     <img class="circle setup-image center" src="/api/v2/media/static/setup-couples.jpg">
                     <br>
                     <p>{{ _('SharedMoments Couples is designed for couples who want to store their shared experiences and wish lists') }}</p>
                 </div>
-    
-                <div class="page left" id="info-family">
-                    <img class="circle setup-image center" src="/api/v2/media/static/setup-family.jpg"
-                        style="width: 100%; height: 100%;">
-                    <br>
-                    <p>{{ _('SharedMoments Family is designed for families who want to store their shared experiences and wish lists') }}</p>
-                </div>
-    
-                <div class="page left" id="info-friends">
-                    <img class="circle setup-image center" src="/api/v2/media/static/setup-friends.jpg"
-                        style="width: 100%; height: 100%;">
-                    <br>
-                    <p>{{ _('SharedMoments Friends is designed for friend groups who want to store their shared experiences and wish lists') }}</p>
-                </div>
-    
+
                 <div class="">
-    
-                    <p>{{ _('Please select an edition of SharedMoments to continue') }}:</p>
-                    <div class="field suffix border round white">
-                        <select onchange="showInfo(this.value);" id="sm_edition" style="color: black;">
-                            <option>Couples</option>
-                            <option>Family</option>
-                            <option>Friends</option>
-                        </select>
-                        <i style="color: black;">arrow_drop_down</i>
-                    </div>
+
                     <div style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.3); padding-top:1rem;">
                         <p>{{ _('Or import data from a previous v2 instance') }}:</p>
                         <button onclick="document.getElementById('setup-import-input').click()" class="border center white" id="button-setup-import">
@@ -228,30 +204,6 @@
                                 <div class="field label border">
                                     <input type="text" id="title">
                                     <label>{{ _('Title') }}</label>
-                                </div>
-                            </div>
-                            <div class="s12 hidden">
-                                <div class="field label border">
-                                    <input type="text" id="family-name">
-                                    <label>{{ _('Family name') }}</label>
-                                </div>
-                            </div>
-                            <div class="s12 hidden">
-                                <div class="field label border">
-                                    <input type="text" id="friend-group-name">
-                                    <label>{{ _('Name of your friend group') }}</label>
-                                </div>
-                            </div>
-                            <div class="s6 hidden">
-                                <div class="field label border">
-                                    <input type="date" id="family-founding-date">
-                                    <label>{{ _('Family founding date') }}</label>
-                                </div>
-                            </div>
-                            <div class="s6 hidden">
-                                <div class="field label border">
-                                    <input type="date" id="friend-group-founding-date">
-                                    <label>{{ _('Founding date') }}</label>
                                 </div>
                             </div>
 

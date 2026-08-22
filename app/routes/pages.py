@@ -35,16 +35,7 @@ pages_bp = Blueprint('pages', __name__)
 
 
 def get_display_title():
-    """Returns the appropriate title setting based on the current edition."""
-    edition = get_setting_by_name('sm_edition').value
-    if edition == 'family':
-        family_name = get_setting_by_name('family_name')
-        if family_name and family_name.value:
-            return family_name
-    elif edition == 'friends':
-        friend_name = get_setting_by_name('friend_group_name')
-        if friend_name and friend_name.value:
-            return friend_name
+    """Returns the title setting."""
     return get_setting_by_name('title')
 
 # Paths that bypass the migration gate

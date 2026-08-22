@@ -597,63 +597,6 @@ function toggleShareTracking() {
         });
 }
 
-// --- Edition ---
-function editEdition() {
-    const select = document.getElementById('input-edition-select');
-    select.innerHTML = '';
-    editions.forEach(ed => {
-        const option = document.createElement('option');
-        option.value = ed.id;
-        option.textContent = ed.name;
-        if (ed.id === currentEdition) option.selected = true;
-        select.appendChild(option);
-    });
-    document.getElementById('edition-info-box').style.display = 'none';
-    select.onchange = function () {
-        document.getElementById('edition-info-box').style.display = this.value !== currentEdition ? '' : 'none';
-    };
-    callUi('#dialog-edition-confirm');
-}
-
-function closeEditionDialog() {
-    callUi('#dialog-edition-confirm');
-}
-
-function saveEdition() {
-    if (!navigator.onLine) {
-        showSnackbar('settings', true, 'error', _('You are offline'), null, false);
-        return;
-    }
-    const btn = document.getElementById('save-edition-btn');
-    btnLoading(btn);
-
-    const value = document.getElementById('input-edition-select').value;
-    const formData = new FormData();
-    formData.append("setting", "sm_edition");
-    formData.append("value", value);
-
-    fetch("/api/v2/settings", {
-        method: "PUT",
-        body: formData,
-    })
-        .then(async (response) => {
-            const result = await response.json();
-            if (result.status === "success") {
-                btnReset(btn);
-                closeEditionDialog();
-                location.reload();
-            } else {
-                btnReset(btn);
-                showSnackbar('settings', true, 'error', result.message, result, true);
-            }
-        })
-        .catch((error) => {
-            btnReset(btn);
-            if (String(error) == "TypeError: Failed to fetch") error = _('Server not reachable');
-            showSnackbar('settings', true, 'error', error, null, false);
-        });
-}
-
 // --- Required Dates after Relationship Status Change ---
 const dateRequirements = {
     '1': ['anniversary_date'],

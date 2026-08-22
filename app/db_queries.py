@@ -117,22 +117,16 @@ def init_db():
 
         # Settings
         settings = [
-            Setting(name='sm_edition', value='couples', icon='stacks', edition='all', category='about', type='variant'),
+            Setting(name='sm_edition', value='couples', icon='stacks', edition='all', category='about', type='text'),
             Setting(name='sm_version', value=__version__, icon='update', edition='all', category='about', type='text'),
             Setting(name='setup_complete', value='False', icon='', edition='all', category='', type='text'),
             Setting(name='title', value='', icon='title', edition='couples', category='general', type='text'),
-            Setting(name='family_name', value='', icon='diversity_3', edition='family', category='general', type='text'),
-            Setting(name='friend_group_name', value='', icon='group', edition='friends', category='general', type='text'),
             Setting(name='relationship_status', value='', icon='favorite', edition='couples', category='general', type='text'),
             Setting(name='anniversary_date', value='', icon='event', edition='couples', category='general', type='date'),
             Setting(name='engaged_date', value='', icon='event', edition='couples', category='general', type='date'),
             Setting(name='wedding_date', value='', icon='event', edition='couples', category='general', type='date'),
             Setting(name='share_tracking', value='True', icon='analytics', edition='all', category='general', type='toggle'),
             Setting(name='banner_image', value='', icon='image', edition='couples', category='general', type='file'),
-            Setting(name='family_banner_image', value='', icon='image', edition='family', category='general', type='file'),
-            Setting(name='friends_banner_image', value='', icon='image', edition='friends', category='general', type='file'),
-            Setting(name='family_founding_date', value='', icon='event', edition='family', category='general', type='date'),
-            Setting(name='friend_group_founding_date', value='', icon='event', edition='friends', category='general', type='date'),
             Setting(name='banner_song', value='', icon='music_note', edition='couples', category='general', type='file'),
             Setting(name='migration_review_complete', value='True', icon='', edition='all', category='', type='text'),
         ]
@@ -2189,25 +2183,20 @@ def ensure_banner_song_setting():
         session.close()
 
 
-def ensure_edition_settings():
-    """For existing databases: creates family_founding_date and friend_group_founding_date settings if missing."""
+def ensure_couples_edition():
+    """SharedMoments ist eine reine Couples-App.
+
+    Bestehende Installationen koennen noch auf 'family' oder 'friends' stehen -
+    dann waeren Navigation und Inhalte auf zwei Editionen verteilt. Die
+    Einstellung bleibt in der Datenbank, wird aber auf 'couples' festgezurrt.
+    """
     session = SessionLocal()
     try:
-        new_settings = [
-            {'name': 'family_founding_date', 'value': '', 'icon': 'event', 'edition': 'family', 'category': 'general', 'type': 'date'},
-            {'name': 'friend_group_founding_date', 'value': '', 'icon': 'event', 'edition': 'friends', 'category': 'general', 'type': 'date'},
-            {'name': 'family_banner_image', 'value': '', 'icon': 'image', 'edition': 'family', 'category': 'general', 'type': 'file'},
-            {'name': 'friends_banner_image', 'value': '', 'icon': 'image', 'edition': 'friends', 'category': 'general', 'type': 'file'},
-        ]
-        for s in new_settings:
-            existing = session.query(Setting).filter(Setting.name == s['name']).first()
-            if not existing:
-                session.add(Setting(**s))
-        # Migrate banner_image from edition='all' to edition='couples'
-        banner_img = session.query(Setting).filter(Setting.name == 'banner_image').first()
-        if banner_img and banner_img.edition == 'all':
-            banner_img.edition = 'couples'
-        session.commit()
+        setting = session.query(Setting).filter(Setting.name == 'sm_edition').first()
+        if setting and setting.value != 'couples':
+            log('info', f"sm_edition war '{setting.value}' - wird auf 'couples' gesetzt")
+            setting.value = 'couples'
+            session.commit()
     finally:
         session.close()
 
