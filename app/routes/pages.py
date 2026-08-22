@@ -1963,12 +1963,6 @@ def home():
 @jwt_required
 def couple_thinking_of_you():
     """Store an in-app couple signal and optionally nudge the partner externally."""
-    if not edition or edition.value != 'couples':
-        return jsonify(
-            status='error',
-            message='Diese Funktion ist nur in der Couples-Edition verfügbar.',
-        ), 404
-
     if not request.is_json:
         return jsonify(
             status='error',
@@ -2052,9 +2046,6 @@ def couple_thinking_of_you():
 @jwt_required
 def couple_thinking_of_you_pending():
     """Return the current user's pending in-app couple signal."""
-    if not edition or edition.value != 'couples':
-        return jsonify(status='success', data={'signal': None})
-
     partner = _couple_partner_for_user(g.user_id)
     signal = _couple_thinking_pending_signal(g.user_id)
     if not partner or not signal or signal['sender_user_id'] != partner.id:
@@ -2078,9 +2069,6 @@ def couple_thinking_of_you_pending():
 @jwt_required
 def couple_thinking_of_you_delivered():
     """Acknowledge a signal after its in-app arrival animation has been shown."""
-    if not edition or edition.value != 'couples':
-        return jsonify(status='error', message='Ungültige Anfrage.'), 404
-
     if not request.is_json:
         return jsonify(status='error', message='Ungültige Anfrage.'), 415
 
@@ -2130,9 +2118,6 @@ def couple_thinking_of_you_delivered():
 @jwt_required
 def couple_thinking_of_you_status():
     """Return the delivery state of the current user's latest couple signal."""
-    if not edition or edition.value != 'couples':
-        return jsonify(status='success', data={'state': 'none', 'retry_after': 0})
-
     partner = _couple_partner_for_user(g.user_id)
     if not partner:
         return jsonify(status='success', data={'state': 'none', 'retry_after': 0})
