@@ -22,11 +22,7 @@
             Hier werden aus Ideen konkrete Vorhaben. Was noch nicht konkret ist, sammelt ihr zuerst in der <a href="{{ url_for('pages.bucketlist') }}">Bucketlist</a>. Aus einem erlebten Plan kann später direkt ein Kapitel werden.
          </p>
 
-         {% if plan_error %}
-         <article class="error-container plan-error">
-            <div class="padding">{{ plan_error }}</div>
-         </article>
-         {% endif %}
+         {% include 'layouts/page-error.html' %}
 
          <nav class="plans-filters">
             <a class="chip round{% if selected_status == 'all' %} fill{% endif %}"
@@ -63,7 +59,7 @@
                      {% endif %}
                   </div>
 
-                  <h5 class="plan-title">{{ plan.title }}</h5>
+                  <h6 class="plan-title">{{ plan.title }}</h6>
 
                   {% if plan.description %}
                   <p class="plan-description">{{ plan.description }}</p>

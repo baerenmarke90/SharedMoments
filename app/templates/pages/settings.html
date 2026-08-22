@@ -51,6 +51,7 @@
    <!-- Settings -->
 
    <main class="responsive settings-main">
+      {% include 'layouts/page-error.html' %}
     <article class="primary-container settings-shell">
             <legend>{{ _('About') }}</legend>
             {% if settings_type == 'settings' %}

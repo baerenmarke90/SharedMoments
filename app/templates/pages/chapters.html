@@ -22,13 +22,7 @@
             Kapitel verbinden zusammengehörige Erinnerungen, Herzmomente und Meilensteine – zum Beispiel einen Urlaub, einen Ausflug oder eine besondere Phase eurer Beziehung.
          </p>
 
-         {% if chapter_error %}
-         <article class="error-container chapter-error">
-            <div class="padding">
-               {{ chapter_error }}
-            </div>
-         </article>
-         {% endif %}
+         {% include 'layouts/page-error.html' %}
 
          {% if chapters %}
             {% for chapter in chapters %}
@@ -47,7 +41,7 @@
                   {% endif %}
 
                   <div class="chapter-card-body">
-                     <h5 class="chapter-card-title">{{ chapter.title }}</h5>
+                     <h6 class="chapter-card-title">{{ chapter.title }}</h6>
 
                      <div class="chapter-card-meta">
                         {% if chapter.date_label %}

@@ -128,11 +128,7 @@
       </div>
 
       <main class="responsive private-page">
-         {% if private_error %}
-         <article class="error-container" style="margin-bottom:var(--sm-space-5);">
-            {{ private_error }}
-         </article>
-         {% endif %}
+         {% include 'layouts/page-error.html' %}
 
          <div class="private-hint">
             <i>lock</i>

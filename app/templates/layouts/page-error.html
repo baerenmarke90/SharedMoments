@@ -1,0 +1,12 @@
+{# Eine Fehleranzeige fuer alle Seiten.
+
+   Liest den Parameter selbst aus der Adresse, statt ihn von jeder Route
+   einzeln durchreichen zu lassen - vorher hiess dieselbe Sache je nach
+   Seite plan_error, bucket_error, place_error, chapter_error oder
+   private_error, und sechs Seiten hatten gar keine Anzeige. #}
+{% set page_error = request.args.get('error') %}
+{% if page_error %}
+<article class="error-container page-error" role="alert">
+   <div class="padding">{{ page_error }}</div>
+</article>
+{% endif %}

@@ -15,6 +15,7 @@
       </div>
 
       <main class="responsive nav-hub-page">
+         {% include 'layouts/page-error.html' %}
          <section class="nav-hub-hero surface-container">
             <span class="nav-hub-hero-icon"><i>photo_library</i></span>
             <div>
@@ -74,8 +75,34 @@
             </a>
          </section>
 
+         {% if not (moments_counts.memories or moments_counts.hearts
+                    or moments_counts.milestones or moments_counts.places) %}
+         <article class="surface-container nav-hub-empty">
+            <i>photo_library</i>
+            <h5>Hier ist noch nichts gesammelt</h5>
+            <p>
+               Sobald ihr eine Erinnerung, einen Herzmoment oder einen Ort
+               festhaltet, füllt sich diese Übersicht von selbst.
+            </p>
+            <button class="round" type="button" onclick="openCoupleCreateMenu()">
+               <i>add</i>
+               <span>Ersten Moment festhalten</span>
+            </button>
+         </article>
+         {% endif %}
+
          {% include 'layouts/footer.html' %}
       </main>
+
+      <div class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index: 40;"
+           onclick="openCoupleCreateMenu()">
+         <button class="square round extra"
+                 aria-label="Moment festhalten"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
 
       {% set couple_create_query = 'sheet' %}
       {% include 'layouts/couple-create-sheet.html' %}

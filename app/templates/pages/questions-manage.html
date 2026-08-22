@@ -12,6 +12,7 @@
       <div id="div-render-nav-drawer">{% include 'layouts/nav-drawer.html' %}</div>
 
       <main class="responsive dq-manage-page">
+         {% include 'layouts/page-error.html' %}
          <div class="dq-manage-toolbar">
             <a class="button circle transparent" href="{{ url_for('daily_questions.questions') }}" aria-label="Zurück zu Unsere Fragen">
                <i>arrow_back</i>

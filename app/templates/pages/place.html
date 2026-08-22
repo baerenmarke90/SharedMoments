@@ -20,11 +20,7 @@
       </div>
 
       <main class="responsive place-page">
-         {% if place_error %}
-         <article class="error-container place-error">
-            <div class="padding">{{ place_error }}</div>
-         </article>
-         {% endif %}
+         {% include 'layouts/page-error.html' %}
 
          <article class="surface-container place-hero">
             <div id="couple-place-detail-map"></div>

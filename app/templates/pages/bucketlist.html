@@ -22,11 +22,7 @@
             Eure gemeinsame Liste für alles, was ihr im Leben noch zusammen machen, sehen oder erleben wollt. Wird aus einer Idee etwas Konkretes, macht ihr daraus einen Plan.
          </p>
 
-         {% if bucket_error %}
-         <article class="error-container bucket-error">
-            <div class="padding">{{ bucket_error }}</div>
-         </article>
-         {% endif %}
+         {% include 'layouts/page-error.html' %}
 
          <article class="surface-container bucket-summary">
             <div class="bucket-summary-top">
@@ -229,6 +225,14 @@
                Eure Bucketlist wartet auf die nächsten Abenteuer.
                {% endif %}
             </p>
+
+            {# Punkt 6: aus einem leeren Filter muss ein Weg herausfuehren. #}
+            {% if search_query or selected_status != 'open' %}
+            <a class="button round border" href="{{ url_for('pages.bucketlist') }}">
+               <i>filter_alt_off</i>
+               <span>Filter zurücksetzen</span>
+            </a>
+            {% endif %}
          </article>
          {% endif %}
       </main>

@@ -16,6 +16,7 @@
       </div>
 
       <main class="responsive questions-page">
+         {% include 'layouts/page-error.html' %}
          <section class="questions-hero">
              <div class="questions-hero-icon" aria-hidden="true">
                 <i>local_florist</i>
@@ -90,7 +91,7 @@
                      </span>
                   </div>
 
-                  <h5 class="question-archive-text">{{ item.question }}</h5>
+                  <h6 class="question-archive-text">{{ item.question }}</h6>
 
                   {% if item.revealed %}
                   <div class="question-answer-grid">
@@ -168,6 +169,10 @@
             <i>local_florist</i>
             <h5>Hier ist noch nichts</h5>
             <p>Für diesen Filter gibt es aktuell keine Fragen.</p>
+            <a class="button round border" href="{{ url_for('daily_questions.questions') }}">
+               <i>filter_alt_off</i>
+               <span>Filter zurücksetzen</span>
+            </a>
          </article>
          {% endif %}
       </main>

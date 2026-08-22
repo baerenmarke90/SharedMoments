@@ -15,6 +15,14 @@
       </div>
 
       <main class="responsive month-page">
+         {% include 'layouts/page-error.html' %}
+
+         <p class="month-intro">
+            Ein Monat aus der Nähe: alles, was in {{ month_snapshot['label'] }}
+            {{ selected_year }} zusammengekommen ist – Momente, Orte und
+            erfüllte Vorhaben.
+         </p>
+
          <div class="month-toolbar">
             <a class="button circle transparent month-toolbar-back"
                href="/year/{{ selected_year }}"

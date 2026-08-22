@@ -18,11 +18,7 @@
       </div>
 
       <main class="responsive chapter-page">
-         {% if chapter_error %}
-         <article class="error-container chapter-error">
-            <div class="padding">{{ chapter_error }}</div>
-         </article>
-         {% endif %}
+         {% include 'layouts/page-error.html' %}
 
          <article class="surface-container chapter-hero">
             {% if chapter.cover_url %}

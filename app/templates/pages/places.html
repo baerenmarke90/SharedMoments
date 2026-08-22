@@ -24,11 +24,7 @@
             Eure gemeinsamen Orte verbinden Pläne, Kapitel und besondere Momente auf einer Karte. Orte aus bestehenden Plänen und Kapiteln werden automatisch übernommen.
          </p>
 
-         {% if place_error %}
-         <article class="error-container place-error">
-            <div class="padding">{{ place_error }}</div>
-         </article>
-         {% endif %}
+         {% include 'layouts/page-error.html' %}
 
          <article class="surface-container places-map-card">
             <div id="couple-places-map"></div>

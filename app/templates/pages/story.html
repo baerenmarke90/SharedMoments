@@ -18,6 +18,7 @@
       </div>
 
       <main class="responsive story-page">
+         {% include 'layouts/page-error.html' %}
          <p class="story-intro">
              Erinnerungen, Herzmomente und Meilensteine als eure gemeinsame Geschichte.
          </p>
@@ -228,6 +229,18 @@
 
          {% include 'layouts/footer.html' %}
       </main>
+
+      {# Punkt 4: /story war die einzige Hauptseite ohne eigene Aktion. #}
+      <div id="div-fab-story-create"
+           class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index: 40;"
+           onclick="openCoupleCreateMenu()">
+         <button class="square round extra"
+                 aria-label="Moment festhalten"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
 
       {% set couple_nav_active = 'story' %}
       {% include 'layouts/couple-create-sheet.html' %}
