@@ -3,6 +3,7 @@
    <head>
       <title>Bucketlist · {{ title.value }}</title>
       {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <style>
          .bucket-page {
             max-width: 760px;
@@ -381,7 +382,7 @@
       </style>
    </head>
 
-   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="couple-app couple-page-bucket {% if darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
 
       <div class="overlay"
@@ -480,7 +481,7 @@
          {% if bucket_items %}
          <section class="surface-container bucket-list">
             {% for entry in bucket_items %}
-            <article class="bucket-item{% if entry.completed %} completed{% endif %}"
+            <article class="bucket-item{% if entry.completed %} completed{% elif entry.plan %} planned{% endif %}"
                      id="bucket-{{ entry.id }}">
                {% if has_list_permission('Update', list_type_title) %}
                <form class="bucket-check-form"
@@ -648,6 +649,9 @@
       </dialog>
 
       {% include 'layouts/footer.html' %}
+
+      {% set couple_nav_active = 'more' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>
       <script>

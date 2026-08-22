@@ -3,6 +3,7 @@
    <head>
       <title>{{ place.name }} · {{ title.value }}</title>
       {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <link rel="stylesheet"
             href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
             crossorigin="">
@@ -434,7 +435,7 @@
       </style>
    </head>
 
-   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="couple-app couple-page-place {% if darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
 
       <div class="overlay"
@@ -727,6 +728,9 @@
             autoOpenCreate: false
          };
       </script>
+      {% set couple_nav_active = 'more' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
+
       <script src="{{ static_versioned('js/main.js') }}"></script>
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
       <script src="{{ static_versioned('js/places.js') }}"></script>

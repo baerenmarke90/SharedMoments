@@ -1,0 +1,548 @@
+/* SharedMoments Couples UI layer
+ * Visual system for the relationship-first pages. Scoped to body.couple-app
+ * so Family/Friends editions keep their existing appearance.
+ */
+
+body.couple-app {
+   --couple-heart: #e56aa6;
+   --couple-heart-soft: rgba(229, 106, 166, 0.13);
+   --couple-memory: #6c63d9;
+   --couple-memory-soft: rgba(108, 99, 217, 0.12);
+   --couple-plan: #6f5bb7;
+   --couple-plan-soft: rgba(111, 91, 183, 0.13);
+   --couple-place: #4e8b77;
+   --couple-place-soft: rgba(78, 139, 119, 0.13);
+   --couple-chapter: #b87948;
+   --couple-chapter-soft: rgba(184, 121, 72, 0.13);
+   --couple-star: #b28a35;
+   --couple-star-soft: rgba(178, 138, 53, 0.13);
+   --couple-shadow: 0 10px 30px rgba(35, 24, 54, 0.07);
+   --couple-shadow-hover: 0 16px 42px rgba(35, 24, 54, 0.12);
+   --couple-radius: 1.15rem;
+   background-image:
+      radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--primary-container) 32%, transparent) 0, transparent 28rem),
+      radial-gradient(circle at 100% 18%, rgba(229, 106, 166, 0.08) 0, transparent 24rem);
+   background-attachment: fixed;
+}
+
+body.couple-app.dark {
+   --couple-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+   --couple-shadow-hover: 0 18px 46px rgba(0, 0, 0, 0.34);
+}
+
+body.couple-app > header {
+   border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
+   backdrop-filter: blur(14px);
+   -webkit-backdrop-filter: blur(14px);
+}
+
+body.couple-app > header nav {
+   max-width: 1040px;
+   margin: 0 auto;
+}
+
+body.couple-app > header h6 {
+   font-weight: 650;
+   letter-spacing: -0.01em;
+}
+
+body.couple-app #header-profile-picture {
+   box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+/* Shared page rhythm */
+body.couple-app main.responsive {
+   padding-top: 1rem;
+}
+
+body.couple-app article.surface-container,
+body.couple-app .surface-container.couple-surface {
+   border: 1px solid color-mix(in srgb, var(--outline-variant) 58%, transparent);
+   box-shadow: var(--couple-shadow);
+}
+
+body.couple-app article.surface-container {
+   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+   body.couple-app article.surface-container:hover {
+      box-shadow: var(--couple-shadow-hover);
+   }
+}
+
+body.couple-app .plans-intro,
+body.couple-app .bucket-intro,
+body.couple-app .chapters-intro,
+body.couple-app .story-intro,
+body.couple-app .places-intro {
+   position: relative;
+   margin: 0 0 1rem;
+   padding: 0.9rem 1rem 0.9rem 1.15rem;
+   border-radius: 0 var(--couple-radius) var(--couple-radius) 0;
+   background: color-mix(in srgb, var(--primary-container) 34%, var(--surface));
+   border-left: 4px solid color-mix(in srgb, var(--primary) 70%, var(--couple-heart));
+   line-height: 1.55;
+   opacity: 1;
+}
+
+body.couple-app .plans-intro a,
+body.couple-app .bucket-intro a,
+body.couple-app .chapters-intro a,
+body.couple-app .story-intro a,
+body.couple-app .places-intro a {
+   font-weight: 650;
+}
+
+body.couple-app .chip {
+   transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+
+body.couple-app .chip.fill {
+   box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+   body.couple-app a.chip:hover,
+   body.couple-app button.chip:hover {
+      transform: translateY(-1px);
+   }
+}
+
+/* Home / Wir */
+body.couple-page-home .couple-home {
+   max-width: 860px;
+}
+
+body.couple-page-home .couple-hero {
+   position: relative;
+   isolation: isolate;
+   border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--outline-variant));
+   box-shadow: 0 18px 46px color-mix(in srgb, var(--primary) 14%, transparent);
+   background:
+      radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.42) 0, transparent 25%),
+      radial-gradient(circle at 82% 5%, rgba(229, 106, 166, 0.18) 0, transparent 25%),
+      var(--primary-container);
+}
+
+body.couple-page-home.dark .couple-hero {
+   background:
+      radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.05) 0, transparent 25%),
+      radial-gradient(circle at 82% 5%, rgba(229, 106, 166, 0.12) 0, transparent 25%),
+      var(--primary-container);
+}
+
+body.couple-page-home .couple-avatars > .couple-avatar {
+   border: 4px solid color-mix(in srgb, var(--surface) 82%, transparent);
+   box-shadow: 0 8px 22px rgba(30, 22, 45, 0.18);
+}
+
+body.couple-page-home .couple-heart {
+   box-shadow: 0 7px 20px rgba(229, 106, 166, 0.22);
+   background: color-mix(in srgb, var(--couple-heart) 14%, var(--surface));
+}
+
+body.couple-page-home .couple-names {
+   letter-spacing: -0.025em;
+}
+
+body.couple-page-home .couple-section-title {
+   font-weight: 650;
+   letter-spacing: -0.015em;
+}
+
+body.couple-page-home .couple-section-title > i {
+   width: 34px;
+   height: 34px;
+   border-radius: 50%;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   background: color-mix(in srgb, var(--primary-container) 70%, var(--surface));
+   color: var(--primary);
+}
+
+body.couple-page-home .couple-year-card article {
+   background:
+      linear-gradient(135deg, color-mix(in srgb, var(--primary-container) 52%, var(--surface)), var(--surface-container));
+}
+
+body.couple-page-home .couple-year-badge {
+   background: linear-gradient(145deg, var(--primary), color-mix(in srgb, var(--primary) 64%, var(--couple-heart)));
+   color: var(--on-primary);
+   box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+body.couple-page-home .couple-recent-leading-heart > i {
+   background: var(--couple-heart-soft);
+}
+
+body.couple-page-home .couple-plan-icon {
+   background: var(--couple-plan-soft);
+   color: var(--couple-plan);
+}
+
+/* Story */
+body.couple-page-story .story-controls {
+   border-radius: var(--couple-radius);
+   padding: 0.85rem;
+   background: color-mix(in srgb, var(--surface-container) 82%, transparent);
+   border: 1px solid color-mix(in srgb, var(--outline-variant) 62%, transparent);
+}
+
+body.couple-page-story .story-month-title {
+   letter-spacing: -0.015em;
+}
+
+body.couple-page-story .story-card {
+   overflow: hidden;
+   border-left-width: 4px;
+}
+
+body.couple-page-story .story-card-memory {
+   border-left-color: var(--couple-memory);
+}
+body.couple-page-story .story-card-heart {
+   border-left-color: var(--couple-heart);
+}
+body.couple-page-story .story-card-milestone {
+   border-left-color: var(--couple-star);
+}
+
+body.couple-page-story .story-card-placeholder-heart,
+body.couple-page-story .story-card-type-heart {
+   color: var(--couple-heart);
+}
+body.couple-page-story .story-card-placeholder-memory,
+body.couple-page-story .story-card-type-memory {
+   color: var(--couple-memory);
+}
+body.couple-page-story .story-card-placeholder-milestone,
+body.couple-page-story .story-card-type-milestone {
+   color: var(--couple-star);
+}
+
+/* Plans */
+body.couple-page-plans .plans-filters,
+body.couple-page-bucket .bucket-filters {
+   padding: 0.15rem 0 0.35rem;
+}
+
+body.couple-page-plans .plan-card {
+   overflow: hidden;
+   border-top: 4px solid var(--couple-plan);
+}
+
+body.couple-page-plans .plan-card-idea {
+   border-top-color: var(--couple-star);
+}
+body.couple-page-plans .plan-card-planned {
+   border-top-color: var(--couple-plan);
+}
+body.couple-page-plans .plan-card-experienced {
+   border-top-color: var(--couple-place);
+}
+
+body.couple-page-plans .plan-status {
+   background: var(--couple-plan-soft);
+}
+
+body.couple-page-plans .plan-title {
+   letter-spacing: -0.02em;
+}
+
+body.couple-page-plans .plan-actions {
+   border-top-color: color-mix(in srgb, var(--outline-variant) 55%, transparent);
+}
+
+/* Bucketlist */
+body.couple-page-bucket .bucket-summary {
+   background: linear-gradient(135deg, color-mix(in srgb, var(--primary-container) 44%, var(--surface)), var(--surface-container));
+}
+
+body.couple-page-bucket .bucket-progress-bar {
+   background: linear-gradient(90deg, var(--primary), var(--couple-heart));
+}
+
+body.couple-page-bucket .bucket-quick-add {
+   padding: 0.75rem;
+   border-radius: var(--couple-radius);
+   background: color-mix(in srgb, var(--surface-container) 72%, transparent);
+   border: 1px solid color-mix(in srgb, var(--outline-variant) 58%, transparent);
+}
+
+body.couple-page-bucket .bucket-list {
+   overflow: visible;
+}
+
+body.couple-page-bucket .bucket-item {
+   position: relative;
+   transition: background-color 150ms ease, transform 150ms ease;
+}
+
+body.couple-page-bucket .bucket-item::before {
+   content: '';
+   position: absolute;
+   left: 0;
+   top: 12px;
+   bottom: 12px;
+   width: 3px;
+   border-radius: 0 3px 3px 0;
+   background: var(--couple-star);
+   opacity: 0.72;
+}
+
+body.couple-page-bucket .bucket-item.planned::before {
+   background: var(--couple-plan);
+}
+
+body.couple-page-bucket .bucket-item.completed::before {
+   background: var(--couple-place);
+}
+
+body.couple-page-bucket .bucket-item.completed {
+   background: color-mix(in srgb, var(--couple-place-soft) 42%, transparent);
+}
+
+body.couple-page-bucket .bucket-check i {
+   transition: transform 130ms ease;
+}
+body.couple-page-bucket .bucket-check:active i {
+   transform: scale(0.78);
+}
+
+/* Chapters */
+body.couple-page-chapters .chapter-card {
+   overflow: hidden;
+}
+body.couple-page-chapters .chapter-card-link {
+   transition: transform 160ms ease;
+}
+body.couple-page-chapters .chapter-cover-placeholder,
+body.couple-page-chapter .chapter-hero-placeholder {
+   background:
+      linear-gradient(145deg, var(--couple-chapter-soft), color-mix(in srgb, var(--primary-container) 50%, var(--surface)));
+   color: var(--couple-chapter);
+}
+
+body.couple-page-chapter .chapter-hero {
+   box-shadow: var(--couple-shadow-hover);
+}
+
+body.couple-page-chapter .chapter-hero-body {
+   background: linear-gradient(180deg, var(--surface-container), color-mix(in srgb, var(--surface) 82%, var(--primary-container)));
+}
+
+/* Places */
+body.couple-page-places .places-map-card,
+body.couple-page-place .place-hero {
+   box-shadow: var(--couple-shadow-hover);
+}
+
+body.couple-page-places .place-card-placeholder {
+   background: linear-gradient(145deg, var(--couple-place-soft), color-mix(in srgb, var(--surface-container-high) 82%, transparent));
+   color: var(--couple-place);
+}
+
+body.couple-page-places .place-card {
+   overflow: hidden;
+   border-left: 4px solid var(--couple-place);
+}
+
+body.couple-page-place .place-section-title > i {
+   color: var(--couple-place);
+}
+
+/* Year recap */
+body.couple-page-year .year-hero {
+   border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--outline-variant));
+   box-shadow: var(--couple-shadow-hover);
+   background:
+      radial-gradient(circle at 14% 12%, rgba(255,255,255,0.38) 0, transparent 24%),
+      radial-gradient(circle at 88% 0%, rgba(229,106,166,0.16) 0, transparent 24%),
+      var(--primary-container);
+}
+body.couple-page-year.dark .year-hero {
+   background:
+      radial-gradient(circle at 14% 12%, rgba(255,255,255,0.05) 0, transparent 24%),
+      radial-gradient(circle at 88% 0%, rgba(229,106,166,0.12) 0, transparent 24%),
+      var(--primary-container);
+}
+
+body.couple-page-year .year-stat {
+   position: relative;
+   overflow: hidden;
+}
+body.couple-page-year .year-stat::after {
+   content: '';
+   position: absolute;
+   inset: auto 0 0;
+   height: 3px;
+   background: var(--couple-memory);
+}
+body.couple-page-year .year-stat:nth-child(2)::after { background: var(--couple-heart); }
+body.couple-page-year .year-stat:nth-child(3)::after { background: var(--couple-star); }
+body.couple-page-year .year-stat:nth-child(4)::after { background: var(--couple-chapter); }
+body.couple-page-year .year-stat:nth-child(5)::after { background: var(--couple-place); }
+body.couple-page-year .year-stat:nth-child(6)::after { background: var(--couple-heart); }
+body.couple-page-year .year-stat:nth-child(7)::after { background: var(--couple-plan); }
+
+body.couple-page-year .year-highlight-list {
+   border-left: 4px solid color-mix(in srgb, var(--primary) 62%, var(--couple-heart));
+}
+
+/* Mobile relationship navigation */
+.couple-bottom-nav {
+   display: none;
+}
+
+@media (max-width: 900px) {
+   body.couple-app main.responsive {
+      padding-bottom: calc(7.2rem + env(safe-area-inset-bottom));
+   }
+
+   body.couple-app > .fixed.bottom.right {
+      bottom: calc(4.7rem + env(safe-area-inset-bottom)) !important;
+   }
+
+   .couple-bottom-nav {
+      position: fixed;
+      z-index: 950;
+      left: 0.7rem;
+      right: 0.7rem;
+      bottom: calc(0.55rem + env(safe-area-inset-bottom));
+      min-height: 64px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: end;
+      padding: 0.35rem 0.25rem;
+      border-radius: 1.35rem;
+      background: color-mix(in srgb, var(--surface-container) 94%, transparent);
+      border: 1px solid color-mix(in srgb, var(--outline-variant) 68%, transparent);
+      box-shadow: 0 12px 34px rgba(28, 20, 40, 0.18);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+   }
+
+   .couple-bottom-nav > a,
+   .couple-bottom-nav > button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: color-mix(in srgb, var(--on-surface) 68%, transparent);
+      min-width: 0;
+      min-height: 52px;
+      padding: 0.2rem 0.15rem;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.1rem;
+      text-decoration: none;
+      font: inherit;
+      cursor: pointer;
+      border-radius: 1rem;
+   }
+
+   .couple-bottom-nav > a > i,
+   .couple-bottom-nav > button > i {
+      position: static !important;
+      font-size: 1.35rem;
+   }
+
+   .couple-bottom-nav-label {
+      max-width: 100%;
+      font-size: 0.67rem;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+   }
+
+   .couple-bottom-nav > .active {
+      color: var(--primary);
+      font-weight: 650;
+      background: color-mix(in srgb, var(--primary-container) 46%, transparent);
+   }
+
+   .couple-bottom-nav > .couple-bottom-add {
+      align-self: center;
+      justify-self: center;
+      width: 58px;
+      min-width: 58px;
+      height: 58px;
+      min-height: 58px;
+      margin-top: -18px;
+      padding: 0;
+      border-radius: 20px;
+      background: linear-gradient(145deg, var(--primary), color-mix(in srgb, var(--primary) 68%, var(--couple-heart)));
+      color: var(--on-primary);
+      box-shadow: 0 9px 22px color-mix(in srgb, var(--primary) 30%, transparent);
+   }
+
+   .couple-bottom-nav > .couple-bottom-add > i {
+      font-size: 1.8rem;
+   }
+
+   .couple-bottom-nav > .couple-bottom-add .couple-bottom-nav-label {
+      display: none;
+   }
+
+   body.couple-page-home .couple-hero {
+      border-radius: 1.35rem;
+   }
+
+   body.couple-page-home .couple-section {
+      margin-top: 1.15rem;
+   }
+}
+
+@media (max-width: 600px) {
+   body.couple-app main.responsive {
+      padding-left: 0.8rem;
+      padding-right: 0.8rem;
+   }
+
+   body.couple-app .plans-intro,
+   body.couple-app .bucket-intro,
+   body.couple-app .chapters-intro,
+   body.couple-app .story-intro,
+   body.couple-app .places-intro {
+      margin-left: 0;
+      margin-right: 0;
+      padding: 0.8rem 0.85rem 0.8rem 1rem;
+   }
+
+   body.couple-page-home .couple-avatars > .couple-avatar {
+      border-width: 3px;
+   }
+
+   .couple-bottom-nav {
+      left: 0.45rem;
+      right: 0.45rem;
+      bottom: calc(0.35rem + env(safe-area-inset-bottom));
+   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+   body.couple-app *,
+   body.couple-app *::before,
+   body.couple-app *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.001ms !important;
+      animation-duration: 0.001ms !important;
+   }
+}
+
+@media (max-width: 900px) {
+   body.couple-page-home #div-fab-couple-create,
+   body.couple-page-memories #div-fab-create-new-home-item,
+   body.couple-page-milestones #div-fab-create-milestone,
+   body.couple-page-plans > .fixed.bottom.right,
+   body.couple-page-bucket > .fixed.bottom.right,
+   body.couple-page-chapters > .fixed.bottom.right,
+   body.couple-page-places > .fixed.bottom.right {
+      display: none !important;
+   }
+}

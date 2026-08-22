@@ -3,6 +3,7 @@
    <head>
       <title>{{ title.value }}</title>
       {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <style>
          .chapters-page {
             max-width: 820px;
@@ -124,7 +125,7 @@
       </style>
    </head>
 
-   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="couple-app couple-page-chapters {% if darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
 
       <div class="overlay"
@@ -297,6 +298,9 @@
       </dialog>
 
       {% include 'layouts/footer.html' %}
+
+      {% set couple_nav_active = 'story' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>
       <script>

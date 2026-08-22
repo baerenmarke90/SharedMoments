@@ -3,6 +3,7 @@
    <head>
       <title>{{ title.value }}</title>
       {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <style>
          .preview-image {
          width: 100px;
@@ -177,7 +178,7 @@
 
 </style>
    </head>
-   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="{% if sm_edition == 'couples' %}couple-app {% if memories_page|default(false) %}couple-page-memories {% elif milestones_page|default(false) %}couple-page-milestones {% else %}couple-page-home {% endif %}{% endif %}{% if darkmode.value == 'TRUE' %}dark{% endif %}">
    <!-- Header -->
    {% include 'layouts/header.html' %}
    <!-- Overlay wenn Nav-Drawer geöffnet -->
@@ -753,6 +754,15 @@
       })();
       {% endif %}
    </script>
+   {% if sm_edition == 'couples' %}
+      {% if not memories_page|default(false) and not milestones_page|default(false) %}
+         {% set couple_nav_active = 'home' %}
+      {% else %}
+         {% set couple_nav_active = 'more' %}
+      {% endif %}
+      {% include 'layouts/couple-bottom-nav.html' %}
+   {% endif %}
+
    <script src="{{ static_versioned('js/main.js') }}"></script>
    <script src="{{ static_versioned('js/home.js') }}"></script>
    <script src="{{ static_versioned('js/timeline.js') }}"></script>

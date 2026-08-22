@@ -1,0 +1,38 @@
+{% set _couple_nav = couple_nav_active|default('more') %}
+<nav class="couple-bottom-nav" aria-label="Paar-Navigation">
+   <a href="/home"
+      class="{% if _couple_nav == 'home' %}active{% endif %}"
+      {% if _couple_nav == 'home' %}aria-current="page"{% endif %}>
+      <i>favorite</i>
+      <span class="couple-bottom-nav-label">Wir</span>
+   </a>
+
+   <a href="/story"
+      class="{% if _couple_nav == 'story' %}active{% endif %}"
+      {% if _couple_nav == 'story' %}aria-current="page"{% endif %}>
+      <i>auto_stories</i>
+      <span class="couple-bottom-nav-label">Geschichte</span>
+   </a>
+
+   <a href="/home?create=1"
+      class="couple-bottom-add"
+      aria-label="Hinzufügen">
+      <i>add</i>
+      <span class="couple-bottom-nav-label">Hinzufügen</span>
+   </a>
+
+   <a href="/plans"
+      class="{% if _couple_nav == 'plans' %}active{% endif %}"
+      {% if _couple_nav == 'plans' %}aria-current="page"{% endif %}>
+      <i>explore</i>
+      <span class="couple-bottom-nav-label">Pläne</span>
+   </a>
+
+   <button type="button"
+           class="{% if _couple_nav == 'more' %}active{% endif %}"
+           aria-label="Mehr öffnen"
+           onclick="callUi('#dialog-nav-drawer')">
+      <i>menu</i>
+      <span class="couple-bottom-nav-label">Mehr</span>
+   </button>
+</nav>

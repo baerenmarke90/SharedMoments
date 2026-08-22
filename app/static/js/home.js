@@ -868,10 +868,34 @@ function initCoupleCreateMenuDismissal() {
    dragZone.addEventListener('pointercancel', finishDrag);
 }
 
-if (document.readyState === 'loading') {
-   document.addEventListener('DOMContentLoaded', initCoupleCreateMenuDismissal);
-} else {
+function initCoupleCreateFromQuery() {
+   const dialog = document.getElementById('dialog-couple-create');
+   if (!dialog) return;
+
+   const params = new URLSearchParams(window.location.search);
+   if (params.get('create') !== '1') return;
+
+   window.setTimeout(() => {
+      callUi('#dialog-couple-create');
+   }, 80);
+
+   params.delete('create');
+   const query = params.toString();
+   const cleanUrl = window.location.pathname
+      + (query ? `?${query}` : '')
+      + window.location.hash;
+   window.history.replaceState({}, '', cleanUrl);
+}
+
+function initCoupleHomeUi() {
    initCoupleCreateMenuDismissal();
+   initCoupleCreateFromQuery();
+}
+
+if (document.readyState === 'loading') {
+   document.addEventListener('DOMContentLoaded', initCoupleHomeUi);
+} else {
+   initCoupleHomeUi();
 }
 
 function getHomeMediaSelectionSignature(fileInput) {
