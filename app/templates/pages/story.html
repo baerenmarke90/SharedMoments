@@ -301,7 +301,7 @@
 
       <main class="responsive story-page">
          <p class="story-intro">
-            Erinnerungen, Herzmomente und Meilensteine – chronologisch als eure gemeinsame Geschichte. Kapitel verbinden zusammengehörige Erlebnisse miteinander.
+            Erinnerungen, Herzmomente und Meilensteine – chronologisch als eure gemeinsame Story. Kapitel verbinden zusammengehörige Erlebnisse miteinander.
          </p>
 
          <nav class="right-align" style="margin:-0.45rem 0 1rem;gap:.7rem;flex-wrap:wrap;">
@@ -319,27 +319,28 @@
             <nav class="story-filter-row">
                {% set year_arg = story_year if story_year else None %}
                {% set query_arg = story_query if story_query else None %}
+               {% set order_arg = story_order if story_order != 'new' else None %}
 
                <a class="chip round {% if story_type == 'all' %}fill{% endif %}"
-                  href="{{ url_for('pages.story', type='all', year=year_arg, q=query_arg) }}">
+                  href="{{ url_for('pages.story', type='all', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>all_inclusive</i>
                   <span>Alles</span>
                </a>
 
                <a class="chip round {% if story_type == 'memory' %}fill{% endif %}"
-                  href="{{ url_for('pages.story', type='memory', year=year_arg, q=query_arg) }}">
+                  href="{{ url_for('pages.story', type='memory', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>photo_library</i>
                   <span>Erinnerungen</span>
                </a>
 
                <a class="chip round {% if story_type == 'heart' %}fill{% endif %}"
-                  href="{{ url_for('pages.story', type='heart', year=year_arg, q=query_arg) }}">
+                  href="{{ url_for('pages.story', type='heart', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>favorite</i>
                   <span>Herzmomente</span>
                </a>
 
                <a class="chip round {% if story_type == 'milestone' %}fill{% endif %}"
-                  href="{{ url_for('pages.story', type='milestone', year=year_arg, q=query_arg) }}">
+                  href="{{ url_for('pages.story', type='milestone', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>star</i>
                   <span>Meilensteine</span>
                </a>
@@ -353,7 +354,7 @@
                      <input type="search"
                             name="q"
                             value="{{ story_query }}"
-                            placeholder="Unsere Geschichte durchsuchen">
+                            placeholder="Unsere Story durchsuchen">
                      <i>search</i>
                      <button type="submit"
                              class="circle transparent story-search-button"
@@ -374,10 +375,18 @@
                      </select>
                      <i>calendar_month</i>
                   </div>
+
+                  <div class="field border round suffix story-year-field">
+                     <select name="order" onchange="this.form.submit()">
+                        <option value="new" {% if story_order != 'old' %}selected{% endif %}>Neueste zuerst</option>
+                        <option value="old" {% if story_order == 'old' %}selected{% endif %}>Älteste zuerst</option>
+                     </select>
+                     <i>swap_vert</i>
+                  </div>
                </div>
             </form>
 
-            {% if story_query or story_year or story_type != 'all' %}
+            {% if story_query or story_year or story_type != 'all' or story_order != 'new' %}
             <nav class="right-align" style="margin-top:0.4rem;">
                <a href="{{ url_for('pages.story') }}">Filter zurücksetzen</a>
             </nav>
@@ -490,7 +499,7 @@
                Filter zurücksetzen
             </a>
             {% else %}
-            <h5>Eure Geschichte beginnt hier.</h5>
+            <h5>Eure Story beginnt hier.</h5>
             <p>Erinnerungen, gemeinsame Herzmomente und Meilensteine erscheinen automatisch an dieser Stelle.</p>
             <a class="button round" href="/memories">
                Erste Erinnerung hinzufügen

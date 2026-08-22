@@ -97,6 +97,28 @@ body.couple-app {
       "Helvetica Neue", "Noto Sans", sans-serif;
    -webkit-font-smoothing: antialiased;
    text-rendering: optimizeLegibility;
+   /* Eine zu breite Karte hat frueher die ganze Seite verschoben. */
+   overflow-x: hidden;
+   /* Android faerbt den Tap sonst in einem kraeftigen Grauton ein, der auf
+      der neuen Palette rot wirkt. */
+   -webkit-tap-highlight-color: transparent;
+}
+
+/* Sichtbarer Fokus nur fuer Tastatur, in der Akzentfarbe statt im
+   Browser-Standard. */
+body.couple-app a:focus-visible,
+body.couple-app button:focus-visible,
+body.couple-app select:focus-visible,
+body.couple-app input:focus-visible,
+body.couple-app textarea:focus-visible {
+   outline: 2px solid var(--primary);
+   outline-offset: 2px;
+   border-radius: var(--sm-radius-xs);
+}
+
+body.couple-app a:focus:not(:focus-visible),
+body.couple-app button:focus:not(:focus-visible) {
+   outline: none;
 }
 
 body.couple-app.dark {
@@ -146,6 +168,12 @@ body.couple-app .small {
 }
 
 body.couple-app > header {
+   /* Der Header hat durch backdrop-filter einen eigenen Stapelkontext.
+      Ohne z-index landet er hinter spaeteren positionierten Elementen -
+      genau deshalb verschwand das Profilmenue hinter der Hero-Karte. */
+   position: sticky;
+   top: 0;
+   z-index: 900;
    /* Glas statt Kante: die harte Trennlinie liess die Seite wie ein
       Formular wirken. */
    border-bottom: 0;
@@ -153,6 +181,10 @@ body.couple-app > header {
    backdrop-filter: blur(18px) saturate(150%);
    -webkit-backdrop-filter: blur(18px) saturate(150%);
    box-shadow: 0 1px 0 color-mix(in srgb, var(--outline-variant) 34%, transparent);
+}
+
+body.couple-app #header-user-menu {
+   z-index: 901;
 }
 
 body.couple-app > header nav {
@@ -561,6 +593,14 @@ body.couple-page-year .year-highlight-list {
 body.couple-app #dialog-couple-create {
    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
    border-radius: var(--sm-radius-xl) var(--sm-radius-xl) 0 0;
+   /* An den Viewport gebunden statt an die Dokumentbreite: laeuft die Seite
+      horizontal ueber, ragte das Sheet sonst rechts aus dem Bild und die
+      rechte Ecke war nicht mehr zu sehen. */
+   left: 0;
+   right: 0;
+   width: auto;
+   max-width: 100vw;
+   box-sizing: border-box;
    /* Das Sheet ist laenger als der Viewport: scrollen statt abschneiden. */
    max-height: min(84vh, 46rem);
    overflow-y: auto;
@@ -755,6 +795,14 @@ body.couple-app .leaflet-container {
       box-sizing: border-box;
    }
 
+   /* Zwei Blur-Ebenen (Header + Leiste) kosten auf Mittelklasse-Androids in
+      jedem Scroll-Frame Zeit. Unten bleibt der Effekt, oben reicht Deckung. */
+   body.couple-app > header {
+      background: color-mix(in srgb, var(--background) 94%, transparent);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+   }
+
    body.couple-app #dialog-nav-drawer-trigger {
       margin-left: 0;
    }
@@ -934,6 +982,10 @@ body.couple-app #dialog-nav-drawer a.nav-current {
    color: var(--primary);
    font-weight: 650;
    border-radius: var(--sm-radius-pill);
+   /* Die Markierung lief vorher bis an beide Raender und lag damit unter
+      dem Tap-Feedback des Nachbareintrags. */
+   margin-inline: var(--sm-space-2);
+   width: auto;
 }
 
 body.couple-app #dialog-nav-drawer .nav-drawer-group {

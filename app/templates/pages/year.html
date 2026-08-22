@@ -270,6 +270,16 @@
             margin: 0 0 var(--sm-space-4) var(--sm-space-1);
          }
 
+         .year-section-hint {
+            margin-left: auto;
+            font-size: var(--sm-text-xxs);
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            opacity: 0.6;
+            white-space: nowrap;
+         }
+
          .year-section-title > i {
             position: static !important;
          }
@@ -645,6 +655,7 @@
             <h5 class="year-section-title">
                <i>auto_awesome</i>
                <span>Unsere Highlights</span>
+               <span class="year-section-hint">Januar → Dezember</span>
             </h5>
 
             {% for group in year_snapshot.month_groups %}
@@ -688,7 +699,7 @@
                {% if group.total > group.entries|length %}
                <div class="year-more-note">
                   {{ group.total - group.entries|length }} weitere Momente in diesem Monat ·
-                  <a href="/story?year={{ selected_year }}">Unsere Geschichte öffnen</a>
+                  <a href="/story?year={{ selected_year }}">Unsere Story öffnen</a>
                </div>
                {% endif %}
             </section>
@@ -753,7 +764,7 @@
          {% endif %}
 
          <nav class="right-align" style="margin-top:1rem;gap:.75rem;flex-wrap:wrap;">
-            <a href="/story?year={{ selected_year }}">Unsere Geschichte {{ selected_year }}</a>
+            <a href="/story?year={{ selected_year }}">Unsere Story {{ selected_year }}</a>
             <a href="/chapters">Kapitel ansehen</a>
          </nav>
          {% else %}

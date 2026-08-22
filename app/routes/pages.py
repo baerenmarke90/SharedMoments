@@ -2240,6 +2240,12 @@ def bucketlist():
             selected_status = 'open'
 
         search_query = str(request.args.get('q', '')).strip()
+
+        # Archiv-Konvention: neueste zuerst. Wer eine Reise nachlesen will,
+        # kann umschalten - deshalb nicht fest verdrahtet.
+        story_order = str(request.args.get('order', 'new')).strip().lower()
+        if story_order not in ('new', 'old'):
+            story_order = 'new'
         search_needle = search_query.casefold()
         selected_sort = str(
             request.args.get('sort', 'created_desc')
@@ -3307,6 +3313,9 @@ def story():
             search_query,
         )
 
+        if story_order == 'old':
+            filtered_entries = list(reversed(filtered_entries))
+
         story_groups = _group_story_entries(filtered_entries)
 
         return render_template(
@@ -3316,13 +3325,14 @@ def story():
             user_data=user_data,
             list_types=list_types,
             sm_edition=sm_edition,
-            page_title='Unsere Geschichte',
+            page_title='Unsere Story',
             story_groups=story_groups,
             story_total=len(filtered_entries),
             story_type=entry_type,
             story_year=selected_year,
             story_years=available_years,
             story_query=search_query,
+            story_order=story_order,
         )
 
     except Exception as e:

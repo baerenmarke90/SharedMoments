@@ -1,8 +1,8 @@
 // SharedMoments Service Worker
-const SW_VERSION = '1.8.0';
+const SW_VERSION = '1.9.0';
 
 // Cache names
-const APP_SHELL_CACHE = 'app-shell-v11';
+const APP_SHELL_CACHE = 'app-shell-v12';
 const CDN_CACHE = 'cdn-v1';
 const API_CACHE = 'api-v2';
 const MEDIA_CACHE = 'media-v1';
@@ -90,9 +90,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Own JS files: network-first (so updates are always picked up)
+  // Own JS files: versionierte URLs (?v=<hash>) kommen aus dem Cache. Der
+  // Hash steckt im Dateiinhalt, eine neue Version ist also automatisch eine
+  // neue URL - network-first hat hier bei jedem Seitenwechsel rund 120 KB
+  // Skripte neu geladen, weil networkFirst zusaetzlich cache:'no-store' setzt.
   if (url.pathname.startsWith('/static/js/') || url.pathname.startsWith('/static/pwa/')) {
-    event.respondWith(networkFirst(event.request, APP_SHELL_CACHE));
+    if (url.searchParams.has('v')) {
+      event.respondWith(cacheFirst(event.request, APP_SHELL_CACHE));
+    } else {
+      event.respondWith(networkFirst(event.request, APP_SHELL_CACHE));
+    }
     return;
   }
 
