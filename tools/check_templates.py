@@ -6,11 +6,15 @@
 - <style>-Bloecke haben ausgeglichene Klammern
 - jedes benutzte --sm-Token ist in couple.css definiert
 - jedes "from <lokales modul> import name" existiert wirklich
+- jede Funktion liest nur Namen, die es auch gibt
 
-Der letzte Punkt ist der wichtigste: genau dieser Fehler hat die Produktion
-lahmgelegt (run.py importierte eine geloeschte Funktion).
+Die letzten beiden Punkte sind die wichtigsten, weil beide schon je einen
+Ausfall verursacht haben: run.py importierte eine geloeschte Funktion, und
+die Story-Seite las eine Variable, die durch einen falsch platzierten
+Patch in einer anderen Funktion gelandet war.
 """
 import ast
+import builtins
 import pathlib
 import re
 import sys
@@ -127,10 +131,78 @@ def check_imports():
                 )
 
 
+MODULE_DUNDERS = {'__file__', '__name__', '__doc__', '__package__', '__spec__'}
+
+
+def _bound_names(node):
+    """Alle Namen, die irgendwo in diesem Teilbaum gebunden werden."""
+    bound = set()
+    for sub in ast.walk(node):
+        if isinstance(sub, ast.Name) and isinstance(sub.ctx, (ast.Store, ast.Del)):
+            bound.add(sub.id)
+        elif isinstance(sub, (ast.Import, ast.ImportFrom)):
+            for alias in sub.names:
+                bound.add((alias.asname or alias.name).split('.')[0])
+        elif isinstance(sub, ast.arg):
+            bound.add(sub.arg)
+        elif isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            bound.add(sub.name)
+        elif isinstance(sub, ast.ExceptHandler) and sub.name:
+            bound.add(sub.name)
+        elif isinstance(sub, (ast.Global, ast.Nonlocal)):
+            bound.update(sub.names)
+    return bound
+
+
+def _check_function(func, outer, rel):
+    """Meldet gelesene Namen, die weder lokal noch aussen bekannt sind."""
+    known = outer | _bound_names(func)
+    reported = set()
+
+    for sub in ast.walk(func):
+        if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load):
+            if sub.id in known or sub.id in reported:
+                continue
+            reported.add(sub.id)
+            problems.append(
+                f'{rel}:{sub.lineno}: {func.name}() liest {sub.id}, '
+                'das nirgends gesetzt wird'
+            )
+
+    for sub in ast.iter_child_nodes(func):
+        if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            _check_function(sub, known, rel)
+
+
+def check_names():
+    for path in sorted(ROOT.rglob('*.py')):
+        if any(part in ('.git', '__pycache__', 'node_modules') for part in path.parts):
+            continue
+        try:
+            tree = ast.parse(path.read_text())
+        except SyntaxError:
+            continue
+
+        # Bei "import *" ist nicht entscheidbar, was im Modul landet.
+        if any(
+            isinstance(node, ast.ImportFrom)
+            and any(alias.name == '*' for alias in node.names)
+            for node in ast.walk(tree)
+        ):
+            continue
+
+        known = set(dir(builtins)) | MODULE_DUNDERS | _bound_names(tree)
+        rel = path.relative_to(ROOT)
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                _check_function(node, known, rel)
+
+
 def main():
     files = check_templates()
     check_tokens(files)
     check_imports()
+    check_names()
 
     if problems:
         print('Probleme gefunden:')
@@ -138,7 +210,7 @@ def main():
             print('  -', problem)
         return 1
 
-    print(f'{len(files)} Templates, Tokens und Importe in Ordnung')
+    print(f'{len(files)} Templates, Tokens, Importe und Namen in Ordnung')
     return 0
 
 

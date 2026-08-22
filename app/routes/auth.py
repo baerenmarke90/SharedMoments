@@ -995,6 +995,11 @@ def login():
                     }), 401
 
             except Exception as e:
+                # app wird in dieser Datei sonst ueberall lokal importiert;
+                # hier fehlte es, wodurch der Fehlerfall selbst mit einem
+                # NameError abgebrochen waere statt mit sauberem JSON.
+                from app import app
+
                 log('error', f'Error while fetching user: {e}')
                 return jsonify({
                     'status': 'error',

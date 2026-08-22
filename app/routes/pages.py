@@ -2332,12 +2332,6 @@ def bucketlist():
             selected_status = 'open'
 
         search_query = str(request.args.get('q', '')).strip()
-
-        # Archiv-Konvention: neueste zuerst. Wer eine Reise nachlesen will,
-        # kann umschalten - deshalb nicht fest verdrahtet.
-        story_order = str(request.args.get('order', 'new')).strip().lower()
-        if story_order not in ('new', 'old'):
-            story_order = 'new'
         search_needle = search_query.casefold()
         selected_sort = str(
             request.args.get('sort', 'created_desc')
@@ -3343,6 +3337,12 @@ def story():
             entry_type = 'all'
 
         search_query = str(request.args.get('q', '')).strip()
+
+        # Archiv-Konvention: neueste zuerst. Wer eine Reise nachlesen will,
+        # kann umschalten - deshalb nicht fest verdrahtet.
+        story_order = str(request.args.get('order', 'new')).strip().lower()
+        if story_order not in ('new', 'old'):
+            story_order = 'new'
 
         year_value = str(request.args.get('year', '')).strip()
         selected_year = None
