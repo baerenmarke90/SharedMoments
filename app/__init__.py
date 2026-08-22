@@ -124,6 +124,22 @@ def enforce_sidebyside_feature_flags():
 
     return redirect(url_for('pages.home'))
 
+# Daily Questions global feature context v1
+@app.context_processor
+def inject_daily_questions_feature_state():
+    try:
+        from app.daily_questions import daily_questions_enabled
+        from app.db_queries import get_setting_by_name
+        edition = get_setting_by_name('sm_edition')
+        enabled = bool(
+            edition
+            and edition.value == 'couples'
+            and daily_questions_enabled()
+        )
+    except Exception:
+        enabled = False
+    return {'daily_questions_nav_enabled': enabled}
+
 # Import und Registrierung der Blueprints
 from app.routes import auth_bp, pages_bp, api_bp, ai_bp, share_bp
 app.register_blueprint(auth_bp)
@@ -134,6 +150,9 @@ app.register_blueprint(share_bp)
 
 from app.routes.daily_questions import daily_questions_bp
 app.register_blueprint(daily_questions_bp)
+
+from app.routes.daily_questions_admin import daily_questions_admin_bp
+app.register_blueprint(daily_questions_admin_bp)
 
 from app.routes.admin import admin_bp
 app.register_blueprint(admin_bp)

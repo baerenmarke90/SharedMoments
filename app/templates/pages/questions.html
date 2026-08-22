@@ -7,96 +7,265 @@
       <link rel="stylesheet" href="{{ static_versioned('css/daily-questions.css') }}">
       <style>
          .questions-page {
-            max-width: 780px;
+            width: min(100%, 940px);
+            max-width: 940px;
             margin: 0 auto;
-            padding-bottom: 6rem;
+            padding-top: var(--sm-space-4);
+            padding-bottom: 7rem;
+            box-sizing: border-box;
          }
-         .questions-intro {
-            margin: var(--sm-space-3) var(--sm-space-1) var(--sm-space-5);
+
+         .questions-hero {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem 1.1rem;
+            border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--outline-variant));
+            border-radius: 22px;
+            background: linear-gradient(
+               135deg,
+               color-mix(in srgb, var(--primary-container) 56%, var(--surface)),
+               color-mix(in srgb, var(--secondary-container) 26%, var(--surface))
+            );
+         }
+         .questions-hero-icon {
+            width: 46px;
+            height: 46px;
+            flex: 0 0 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--primary);
+            background: color-mix(in srgb, var(--primary-container) 80%, var(--surface));
+         }
+         .questions-hero-icon i {
+            position: static !important;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+         .questions-hero-copy { min-width: 0; }
+         .questions-hero-copy strong {
+            display: block;
+            margin-bottom: .2rem;
+            font-size: 1.05rem;
+         }
+         .questions-hero-copy p {
+            margin: 0;
+            color: var(--on-surface-variant);
+            font-size: .88rem;
             line-height: 1.45;
-            opacity: .78;
          }
+
          .questions-stats {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: var(--sm-space-3);
-            margin-bottom: var(--sm-space-5);
+            align-items: stretch;
+            gap: .65rem;
+            margin-bottom: 1rem;
          }
          .questions-stat {
-            padding: var(--sm-space-4);
+            min-height: 98px;
+            height: 100%;
+            margin: 0;
+            padding: .8rem .65rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
             text-align: center;
-            border-radius: var(--sm-radius-md);
+            border-radius: 18px;
          }
          .questions-stat strong {
             display: block;
-            font-size: 1.35rem;
-            line-height: 1.1;
+            font-size: 1.22rem;
+            line-height: 1;
          }
          .questions-stat span {
             display: block;
-            margin-top: .25rem;
-            font-size: var(--sm-text-xs);
-            opacity: .7;
+            margin-top: .35rem;
+            color: var(--on-surface-variant);
+            font-size: .73rem;
+            line-height: 1.2;
          }
+
+         .questions-toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(150px, 210px) auto;
+            gap: .6rem;
+            align-items: end;
+            margin-bottom: .8rem;
+         }
+         .questions-toolbar .field { margin: 0; }
+         .questions-toolbar-actions {
+            display: flex;
+            gap: .45rem;
+            align-items: center;
+         }
+         .questions-toolbar-actions button { margin: 0; }
+
          .questions-filters {
             display: flex;
-            gap: var(--sm-space-2);
+            align-items: center;
+            gap: .5rem;
             overflow-x: auto;
-            padding: .05rem .1rem var(--sm-space-4);
+            padding: .05rem .05rem .9rem;
             scrollbar-width: none;
          }
-         .questions-filters::-webkit-scrollbar {
-            display: none;
+         .questions-filters::-webkit-scrollbar { display: none; }
+         .questions-filters .chip {
+            flex: 0 0 auto;
+            min-height: 36px;
+            margin: 0;
+            padding: 0 .85rem;
+            border: 1px solid color-mix(in srgb, var(--outline-variant) 58%, transparent);
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--surface-container) 92%, transparent);
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow) 6%, transparent);
          }
+         .questions-filters .chip.fill {
+            color: var(--on-primary);
+            border-color: color-mix(in srgb, var(--primary) 42%, transparent);
+            background: var(--primary);
+         }
+
          .question-archive-card {
-            margin-bottom: var(--sm-space-4);
-            border-radius: var(--sm-radius-md);
+            margin-bottom: .9rem;
             overflow: hidden;
             scroll-margin-top: 5rem;
+            border-radius: 22px;
+            border: 1px solid color-mix(in srgb, var(--outline-variant) 52%, transparent);
          }
-         .question-archive-inner {
-            padding: var(--sm-space-5);
-         }
+         .question-archive-inner { padding: 1rem 1.1rem 1.05rem; }
          .question-archive-meta {
             display: flex;
             align-items: center;
-            gap: var(--sm-space-2);
+            gap: .45rem;
             flex-wrap: wrap;
-            margin-bottom: var(--sm-space-3);
+            margin-bottom: .75rem;
+         }
+         .question-archive-meta .chip {
+            min-height: 30px;
+            margin: 0;
+            font-size: .74rem;
+         }
+         .question-source-chip {
+            color: var(--primary);
+            border-color: color-mix(in srgb, var(--primary) 34%, transparent) !important;
          }
          .question-archive-date {
             margin-left: auto;
+            color: var(--on-surface-variant);
             font-size: var(--sm-text-xs);
-            opacity: .68;
          }
          .question-archive-text {
             margin: 0;
+            max-width: 50rem;
             font-size: 1.08rem;
             line-height: 1.4;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: -.01em;
          }
+         .question-open-note {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-top: .75rem;
+            color: var(--on-surface-variant);
+            font-size: .82rem;
+         }
+         .question-open-note i {
+            position: static !important;
+            width: 28px;
+            height: 28px;
+            flex: 0 0 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--primary);
+            background: color-mix(in srgb, var(--primary-container) 60%, transparent);
+            font-size: 1rem;
+         }
+
+         .question-archive-form {
+            display: block;
+            margin-top: .9rem;
+            padding-top: .9rem;
+            border-top: 1px solid color-mix(in srgb, var(--outline-variant) 52%, transparent);
+         }
+         .question-archive-form .field {
+            display: block;
+            width: 100%;
+            margin: 0 0 .75rem;
+            box-sizing: border-box;
+         }
+         .question-archive-form textarea {
+            display: block;
+            width: 100%;
+            min-height: 84px;
+            max-height: 190px;
+            resize: vertical;
+            box-sizing: border-box;
+            line-height: 1.45;
+         }
+         .question-archive-actions {
+            position: static;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .7rem;
+            width: 100%;
+            min-height: 40px;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+         }
+         .question-count {
+            flex: 1 1 auto;
+            color: var(--on-surface-variant);
+            font-size: var(--sm-text-xs);
+         }
+         .question-archive-actions button {
+            position: static !important;
+            inset: auto !important;
+            float: none !important;
+            transform: none !important;
+            flex: 0 0 auto;
+            margin: 0;
+            border-radius: 999px;
+         }
+         .question-skip-form {
+            margin: .7rem 0 0;
+            text-align: right;
+         }
+         .question-skip-form button { margin: 0; }
+
          .question-answer-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: var(--sm-space-3);
-            margin-top: var(--sm-space-4);
+            gap: .7rem;
+            margin-top: .9rem;
          }
          .question-answer-card {
-            padding: var(--sm-space-4);
-            border-radius: var(--sm-radius-md);
-            background: var(--surface-container-high);
+            min-width: 0;
+            padding: .85rem .95rem;
+            border-radius: 18px;
+            border: 1px solid color-mix(in srgb, var(--outline-variant) 42%, transparent);
+            background: color-mix(in srgb, var(--surface-container-high) 90%, var(--surface));
          }
          .question-answer-author {
             display: flex;
             align-items: center;
-            gap: var(--sm-space-2);
-            margin-bottom: var(--sm-space-2);
+            gap: .5rem;
+            margin-bottom: .5rem;
             font-size: var(--sm-text-sm);
-            font-weight: 600;
+            font-weight: 650;
          }
          .question-answer-author img {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             object-fit: cover;
          }
@@ -104,620 +273,85 @@
             margin: 0;
             white-space: pre-wrap;
             overflow-wrap: anywhere;
-            line-height: 1.45;
+            line-height: 1.5;
          }
-         .question-open-note {
+         .question-reveal-actions {
             display: flex;
             align-items: center;
-            gap: var(--sm-space-2);
-            margin-top: var(--sm-space-4);
-            font-size: var(--sm-text-sm);
-            opacity: .75;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-top: .8rem;
          }
-         .question-archive-form {
-            margin-top: var(--sm-space-4);
+         .question-reveal-actions form { margin: 0; }
+         .question-reveal-actions button,
+         .question-reveal-actions .button { margin: 0; }
+         .question-favorite-active {
+            color: #e56aa6;
+            border-color: color-mix(in srgb, #e56aa6 45%, transparent) !important;
          }
-         .question-archive-form textarea {
-            min-height: 105px;
-         }
-         .question-archive-actions {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--sm-space-3);
-            margin-top: var(--sm-space-2);
-         }
-         .question-count {
-            font-size: var(--sm-text-xs);
-            opacity: .65;
+
+         .questions-banner {
+            margin-bottom: .8rem;
+            border-radius: 16px;
          }
          .questions-empty {
             padding: 2.2rem var(--sm-space-6);
             text-align: center;
-            border-radius: var(--sm-radius-md);
+            border-radius: 22px;
          }
-         @media (max-width: 600px) {
+
+         .custom-question-dialog {
+            width: min(92vw, 620px);
+         }
+         .custom-question-dialog form > .field { margin-bottom: .8rem; }
+         .custom-question-dialog textarea { min-height: 120px; }
+
+         @media (max-width: 760px) {
             .questions-page {
-               padding-left: .15rem;
-               padding-right: .15rem;
+               padding-left: .85rem;
+               padding-right: .85rem;
             }
-            .questions-stats {
-               gap: var(--sm-space-2);
-            }
-            .questions-stat {
-               padding: var(--sm-space-3) var(--sm-space-2);
-            }
-            .question-answer-grid {
+            .questions-toolbar {
                grid-template-columns: 1fr;
             }
-            .question-archive-inner {
-               padding: var(--sm-space-4);
+            .questions-toolbar-actions {
+               justify-content: stretch;
             }
+            .questions-toolbar-actions button {
+               width: 100%;
+               justify-content: center;
+            }
+            .questions-stat { min-height: 92px; }
+            .question-answer-grid { grid-template-columns: 1fr; }
+            .question-archive-date {
+               flex: 1 1 100%;
+               margin-left: 0;
+            }
+            .question-archive-actions {
+               display: grid;
+               grid-template-columns: 1fr;
+               gap: .55rem;
+            }
+            .question-archive-actions button {
+               width: 100%;
+               justify-content: center;
+            }
+            .question-count { order: 2; }
+            .question-skip-form button { width: 100%; }
          }
-      
-          /* questions-design-v3 */
 
-          .questions-page {
-             width: min(100%, 940px);
-             max-width: 940px;
-             margin: 0 auto;
-             padding-top: var(--sm-space-4);
-             padding-bottom: 7rem;
-             box-sizing: border-box;
-          }
-
-          .questions-hero {
-             position: relative;
-             display: flex;
-             align-items: center;
-             gap: 1rem;
-             overflow: hidden;
-             margin: 0 0 1rem;
-             padding: 1.05rem 1.15rem;
-             border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--outline-variant));
-             border-radius: 24px;
-             background:
-                radial-gradient(circle at 92% 8%,
-                   color-mix(in srgb, var(--primary) 16%, transparent),
-                   transparent 10rem),
-                linear-gradient(135deg,
-                   color-mix(in srgb, var(--primary-container) 55%, var(--surface)),
-                   color-mix(in srgb, var(--secondary-container) 26%, var(--surface)));
-             box-shadow: 0 10px 28px color-mix(in srgb, var(--shadow) 10%, transparent);
-          }
-
-          .questions-hero-icon {
-             width: 48px;
-             height: 48px;
-             flex: 0 0 48px;
-             display: inline-flex;
-             align-items: center;
-             justify-content: center;
-             border-radius: 50%;
-             color: var(--primary);
-             background: color-mix(in srgb, var(--primary-container) 80%, var(--surface));
-          }
-
-          .questions-hero-icon i {
-             position: static;
-             font-size: 1.5rem;
-             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
-          }
-
-          .questions-hero-copy {
-             min-width: 0;
-          }
-
-          .questions-hero-copy strong {
-             display: block;
-             margin: 0 0 .18rem;
-             font-size: 1.05rem;
-             line-height: 1.25;
-          }
-
-          .questions-hero-copy p {
-             margin: 0;
-             max-width: 42rem;
-             color: var(--on-surface-variant);
-             font-size: .9rem;
-             line-height: 1.45;
-          }
-
-          .questions-stats {
-             gap: .65rem;
-             margin-bottom: 1rem;
-          }
-
-          .questions-stat {
-             min-width: 0;
-             padding: .75rem .9rem;
-             border: 1px solid color-mix(in srgb, var(--outline-variant) 45%, transparent);
-             border-radius: 18px;
-             background: color-mix(in srgb, var(--surface-container) 90%, transparent);
-             box-shadow: none;
-          }
-
-          .questions-stat strong {
-             font-size: 1.2rem;
-             line-height: 1;
-          }
-
-          .questions-stat span {
-             margin-top: .3rem;
-             color: var(--on-surface-variant);
-             font-size: .73rem;
-             opacity: 1;
-          }
-
-          .questions-filters {
-             width: fit-content;
-             max-width: 100%;
-             gap: .15rem;
-             margin: 0 0 1rem;
-             padding: .22rem;
-             overflow-x: auto;
-             border: 1px solid color-mix(in srgb, var(--outline-variant) 42%, transparent);
-             border-radius: 999px;
-             background: color-mix(in srgb, var(--surface-container) 92%, transparent);
-             scrollbar-width: none;
-          }
-
-          .questions-filters .chip {
-             flex: 0 0 auto;
-             min-height: 34px;
-             margin: 0;
-             padding: 0 .8rem;
-             border: 0;
-          }
-
-          .questions-filters .chip.fill {
-             color: var(--on-primary);
-             background: linear-gradient(
-                135deg,
-                color-mix(in srgb, var(--primary) 86%, var(--secondary)),
-                var(--primary)
-             );
-             box-shadow: 0 5px 14px color-mix(in srgb, var(--primary) 18%, transparent);
-          }
-
-          .question-archive-card {
-             margin-bottom: .9rem;
-             border: 1px solid color-mix(in srgb, var(--outline-variant) 48%, transparent);
-             border-radius: 22px;
-             background: color-mix(in srgb, var(--surface-container) 94%, var(--surface));
-             box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 7%, transparent);
-          }
-
-          .question-archive-card:has(.chip.fill) {
-             border-color: color-mix(in srgb, var(--primary) 32%, var(--outline-variant));
-             background:
-                linear-gradient(
-                   145deg,
-                   color-mix(in srgb, var(--primary-container) 19%, var(--surface-container)),
-                   var(--surface-container)
-                );
-          }
-
-          .question-archive-inner {
-             padding: 1rem 1.1rem 1.05rem;
-          }
-
-          .question-archive-meta {
-             gap: .45rem;
-             margin-bottom: .7rem;
-          }
-
-          .question-archive-meta .chip {
-             min-height: 30px;
-             margin: 0;
-             padding: 0 .65rem;
-             font-size: .74rem;
-          }
-
-          .question-archive-date {
-             color: var(--on-surface-variant);
-             opacity: .78;
-          }
-
-          .question-archive-text {
-             max-width: 48rem;
-             font-size: 1.08rem;
-             font-weight: 700;
-             line-height: 1.38;
-             letter-spacing: -.01em;
-          }
-
-          .question-open-note {
-             gap: .5rem;
-             margin-top: .75rem;
-             color: var(--on-surface-variant);
-             font-size: .82rem;
-             opacity: 1;
-          }
-
-          .question-open-note i {
-             position: static;
-             width: 28px;
-             height: 28px;
-             flex: 0 0 28px;
-             display: inline-flex;
-             align-items: center;
-             justify-content: center;
-             border-radius: 50%;
-             color: var(--primary);
-             background: color-mix(in srgb, var(--primary-container) 60%, transparent);
-             font-size: 1rem;
-          }
-
-          .question-archive-form {
-             margin-top: .85rem;
-             padding-top: .9rem;
-             border-top: 1px solid color-mix(in srgb, var(--outline-variant) 50%, transparent);
-          }
-
-          .question-archive-form .field {
-             margin: 0;
-             border-radius: 16px;
-             background: color-mix(in srgb, var(--surface-container-high) 76%, transparent);
-          }
-
-          .question-archive-form textarea {
-             min-height: 78px;
-             max-height: 180px;
-             resize: vertical;
-             line-height: 1.45;
-          }
-
-          .question-archive-actions {
-             margin-top: .5rem;
-          }
-
-          .question-count {
-             color: var(--on-surface-variant);
-             opacity: .78;
-          }
-
-          .question-archive-actions button {
-             min-height: 38px;
-             margin: 0;
-             padding-inline: 1rem;
-             border-radius: 999px;
-             box-sizing: border-box;
-          }
-
-          .question-answer-grid {
-             gap: .7rem;
-             margin-top: .9rem;
-          }
-
-          .question-answer-card {
-             padding: .85rem .95rem;
-             border: 1px solid color-mix(in srgb, var(--outline-variant) 42%, transparent);
-             border-radius: 18px;
-             background:
-                linear-gradient(
-                   145deg,
-                   color-mix(in srgb, var(--primary-container) 15%, var(--surface-container-high)),
-                   var(--surface-container-high)
-                );
-          }
-
-          .question-answer-author {
-             margin-bottom: .5rem;
-          }
-
-          .question-answer-author img {
-             width: 32px;
-             height: 32px;
-             box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 16%, transparent);
-          }
-
-          .questions-empty {
-             border-radius: 22px;
-          }
-
-          @media (max-width: 700px) {
-             .questions-page {
-                padding-top: .8rem;
-                padding-left: .85rem;
-                padding-right: .85rem;
-             }
-
-             .questions-hero {
-                gap: .8rem;
-                padding: .9rem;
-                border-radius: 20px;
-             }
-
-             .questions-hero-icon {
-                width: 42px;
-                height: 42px;
-                flex-basis: 42px;
-             }
-
-             .questions-hero-copy strong {
-                font-size: .98rem;
-             }
-
-             .questions-hero-copy p {
-                font-size: .78rem;
-             }
-
-             .questions-stats {
-                gap: .4rem;
-             }
-
-             .questions-stat {
-                padding: .65rem .35rem;
-                border-radius: 15px;
-             }
-
-             .questions-stat strong {
-                font-size: 1.05rem;
-             }
-
-             .questions-stat span {
-                font-size: .64rem;
-                line-height: 1.15;
-             }
-
-             .questions-filters {
-                display: flex;
-                width: 100%;
-                box-sizing: border-box;
-             }
-
-             .questions-filters .chip {
-                flex: 1 0 auto;
-                justify-content: center;
-                padding-inline: .6rem;
-             }
-
-             .question-archive-inner {
-                padding: .9rem;
-             }
-
-             .question-archive-date {
-                flex: 1 1 100%;
-                margin-left: 0;
-             }
-
-             .question-archive-text {
-                font-size: 1.02rem;
-             }
-
-             .question-answer-grid {
-                grid-template-columns: 1fr;
-             }
-
-             .question-archive-form textarea {
-                min-height: 84px;
-             }
-
-             .question-archive-actions {
-                align-items: stretch;
-                flex-direction: column;
-             }
-
-             .question-archive-actions button {
-                width: 100%;
-                justify-content: center;
-             }
-
-             .question-count {
-                order: 2;
-                padding-left: .1rem;
-             }
-          }
-
-       
-          /* questions-design-v4-tuning */
-
-          .questions-stats {
-             align-items: stretch;
-          }
-
-          .questions-stat {
-             height: 100%;
-             min-height: 88px;
-             display: flex;
-             flex-direction: column;
-             justify-content: center;
-          }
-
-          .questions-filters {
-             display: flex;
-             align-items: center;
-             gap: .55rem;
-             width: auto;
-             max-width: 100%;
-             padding: 0;
-             border: 0;
-             border-radius: 0;
-             background: transparent;
-             overflow-x: auto;
-             scrollbar-width: none;
-          }
-
-          .questions-filters::-webkit-scrollbar {
-             display: none;
-          }
-
-          .questions-filters .chip {
-             min-height: 38px;
-             padding: 0 .95rem;
-             border: 1px solid color-mix(in srgb, var(--outline-variant) 52%, transparent);
-             border-radius: 999px;
-             background: color-mix(in srgb, var(--surface-container) 90%, transparent);
-             box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow) 6%, transparent);
-          }
-
-          .questions-filters .chip.fill {
-             border-color: color-mix(in srgb, var(--primary) 34%, transparent);
-             box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 18%, transparent);
-          }
-
-          .question-archive-form .field {
-             margin-bottom: .75rem;
-          }
-
-          .question-archive-actions {
-             display: flex;
-             align-items: center;
-             justify-content: space-between;
-             gap: .8rem;
-             width: 100%;
-             margin-top: .25rem;
-          }
-
-          .question-count {
-             flex: 1 1 auto;
-             min-width: 0;
-          }
-
-          .question-archive-actions button {
-             position: static;
-             flex: 0 0 auto;
-             margin-left: auto;
-             align-self: center;
-             z-index: auto;
-          }
-
-          @media (max-width: 700px) {
-             .questions-filters {
-                gap: .45rem;
-             }
-
-             .questions-filters .chip {
-                flex: 0 0 auto;
-             }
-
-             .question-archive-actions {
-                flex-direction: column;
-                align-items: stretch;
-             }
-
-             .question-count {
-                order: 2;
-             }
-
-             .question-archive-actions button {
-                width: 100%;
-                margin-left: 0;
-                justify-content: center;
-             }
-          }
-
-       
-          /* daily-questions-layout-fix-v1 */
-
-          /* Alle drei Statistik-Karten exakt auf einer Linie und gleich hoch */
-          .questions-stats {
-             display: grid !important;
-             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-             align-items: stretch !important;
-             gap: .65rem !important;
-          }
-
-          .questions-stats > .questions-stat {
-             position: relative !important;
-             top: auto !important;
-             bottom: auto !important;
-             left: auto !important;
-             right: auto !important;
-             transform: none !important;
-             align-self: stretch !important;
-             justify-self: stretch !important;
-             height: auto !important;
-             min-height: 104px !important;
-             margin: 0 !important;
-             box-sizing: border-box !important;
-             display: flex !important;
-             flex-direction: column !important;
-             align-items: center !important;
-             justify-content: center !important;
-          }
-
-          /* Antwortbereich sauber voneinander trennen */
-          .question-archive-form {
-             display: block !important;
-             overflow: visible !important;
-          }
-
-          .question-archive-form .field {
-             position: relative !important;
-             display: block !important;
-             width: 100% !important;
-             margin: 0 0 1rem 0 !important;
-             box-sizing: border-box !important;
-          }
-
-          .question-archive-form textarea {
-             display: block !important;
-             width: 100% !important;
-             min-height: 82px !important;
-             box-sizing: border-box !important;
-          }
-
-          .question-archive-actions {
-             position: relative !important;
-             inset: auto !important;
-             clear: both !important;
-             display: flex !important;
-             align-items: center !important;
-             justify-content: space-between !important;
-             width: 100% !important;
-             min-height: 42px !important;
-             margin: 0 !important;
-             padding: 0 !important;
-             box-sizing: border-box !important;
-             z-index: 1 !important;
-          }
-
-          .question-archive-actions .question-count {
-             position: static !important;
-             flex: 1 1 auto !important;
-             margin: 0 !important;
-          }
-
-          .question-archive-actions button {
-             position: static !important;
-             inset: auto !important;
-             float: none !important;
-             transform: none !important;
-             flex: 0 0 auto !important;
-             align-self: center !important;
-             margin: 0 0 0 1rem !important;
-             z-index: 1 !important;
-          }
-
-          @media (max-width: 700px) {
-             .questions-stats > .questions-stat {
-                min-height: 92px !important;
-             }
-
-             .question-archive-form .field {
-                margin-bottom: .85rem !important;
-             }
-
-             .question-archive-actions {
-                display: grid !important;
-                grid-template-columns: 1fr !important;
-                gap: .55rem !important;
-             }
-
-             .question-archive-actions button {
-                width: 100% !important;
-                margin: 0 !important;
-                justify-content: center !important;
-             }
-
-             .question-archive-actions .question-count {
-                order: 2 !important;
-             }
-          }
-
-       </style>
+         @media (max-width: 480px) {
+            .questions-stats { gap: .4rem; }
+            .questions-stat {
+               min-height: 88px;
+               padding: .65rem .35rem;
+            }
+            .questions-stat strong { font-size: 1.05rem; }
+            .questions-stat span { font-size: .64rem; }
+            .questions-hero { padding: .85rem; }
+            .questions-hero-copy p { font-size: .78rem; }
+         }
+      </style>
    </head>
    <body class="couple-app couple-page-questions {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
@@ -730,17 +364,17 @@
 
       <main class="responsive questions-page">
          <section class="questions-hero">
-             <div class="questions-hero-icon" aria-hidden="true">
-                <i>local_florist</i>
-             </div>
-             <div class="questions-hero-copy">
-                <strong>Ein bisschen mehr Wir – jeden Tag</strong>
-                <p>
-                   Eine gemeinsame Frage für euch beide. Eure Antworten bleiben verborgen,
-                   bis ihr beide geantwortet habt.
-                </p>
-             </div>
-          </section>
+            <div class="questions-hero-icon" aria-hidden="true">
+               <i>local_florist</i>
+            </div>
+            <div class="questions-hero-copy">
+               <strong>Ein bisschen mehr Wir – jeden Tag</strong>
+               <p>
+                  Eine gemeinsame Frage für euch beide. Eure Antworten bleiben verborgen,
+                  bis ihr beide geantwortet habt.
+               </p>
+            </div>
+         </section>
 
          <section class="questions-stats" aria-label="Fragen-Statistik">
             <article class="surface-container questions-stat">
@@ -757,37 +391,78 @@
             </article>
          </section>
 
+         {% if request.args.get('message') %}
+         <article class="primary-container padding questions-banner">
+            {{ request.args.get('message') }}
+         </article>
+         {% endif %}
          {% if request.args.get('error') %}
-         <article class="error-container">
-            <div class="padding">{{ request.args.get('error') }}</div>
+         <article class="error-container padding questions-banner">
+            {{ request.args.get('error') }}
          </article>
          {% endif %}
 
-         <nav class="questions-filters">
+         <form class="questions-toolbar" method="get" action="{{ url_for('daily_questions.questions') }}">
+            <input type="hidden" name="status" value="{{ selected_status }}">
+            <div class="field label border">
+               <input type="search" name="q" value="{{ search_query }}" maxlength="120">
+               <label>Fragen & Antworten durchsuchen</label>
+            </div>
+            <div class="field label border suffix">
+               <select name="category">
+                  <option value="all" {% if selected_category == 'all' %}selected{% endif %}>Alle Kategorien</option>
+                  {% for category in question_categories %}
+                  <option value="{{ category.key }}" {% if selected_category == category.key %}selected{% endif %}>{{ category.label }}</option>
+                  {% endfor %}
+               </select>
+               <label>Kategorie</label>
+               <i>arrow_drop_down</i>
+            </div>
+            <div class="questions-toolbar-actions">
+               <button type="submit" class="round">
+                  <i>search</i><span>Suchen</span>
+               </button>
+               <button type="button"
+                       class="round transparent"
+                       onclick="document.getElementById('dialog-custom-question').showModal()">
+                  <i>add</i><span>Eigene Frage</span>
+               </button>
+            </div>
+         </form>
+
+         <nav class="questions-filters" aria-label="Fragen filtern">
             <a class="chip round{% if selected_status == 'all' %} fill{% endif %}"
-               href="{{ url_for('daily_questions.questions', status='all') }}">
+               href="{{ url_for('daily_questions.questions', status='all', category=selected_category, q=search_query) }}">
                <i>apps</i><span>Alle</span>
             </a>
             <a class="chip round{% if selected_status == 'answered' %} fill{% endif %}"
-               href="{{ url_for('daily_questions.questions', status='answered') }}">
+               href="{{ url_for('daily_questions.questions', status='answered', category=selected_category, q=search_query) }}">
                <i>favorite</i><span>Beantwortet</span>
             </a>
             <a class="chip round{% if selected_status == 'open' %} fill{% endif %}"
-               href="{{ url_for('daily_questions.questions', status='open') }}">
+               href="{{ url_for('daily_questions.questions', status='open', category=selected_category, q=search_query) }}">
                <i>schedule</i><span>Offen</span>
+            </a>
+            <a class="chip round{% if selected_status == 'favorites' %} fill{% endif %}"
+               href="{{ url_for('daily_questions.questions', status='favorites', category=selected_category, q=search_query) }}">
+               <i>favorite</i><span>Favoriten ({{ question_stats.favorites }})</span>
             </a>
          </nav>
 
          {% if questions %}
             {% for item in questions %}
-            <article class="surface-container question-archive-card"
-                     id="question-{{ item.id }}">
+            <article class="surface-container question-archive-card" id="question-{{ item.id }}">
                <div class="question-archive-inner">
                   <div class="question-archive-meta">
                      <span class="chip small round">
                         <i>local_florist</i>
                         <span>{{ item.category_label }}</span>
                      </span>
+                     {% if item.source == 'custom' %}
+                     <span class="chip small round question-source-chip">Von euch</span>
+                     {% elif item.source == 'admin' %}
+                     <span class="chip small round question-source-chip">Eigene Sammlung</span>
+                     {% endif %}
                      {% if item.is_today %}
                      <span class="chip small round fill">Heute</span>
                      {% endif %}
@@ -812,6 +487,37 @@
                      </div>
                      {% endfor %}
                   </div>
+
+                  <div class="question-reveal-actions">
+                     <form method="post"
+                           action="{{ url_for('daily_questions.favorite_question_page', assignment_id=item.id) }}">
+                        <input type="hidden" name="status" value="{{ selected_status }}">
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                        <input type="hidden" name="q" value="{{ search_query }}">
+                        <button type="submit"
+                                class="round transparent{% if item.favorite %} question-favorite-active{% endif %}">
+                           <i>{% if item.favorite %}favorite{% else %}favorite_border{% endif %}</i>
+                           <span>{% if item.favorite %}Favorit{% else %}Als Favorit merken{% endif %}</span>
+                        </button>
+                     </form>
+
+                     {% if item.heart_moment_id %}
+                     <span class="chip round">
+                        <i>favorite</i><span>Als Herzmoment gespeichert</span>
+                     </span>
+                     {% else %}
+                     <form method="post"
+                           action="{{ url_for('daily_questions.question_to_heart_moment_page', assignment_id=item.id) }}">
+                        <input type="hidden" name="status" value="{{ selected_status }}">
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                        <input type="hidden" name="q" value="{{ search_query }}">
+                        <button type="submit" class="round transparent">
+                           <i>favorite</i><span>Als Herzmoment speichern</span>
+                        </button>
+                     </form>
+                     {% endif %}
+                  </div>
+
                   {% else %}
                      {% if item.own_answer %}
                      <div class="question-open-note">
@@ -829,6 +535,8 @@
                            method="post"
                            action="{{ url_for('daily_questions.answer_question_page', assignment_id=item.id) }}">
                         <input type="hidden" name="status" value="{{ selected_status }}">
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                        <input type="hidden" name="q" value="{{ search_query }}">
                         <div class="field label border extra">
                            <textarea name="answer"
                                      maxlength="500"
@@ -844,6 +552,20 @@
                            </button>
                         </div>
                      </form>
+
+                     {% if item.can_skip %}
+                     <form class="question-skip-form"
+                           method="post"
+                           action="{{ url_for('daily_questions.skip_question_page', assignment_id=item.id) }}"
+                           onsubmit="return confirm('Diese Frage für euch beide überspringen und heute eine andere wählen?');">
+                        <input type="hidden" name="status" value="{{ selected_status }}">
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                        <input type="hidden" name="q" value="{{ search_query }}">
+                        <button type="submit" class="round transparent">
+                           <i>skip_next</i><span>Andere Frage</span>
+                        </button>
+                     </form>
+                     {% endif %}
                   {% endif %}
                </div>
             </article>
@@ -852,10 +574,64 @@
          <article class="surface-container questions-empty">
             <i>local_florist</i>
             <h5>Hier ist noch nichts</h5>
-            <p>Für diesen Filter gibt es aktuell keine Fragen.</p>
+            <p>Für diese Suche oder diesen Filter gibt es aktuell keine Fragen.</p>
          </article>
          {% endif %}
       </main>
+
+      <dialog class="modal custom-question-dialog" id="dialog-custom-question">
+         <nav>
+            <h5 class="max">Eigene Frage hinzufügen</h5>
+            <button type="button"
+                    class="circle transparent"
+                    aria-label="Schließen"
+                    onclick="document.getElementById('dialog-custom-question').close()">
+               <i>close</i>
+            </button>
+         </nav>
+         <form method="post" action="{{ url_for('daily_questions.create_custom_question_page') }}">
+            <input type="hidden" name="status" value="{{ selected_status }}">
+            <input type="hidden" name="category_filter" value="{{ selected_category }}">
+            <input type="hidden" name="q" value="{{ search_query }}">
+            <div class="field label border extra">
+               <textarea name="question" maxlength="500" required></textarea>
+               <label>Eure eigene Frage</label>
+            </div>
+            <div class="field label border suffix">
+               <select name="question_category" required>
+                  {% for category in question_categories %}
+                  <option value="{{ category.key }}">{{ category.label }}</option>
+                  {% endfor %}
+               </select>
+               <label>Kategorie</label>
+               <i>arrow_drop_down</i>
+            </div>
+            <div class="field label border suffix">
+               <select name="schedule_mode" id="custom-question-schedule-mode"
+                       onchange="document.getElementById('custom-question-date-wrap').hidden = this.value !== 'date';">
+                  <option value="random">Irgendwann zufällig</option>
+                  <option value="tomorrow">Morgen</option>
+                  <option value="date">Bestimmtes Datum</option>
+               </select>
+               <label>Wann verwenden?</label>
+               <i>arrow_drop_down</i>
+            </div>
+            <div class="field label border" id="custom-question-date-wrap" hidden>
+               <input type="date" name="scheduled_date">
+               <label>Datum</label>
+            </div>
+            <p class="small-text">
+               Zufällige Fragen landen im gemeinsamen Pool. Für morgen oder ein bestimmtes Datum wird die Frage direkt eingeplant.
+            </p>
+            <nav class="right-align">
+               <button type="button" class="transparent"
+                       onclick="document.getElementById('dialog-custom-question').close()">Abbrechen</button>
+               <button type="submit">
+                  <i>add</i><span>Frage hinzufügen</span>
+               </button>
+            </nav>
+         </form>
+      </dialog>
 
       {% include 'layouts/footer.html' %}
       {% set couple_nav_active = 'more' %}

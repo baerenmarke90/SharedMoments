@@ -1,103 +1,129 @@
-<section class="admin-auth-page admin-features-page">
+<section class="admin-auth-page" id="daily-questions-admin-panel">
     <article class="surface-container admin-auth-card">
         <div class="admin-auth-heading">
             <div>
                 <h5>Funktionen</h5>
-                <p>SideBySide auf die Funktionen reduzieren, die ihr wirklich nutzt.</p>
+                <p>Optionale Funktionen der Couples-App zentral verwalten.</p>
             </div>
             <i>extension</i>
+        </div>
+
+        <div class="admin-auth-row">
+            <i>local_florist</i>
+            <div class="max">
+                <h6>Frage des Tages</h6>
+                <p>
+                    Zeigt täglich eine gemeinsame Frage auf dem Wir-Bildschirm.
+                    Beide Antworten bleiben verborgen, bis beide geantwortet haben.
+                </p>
+            </div>
+            <label class="switch" title="Frage des Tages aktivieren oder deaktivieren">
+                <input
+                    id="admin-feature-daily-questions"
+                    type="checkbox"
+                    {% if daily_questions_enabled %}checked{% endif %}
+                    onchange="setDailyQuestionsFeature(this)"
+                >
+                <span></span>
+            </label>
         </div>
 
         <div class="admin-auth-warning surface-container-low padding">
             <i>info</i>
             <span>
-                Deaktivieren löscht keine vorhandenen Daten. Navigation,
-                Dashboard und zugehörige Seiten werden ausgeblendet bzw. gesperrt.
+                Beim Deaktivieren bleiben Fragen, Antworten, Favoriten und eigene Fragen erhalten.
+                Dashboard, Archiv und Antwortfunktion werden lediglich ausgeblendet.
             </span>
         </div>
     </article>
 
-    <div class="admin-feature-groups">
-        {% for group in feature_groups %}
-        <article class="surface-container admin-auth-card admin-feature-group">
-            <div class="admin-feature-group-heading">
-                <i>{{ group.icon }}</i>
-                <div>
-                    <h6>{{ group.label }}</h6>
-                    <p>{{ group.description }}</p>
-                </div>
+    <article class="surface-container admin-auth-card" style="margin-top:1rem;">
+        <div class="admin-auth-heading">
+            <div>
+                <h5>Tageswechsel</h5>
+                <p>Legt fest, nach welcher lokalen Zeitzone eine neue Frage beginnt.</p>
             </div>
+            <i>schedule</i>
+        </div>
+        <div class="admin-auth-row" style="align-items:flex-end;">
+            <div class="field label border max" style="margin:0;">
+                <input id="admin-dq-timezone" type="text" value="Europe/Berlin" placeholder="Europe/Berlin">
+                <label>Zeitzone (IANA)</label>
+            </div>
+            <button type="button" class="round" onclick="saveDailyQuestionsTimezone(this)">
+                <i>save</i><span>Speichern</span>
+            </button>
+        </div>
+        <div class="admin-auth-warning surface-container-low padding">
+            <i>info</i>
+            <span>Für Deutschland ist <strong>Europe/Berlin</strong> richtig – inklusive automatischer Sommer-/Winterzeit.</span>
+        </div>
+    </article>
 
-            <div class="admin-feature-list">
-                {% for feature in group.features %}
-                <div class="admin-auth-row admin-feature-row">
-                    <i>{{ feature.icon }}</i>
-                    <div class="max">
-                        <h6>{{ feature.label }}</h6>
-                        <p>{{ feature.description }}</p>
-                    </div>
-                    <label class="switch"
-                           title="{{ feature.label }} aktivieren oder deaktivieren">
-                        <input
-                            type="checkbox"
-                            data-feature-key="{{ feature.key }}"
-                            {% if feature.enabled %}checked{% endif %}
-                            onchange="setAdminFeature(this)"
-                        >
-                        <span></span>
-                    </label>
-                </div>
-                {% endfor %}
+    <article class="surface-container admin-auth-card" style="margin-top:1rem;">
+        <div class="admin-auth-heading">
+            <div>
+                <h5>Fragen verwalten</h5>
+                <p>Standardfragen bearbeiten/deaktivieren und eigene Fragen dauerhaft ergänzen.</p>
             </div>
-        </article>
-        {% endfor %}
-    </div>
+            <i>quiz</i>
+        </div>
+
+        <div class="grid" style="margin-bottom:1rem;">
+            <div class="s4 surface-container-low padding round center-align">
+                <strong id="admin-dq-count-all">–</strong>
+                <div class="small-text">gesamt</div>
+            </div>
+            <div class="s4 surface-container-low padding round center-align">
+                <strong id="admin-dq-count-active">–</strong>
+                <div class="small-text">aktiv</div>
+            </div>
+            <div class="s4 surface-container-low padding round center-align">
+                <strong id="admin-dq-count-custom">–</strong>
+                <div class="small-text">eigene</div>
+            </div>
+        </div>
+
+        <div class="surface-container-low padding round" style="margin-bottom:1rem;">
+            <h6>Neue Frage hinzufügen</h6>
+            <div class="field label border extra" style="margin-bottom:.75rem;">
+                <textarea id="admin-dq-new-question" maxlength="500"></textarea>
+                <label>Frage</label>
+            </div>
+            <div class="row" style="gap:.75rem; align-items:flex-end; flex-wrap:wrap;">
+                <div class="field label border suffix max" style="margin:0; min-width:220px;">
+                    <select id="admin-dq-new-category"></select>
+                    <label>Kategorie</label>
+                    <i>arrow_drop_down</i>
+                </div>
+                <button type="button" class="round" onclick="createDailyQuestionAdmin(this)">
+                    <i>add</i><span>Hinzufügen</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="row" style="gap:.6rem; align-items:flex-end; flex-wrap:wrap; margin-bottom:1rem;">
+            <div class="field label border max" style="margin:0; min-width:220px;">
+                <input id="admin-dq-search" type="search" placeholder="Frage durchsuchen">
+                <label>Suche</label>
+            </div>
+            <div class="field label border suffix" style="margin:0; min-width:180px;">
+                <select id="admin-dq-source">
+                    <option value="all">Alle Quellen</option>
+                    <option value="builtin">365 Standardfragen</option>
+                    <option value="custom">Von euch</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <label>Quelle</label>
+                <i>arrow_drop_down</i>
+            </div>
+            <button type="button" class="round transparent" onclick="loadDailyQuestionsAdmin()">
+                <i>search</i><span>Filtern</span>
+            </button>
+        </div>
+
+        <div id="admin-dq-list" aria-live="polite">
+            <div class="center-align padding"><progress class="circle"></progress></div>
+        </div>
+    </article>
 </section>
-
-<style>
-.admin-feature-groups {
-    display: grid;
-    gap: 1rem;
-    max-width: 960px;
-    margin: 1rem auto 0;
-}
-.admin-feature-group {
-    padding: 0.9rem 1rem;
-}
-.admin-feature-group-heading {
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr);
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.2rem 0.25rem 0.65rem;
-    border-bottom: 1px solid var(--outline-variant);
-}
-.admin-feature-group-heading > i {
-    position: static !important;
-    width: 2rem;
-    text-align: center;
-}
-.admin-feature-group-heading h6,
-.admin-feature-group-heading p,
-.admin-feature-row p {
-    margin: 0;
-}
-.admin-feature-group-heading p,
-.admin-feature-row p {
-    margin-top: 0.18rem;
-    opacity: 0.68;
-    font-size: 0.86rem;
-    line-height: 1.35;
-}
-.admin-feature-row + .admin-feature-row {
-    border-top: 1px solid var(--outline-variant);
-}
-@media (max-width: 700px) {
-    .admin-feature-groups {
-        gap: 0.75rem;
-    }
-    .admin-feature-group {
-        padding: 0.7rem 0.75rem;
-    }
-}
-</style>
