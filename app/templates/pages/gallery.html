@@ -49,7 +49,7 @@
    <main class="responsive">
       <article class="no-padding primary-container">
          <div class="padding">
-            <h5><button class="circle transparent" onclick="window.history.back()"><i>arrow_back</i></button> {{ _('Gallery') }}</h5>
+            <h5><button class="circle transparent" onclick="window.history.back()"><i>arrow_back</i></button> {{ item.title if item.title else _('Gallery') }}</h5>
             <p>{{ item.content }}</p>
             <div id="lightgallery">
                {% for url in item.contentURL.split(';') %}

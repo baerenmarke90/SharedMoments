@@ -774,7 +774,14 @@
                grid-template-columns: 1fr;
             }
          }
-      </style>
+      
+         /* Monthly recap month-label clipping fix v5 */
+         .year-month-scrapbook-title > span {
+            padding-left: 4px;
+            overflow: visible !important;
+            text-overflow: clip !important;
+         }
+</style>
    </head>
 
    <body class="couple-app couple-page-year {% if darkmode.value == 'TRUE' %}dark{% endif %}">
