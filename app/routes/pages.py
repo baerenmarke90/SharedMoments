@@ -1061,20 +1061,66 @@ def _build_couple_year_snapshot(
 
     month_groups = []
     for month in sorted(monthly):
-        candidates = monthly[month]
-        candidates.sort(
+        candidates = list(monthly[month])
+        chronological = sorted(
+            candidates,
+            key=lambda entry: _as_datetime(entry['event_date']),
+        )
+        priority_candidates = sorted(
+            candidates,
             key=lambda entry: (
                 priority.get(entry.get('type'), 99),
                 -_as_datetime(entry['event_date']).timestamp(),
-            )
+            ),
         )
-        selected = candidates[:4]
-        selected.sort(key=lambda entry: _as_datetime(entry['event_date']))
+        selected = sorted(
+            priority_candidates[:4],
+            key=lambda entry: _as_datetime(entry['event_date']),
+        )
+
+        month_place_map = {}
+        for entry in chronological:
+            for place in entry.get('places') or []:
+                month_place_map.setdefault(place['id'], place)
+        month_places = sorted(
+            month_place_map.values(),
+            key=lambda place: place['name'].casefold(),
+        )
+
+        month_cover_images = []
+        seen_month_images = set()
+        for entry in reversed(chronological):
+            image_url = entry.get('image_url')
+            if not image_url or image_url in seen_month_images:
+                continue
+            month_cover_images.append({
+                'url': image_url,
+                'href': entry.get('href') or f'/story?year={selected_year}',
+                'title': entry.get('title') or entry.get('type_label') or 'Moment',
+            })
+            seen_month_images.add(image_url)
+            if len(month_cover_images) >= 8:
+                break
+
+        month_stats = {
+            'memories': sum(1 for entry in chronological if entry['type'] == 'memory'),
+            'hearts': sum(1 for entry in chronological if entry['type'] == 'heart'),
+            'milestones': sum(1 for entry in chronological if entry['type'] == 'milestone'),
+            'chapters': sum(1 for entry in chronological if entry['type'] == 'chapter'),
+            'bucket': sum(1 for entry in chronological if entry['type'] == 'bucket'),
+            'plans': sum(1 for entry in chronological if entry['type'] == 'plan'),
+            'places': len(month_places),
+        }
+
         month_groups.append({
             'month': month,
             'label': _STORY_MONTH_NAMES[month],
             'entries': selected,
-            'total': len(candidates),
+            'all_entries': chronological,
+            'total': len(chronological),
+            'cover_images': month_cover_images,
+            'places': month_places,
+            'stats': month_stats,
         })
 
     # Collect unique places touched by any relationship content in the year.
@@ -3536,6 +3582,86 @@ def couple_year(selected_year=None):
     except Exception as e:
         log('error', f'Error while rendering couple year recap: {e}')
         return "An error occurred while rendering the yearly recap.", 500
+
+
+# ===== Monthly Scrapbook =====
+@pages_bp.route('/year/<int:selected_year>/month/<int:selected_month>')
+@jwt_required
+def couple_month(selected_year, selected_month):
+    """Magazine-style monthly recap derived entirely from existing couple data."""
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        if selected_year < 1900 or selected_year > date.today().year + 2:
+            return redirect(url_for(
+                'pages.couple_year',
+                selected_year=date.today().year,
+            ))
+        if selected_month < 1 or selected_month > 12:
+            return redirect(url_for(
+                'pages.couple_year',
+                selected_year=selected_year,
+            ))
+
+        snapshot = _build_couple_year_snapshot(
+            selected_year,
+            sm_edition,
+            g.user_id,
+        )
+        month_snapshot = next(
+            (
+                group for group in snapshot['month_groups']
+                if group['month'] == selected_month
+            ),
+            None,
+        )
+        if month_snapshot is None:
+            month_snapshot = {
+                'month': selected_month,
+                'label': _STORY_MONTH_NAMES[selected_month],
+                'entries': [],
+                'all_entries': [],
+                'total': 0,
+                'cover_images': [],
+                'places': [],
+                'stats': {
+                    'memories': 0,
+                    'hearts': 0,
+                    'milestones': 0,
+                    'chapters': 0,
+                    'bucket': 0,
+                    'plans': 0,
+                    'places': 0,
+                },
+            }
+
+        available_months = [
+            {
+                'month': group['month'],
+                'label': group['label'],
+            }
+            for group in snapshot['month_groups']
+        ]
+
+        return render_template(
+            'pages/month.html',
+            title=get_display_title(),
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            sm_edition=sm_edition,
+            page_title=f"Unser {month_snapshot['label']} {selected_year}",
+            selected_year=selected_year,
+            selected_month=selected_month,
+            month_snapshot=month_snapshot,
+            available_years=snapshot['available_years'],
+            available_months=available_months,
+        )
+    except Exception as e:
+        log('error', f'Error while rendering monthly couple recap: {e}')
+        return "An error occurred while rendering the monthly recap.", 500
 
 
 @pages_bp.route('/story')
