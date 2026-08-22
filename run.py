@@ -1,6 +1,6 @@
 from app import app
 from app.models import Base, engine
-from app.db_queries import init_db, sync_version_to_db, ensure_reminder_permissions, ensure_edition_settings, ensure_list_type_edition_column
+from app.db_queries import init_db, sync_version_to_db, ensure_reminder_permissions, ensure_list_type_edition_column
 from app.translation import load_translation_in_cache, migrateTranslations
 from app.logger import log
 from app.version import __version__
@@ -10,7 +10,6 @@ Base.metadata.create_all(engine)
 init_db()
 sync_version_to_db()
 ensure_reminder_permissions()
-ensure_edition_settings()
 ensure_list_type_edition_column()
 migrateTranslations(overwrite=True)
 load_translation_in_cache()
