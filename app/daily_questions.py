@@ -94,11 +94,9 @@ def ensure_daily_questions_schema():
                     active=True,
                 ))
             else:
-                # This lets later releases improve wording without duplicating rows.
-                row.questionText = text
-                row.category = category
+                # DQ MODULAR SUITE V1: keep admin edits/deactivation stable.
+                # Only the deterministic built-in order follows the bundled seed.
                 row.sortIndex = index
-                row.active = True
 
         feature_setting = (
             session.query(Setting)
@@ -134,6 +132,16 @@ def daily_questions_enabled():
         session.close()
 
 
+# DQ MODULAR SUITE V1: timezone-aware calendar day.
+def _daily_question_today():
+    try:
+        from app.daily_questions_extras import current_question_date
+        return current_question_date()
+    except Exception:
+        return date.today()
+
+
+
 def _get_couple_users(session):
     users = (
         session.query(User)
@@ -153,7 +161,7 @@ def _assert_couple_user(users, user_id):
 
 
 def _get_or_create_assignment(session, question_day=None):
-    question_day = question_day or date.today()
+    question_day = question_day or _daily_question_today()
 
     assignment = (
         session.query(CoupleDailyQuestion)
@@ -163,28 +171,9 @@ def _get_or_create_assignment(session, question_day=None):
     if assignment:
         return assignment
 
-    active_questions = (
-        session.query(DailyQuestion)
-        .filter(DailyQuestion.active.is_(True))
-        .order_by(DailyQuestion.sortIndex.asc(), DailyQuestion.id.asc())
-        .all()
-    )
-    if not active_questions:
-        raise RuntimeError('Der Fragenpool ist leer.')
-
-    # Avoid repeats until the pool has been consumed once.
-    used_ids = {
-        row[0]
-        for row in session.query(CoupleDailyQuestion.questionID).all()
-    }
-    available = [question for question in active_questions if question.id not in used_ids]
-    if not available:
-        available = active_questions
-
-    # Deterministic but not simply sequential. The assignment is persisted, so
-    # both users and all workers always see the exact same question.
-    offset = (question_day.toordinal() * 37 + len(used_ids) * 17) % len(available)
-    selected = available[offset]
+    # DQ MODULAR SUITE V1: scheduled/custom/skipped questions use one selector.
+    from app.daily_questions_extras import choose_question_for_day
+    selected = choose_question_for_day(session, question_day)
 
     assignment = CoupleDailyQuestion(
         questionID=selected.id,
@@ -313,7 +302,7 @@ def save_daily_question_answer(user_id, answer_text, assignment_id=None):
         _assert_couple_user(users, user_id)
 
         if assignment_id is None:
-            assignment = _get_or_create_assignment(session, date.today())
+            assignment = _get_or_create_assignment(session, _daily_question_today())
         else:
             assignment = (
                 session.query(CoupleDailyQuestion)
@@ -350,7 +339,15 @@ def save_daily_question_answer(user_id, answer_text, assignment_id=None):
             ))
 
         session.commit()
-        return _serialize_state(session, assignment, user_id)
+        state = _serialize_state(session, assignment, user_id)
+        if state.get('revealed'):
+            try:
+                from app.daily_questions_extras import notify_reveal_if_needed
+                notify_reveal_if_needed(assignment.id)
+            except Exception:
+                # Saving the answer must never fail because notification failed.
+                pass
+        return state
     finally:
         session.close()
 
@@ -444,7 +441,7 @@ def get_daily_question_history(user_id, status_filter='all'):
         user_by_id = {user.id: user for user in users}
 
         # Ensure today appears in the archive even before anyone has answered.
-        _get_or_create_assignment(session, date.today())
+        _get_or_create_assignment(session, _daily_question_today())
 
         assignments = (
             session.query(CoupleDailyQuestion)
@@ -509,7 +506,7 @@ def get_daily_question_history(user_id, status_filter='all'):
                 'own_answer': mine.answer if mine else '',
                 'can_edit': not revealed,
                 'answers': [],
-                'is_today': assignment.questionDate == date.today(),
+                'is_today': assignment.questionDate == _daily_question_today(),
             }
 
             if revealed:

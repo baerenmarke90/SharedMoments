@@ -1,0 +1,11 @@
+/* DQ MODULAR SUITE V1 */
+(() => {
+   'use strict';
+   const ROOT_ID = 'daily-question-flashback-section';
+   function isCoupleHome(){return document.body.classList.contains('couple-page-home')&&document.getElementById('div-render-couple-home-dashboard')&&!window.ownItemsOnly}
+   function esc(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+   function answerHtml(answer){return `<div class="dq-flashback-answer"><img src="/api/v2/media/static/${encodeURIComponent(answer.profile_picture||'profile-placeholder.jpg')}" alt="" loading="lazy"><div><strong>${esc(answer.first_name)}</strong><p>${esc(answer.answer)}</p></div></div>`}
+   function render(data){if(!data||document.getElementById(ROOT_ID))return;const section=document.createElement('section');section.id=ROOT_ID;section.className='couple-section dq-flashback-section';section.innerHTML=`<article class="surface-container dq-flashback-card"><div class="dq-flashback-head"><span class="dq-flashback-icon"><i>history</i></span><div><strong>Heute vor einem Jahr</strong><span>${esc(data.category_label||'Gemeinsame Frage')}</span></div></div><p class="dq-flashback-question">${esc(data.question)}</p><div class="dq-flashback-answers">${(data.answers||[]).map(answerHtml).join('')}</div><a class="dq-flashback-open" href="/questions#question-${encodeURIComponent(data.assignment_id)}">Antworten im Archiv öffnen</a></article>`;const daily=document.getElementById('daily-question-section');if(daily){daily.insertAdjacentElement('afterend',section);return}const home=document.getElementById('div-render-couple-home-dashboard');if(home)home.append(section)}
+   async function load(){if(!isCoupleHome())return;try{const response=await fetch('/api/v2/daily-question/flashback',{credentials:'same-origin'});if(!response.ok)return;const payload=await response.json();if(payload&&payload.status==='success'&&payload.data)render(payload.data)}catch(error){console.warn('[Daily Questions] Flashback could not be loaded:',error)}}
+   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();
+})();

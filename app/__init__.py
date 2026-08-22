@@ -66,6 +66,20 @@ except Exception as exc:
     log('error', f'Daily Questions schema initialization failed: {exc}')
     raise
 
+# DQ MODULAR SUITE V1: additive Daily Questions tables and nav context.
+from app.daily_questions_extras import (
+    ensure_daily_questions_extras_schema,
+    daily_questions_template_context,
+)
+
+try:
+    ensure_daily_questions_extras_schema()
+    app.context_processor(daily_questions_template_context)
+    log('info', 'Daily Questions extras schema ready')
+except Exception as exc:
+    log('error', f'Daily Questions extras initialization failed: {exc}')
+    raise
+
 # Custom Lists: permissions for every normal user role
 from app.db_queries import ensure_custom_list_role_permissions
 
@@ -144,6 +158,9 @@ app.register_blueprint(share_bp)
 
 from app.routes.daily_questions import daily_questions_bp
 app.register_blueprint(daily_questions_bp)
+
+from app.routes.daily_questions_manage import daily_questions_manage_bp
+app.register_blueprint(daily_questions_manage_bp)
 
 from app.routes.admin import admin_bp
 app.register_blueprint(admin_bp)

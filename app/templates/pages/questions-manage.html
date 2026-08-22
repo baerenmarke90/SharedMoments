@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Fragen verwalten · {{ title.value if title else 'SharedMoments' }}</title>
+      {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
+      <link rel="stylesheet" href="{{ static_versioned('css/daily-questions-manage.css') }}">
+   </head>
+   <body class="couple-app couple-page-questions-manage {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+      <div class="overlay" id="div-overlay-nav-drawer" onclick="callUi('#dialog-nav-drawer')"></div>
+      <div id="div-render-nav-drawer">{% include 'layouts/nav-drawer.html' %}</div>
+
+      <main class="responsive dq-manage-page">
+         <div class="dq-manage-toolbar">
+            <a class="button circle transparent" href="{{ url_for('daily_questions.questions') }}" aria-label="Zurück zu Unsere Fragen">
+               <i>arrow_back</i>
+            </a>
+            <div class="dq-manage-toolbar-copy">
+               <h4>Fragen verwalten</h4>
+               <p>Eigene Fragen ergänzen, planen und den gemeinsamen Fragenpool pflegen.</p>
+            </div>
+         </div>
+
+         {% if request.args.get('message') %}
+         <article class="dq-manage-message success-container"><i>check_circle</i><span>{{ request.args.get('message') }}</span></article>
+         {% endif %}
+         {% if request.args.get('error') %}
+         <article class="dq-manage-message error-container"><i>error</i><span>{{ request.args.get('error') }}</span></article>
+         {% endif %}
+
+         <section class="dq-manage-grid">
+            <article class="surface-container dq-manage-card">
+               <div class="dq-manage-card-head">
+                  <span class="dq-manage-icon"><i>add_comment</i></span>
+                  <div><h5>Eigene Frage</h5><p>Zufällig im Pool oder für einen bestimmten Tag vormerken.</p></div>
+               </div>
+               <form method="post" action="{{ url_for('daily_questions_manage.create_question') }}" class="dq-manage-form">
+                  <div class="field label border textarea">
+                     <textarea name="question" maxlength="500" required></textarea>
+                     <label>Frage</label>
+                  </div>
+                  <div class="dq-manage-two">
+                     <label class="field label border">
+                        <select name="category" required>
+                           {% for category in categories %}<option value="{{ category.key }}">{{ category.label }}</option>{% endfor %}
+                        </select>
+                        <span>Kategorie</span>
+                     </label>
+                     <label class="field label border">
+                        <select name="when" data-dq-plan-select required>
+                           <option value="pool">Zufällig im Fragenpool</option>
+                           <option value="tomorrow">Morgen</option>
+                           <option value="date">Bestimmtes Datum</option>
+                        </select>
+                        <span>Verwendung</span>
+                     </label>
+                  </div>
+                  <div class="field label border dq-plan-date" data-dq-plan-date hidden>
+                     <input type="date" name="planned_date" min="{{ min_schedule_date }}">
+                     <label>Datum</label>
+                  </div>
+                  <div class="dq-manage-form-actions"><button type="submit" class="round"><i>add</i><span>Frage hinzufügen</span></button></div>
+               </form>
+            </article>
+
+            {% if can_admin %}
+            <article class="surface-container dq-manage-card">
+               <div class="dq-manage-card-head">
+                  <span class="dq-manage-icon"><i>schedule</i></span>
+                  <div><h5>Tageswechsel</h5><p>Die Frage wechselt um Mitternacht in dieser Zeitzone.</p></div>
+               </div>
+               <form method="post" action="{{ url_for('daily_questions_manage.update_timezone') }}" class="dq-manage-form">
+                  <div class="field label border"><input type="text" name="timezone" value="{{ timezone_name }}" required><label>IANA-Zeitzone</label></div>
+                  <p class="dq-manage-help">Für Deutschland: <strong>Europe/Berlin</strong></p>
+                  <div class="dq-manage-form-actions"><button type="submit" class="round border"><i>save</i><span>Zeitzone speichern</span></button></div>
+               </form>
+            </article>
+            {% endif %}
+         </section>
+
+         <section class="dq-manage-section">
+            <div class="dq-manage-section-head"><div><h5>Eure eigenen Fragen</h5><p>{{ custom_questions|length }} eigene Fragen im gemeinsamen Pool</p></div></div>
+            {% if custom_questions %}
+            <div class="dq-question-list">
+               {% for item in custom_questions %}
+               <details class="surface-container dq-question-row">
+                  <summary>
+                     <span class="dq-question-row-main">
+                        <strong>{{ item.question }}</strong>
+                        <span class="dq-question-row-meta">{{ item.category_label }}{% if item.planned_date %} · geplant für {{ item.planned_date.strftime('%d.%m.%Y') }}{% else %} · zufälliger Pool{% endif %}{% if item.creator_name %} · von {{ item.creator_name }}{% endif %}</span>
+                     </span>
+                     <span class="chip small round {% if item.active %}fill{% endif %}">{% if item.active %}Aktiv{% else %}Inaktiv{% endif %}</span>
+                  </summary>
+                  <form method="post" action="{{ url_for('daily_questions_manage.update_question', question_id=item.id) }}" class="dq-question-edit">
+                     {% if item.used %}
+                     <article class="dq-history-lock"><i>lock</i><span>Bereits {{ item.usage_count }}× verwendet. Text, Kategorie und Planung bleiben für den historischen Verlauf unverändert.</span></article>
+                     <input type="hidden" name="question" value=""><input type="hidden" name="category" value="">
+                     {% else %}
+                     <div class="field label border textarea"><textarea name="question" maxlength="500" required>{{ item.question }}</textarea><label>Frage</label></div>
+                     <div class="dq-manage-two">
+                        <label class="field label border">
+                           <select name="category">{% for category in categories %}<option value="{{ category.key }}" {% if category.key == item.category %}selected{% endif %}>{{ category.label }}</option>{% endfor %}</select><span>Kategorie</span>
+                        </label>
+                        <label class="field label border">
+                           <select name="when" data-dq-plan-select>
+                              <option value="pool" {% if not item.planned_date %}selected{% endif %}>Zufälliger Pool</option>
+                              <option value="tomorrow">Morgen</option>
+                              <option value="date" {% if item.planned_date %}selected{% endif %}>Bestimmtes Datum</option>
+                           </select><span>Verwendung</span>
+                        </label>
+                     </div>
+                     <div class="field label border dq-plan-date" data-dq-plan-date {% if not item.planned_date %}hidden{% endif %}>
+                        <input type="date" name="planned_date" min="{{ min_schedule_date }}" value="{{ item.planned_date.isoformat() if item.planned_date else '' }}"><label>Datum</label>
+                     </div>
+                     {% endif %}
+                     <label class="checkbox"><input type="checkbox" name="active" value="1" {% if item.active %}checked{% endif %}><span>Frage aktiv</span></label>
+                     <div class="dq-manage-form-actions"><button type="submit" class="round border"><i>save</i><span>Speichern</span></button></div>
+                  </form>
+               </details>
+               {% endfor %}
+            </div>
+            {% else %}
+            <article class="surface-container dq-manage-empty"><i>chat_bubble_outline</i><p>Noch keine eigenen Fragen. Oben könnt ihr eure erste ergänzen.</p></article>
+            {% endif %}
+         </section>
+
+         {% if can_admin %}
+         <section class="dq-manage-section">
+            <div class="dq-manage-section-head"><div><h5>Standard-Fragenpool</h5><p>Built-in-Fragen deaktivieren und noch unbenutzte Fragen bearbeiten.</p></div></div>
+            <form method="get" class="dq-pool-filter">
+               <div class="field prefix border"><i>search</i><input type="search" name="pool_q" value="{{ pool_query }}" placeholder="Frage suchen"></div>
+               <label class="field border"><select name="pool_category"><option value="all">Alle Kategorien</option>{% for category in categories %}<option value="{{ category.key }}" {% if pool_category == category.key %}selected{% endif %}>{{ category.label }}</option>{% endfor %}</select></label>
+               <button type="submit" class="round border"><i>filter_alt</i><span>Filtern</span></button>
+            </form>
+            <div class="dq-question-list">
+               {% for item in builtin_questions %}
+               <details class="surface-container dq-question-row">
+                  <summary>
+                     <span class="dq-question-row-main"><strong>{{ item.question }}</strong><span class="dq-question-row-meta">{{ item.category_label }} · {{ item.usage_count }}× verwendet</span></span>
+                     <span class="chip small round {% if item.active %}fill{% endif %}">{% if item.active %}Aktiv{% else %}Inaktiv{% endif %}</span>
+                  </summary>
+                  <form method="post" action="{{ url_for('daily_questions_manage.update_question', question_id=item.id) }}" class="dq-question-edit">
+                     <input type="hidden" name="pool_q" value="{{ pool_query }}"><input type="hidden" name="pool_category" value="{{ pool_category }}">
+                     {% if item.used %}
+                     <article class="dq-history-lock"><i>lock</i><span>Bereits verwendet. Text und Kategorie bleiben unverändert, damit alte Antworten dieselbe Frage behalten.</span></article>
+                     <input type="hidden" name="question" value=""><input type="hidden" name="category" value="">
+                     {% else %}
+                     <div class="field label border textarea"><textarea name="question" maxlength="500" required>{{ item.question }}</textarea><label>Frage</label></div>
+                     <label class="field label border"><select name="category">{% for category in categories %}<option value="{{ category.key }}" {% if category.key == item.category %}selected{% endif %}>{{ category.label }}</option>{% endfor %}</select><span>Kategorie</span></label>
+                     {% endif %}
+                     <label class="checkbox"><input type="checkbox" name="active" value="1" {% if item.active %}checked{% endif %}><span>Frage aktiv</span></label>
+                     <div class="dq-manage-form-actions"><button type="submit" class="round border"><i>save</i><span>Speichern</span></button></div>
+                  </form>
+               </details>
+               {% else %}
+               <article class="surface-container dq-manage-empty"><i>search_off</i><p>Für diesen Filter wurden keine Standardfragen gefunden.</p></article>
+               {% endfor %}
+            </div>
+         </section>
+         {% endif %}
+      </main>
+
+      {% include 'layouts/footer.html' %}
+      {% set couple_nav_active = 'more' %}
+      {% set couple_create_query = 'sheet' %}
+      {% include 'layouts/couple-create-sheet.html' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+      <script>
+         (() => {
+            function refreshPlanningField(select) {
+               const form = select.closest('form');
+               const holder = form ? form.querySelector('[data-dq-plan-date]') : null;
+               if (!holder) return;
+               const show = select.value === 'date';
+               holder.hidden = !show;
+               const input = holder.querySelector('input[type="date"]');
+               if (input) input.required = show;
+            }
+            document.querySelectorAll('[data-dq-plan-select]').forEach((select) => {
+               refreshPlanningField(select);
+               select.addEventListener('change', () => refreshPlanningField(select));
+            });
+         })();
+      </script>
+   </body>
+</html>

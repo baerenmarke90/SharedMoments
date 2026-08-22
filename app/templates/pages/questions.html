@@ -717,7 +717,7 @@
              }
           }
 
-       </style>
+       \n          /* DQ MODULAR SUITE V1: archive extras */\n          .questions-hero { flex-wrap: wrap; }\n          .questions-manage-link { margin-left: auto; flex: 0 0 auto; }\n          .questions-search { display:grid; grid-template-columns:minmax(200px,1fr) minmax(170px,.55fr) auto; align-items:center; gap:.55rem; margin:0 0 1rem; }\n          .questions-search .field { margin:0; }\n          .question-card-tools,.question-skip-tools { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; margin-top:.8rem; }\n          .question-card-tools form,.question-skip-tools form { margin:0; }\n          .question-card-tools button,.question-skip-tools button { margin:0 !important; }\n          .questions-result-context { margin:-.35rem 0 .85rem; color:var(--on-surface-variant); font-size:.78rem; }\n          .questions-inline-message { display:flex; align-items:center; gap:.55rem; margin-bottom:.8rem; padding:.7rem .85rem; border-radius:var(--sm-radius-md); }\n          .questions-inline-message>i { position:static; }\n          @media(max-width:700px){ .questions-manage-link{width:100%;margin-left:0;justify-content:center}.questions-search{grid-template-columns:1fr}.questions-search button{width:100%;justify-content:center} }\n</style>
    </head>
    <body class="couple-app couple-page-questions {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
@@ -740,7 +740,10 @@
                    bis ihr beide geantwortet habt.
                 </p>
              </div>
-          </section>
+                       <a class="button round border questions-manage-link" href="{{ url_for('daily_questions_manage.manage_questions') }}">
+                <i>tune</i><span>Fragen verwalten</span>
+             </a>
+</section>
 
          <section class="questions-stats" aria-label="Fragen-Statistik">
             <article class="surface-container questions-stat">
@@ -762,21 +765,25 @@
             <div class="padding">{{ request.args.get('error') }}</div>
          </article>
          {% endif %}
+         {% if request.args.get('message') %}
+         <article class="primary-container questions-inline-message"><i>check_circle</i><span>{{ request.args.get('message') }}</span></article>
+         {% endif %}
 
          <nav class="questions-filters">
-            <a class="chip round{% if selected_status == 'all' %} fill{% endif %}"
-               href="{{ url_for('daily_questions.questions', status='all') }}">
-               <i>apps</i><span>Alle</span>
-            </a>
-            <a class="chip round{% if selected_status == 'answered' %} fill{% endif %}"
-               href="{{ url_for('daily_questions.questions', status='answered') }}">
-               <i>favorite</i><span>Beantwortet</span>
-            </a>
-            <a class="chip round{% if selected_status == 'open' %} fill{% endif %}"
-               href="{{ url_for('daily_questions.questions', status='open') }}">
-               <i>schedule</i><span>Offen</span>
-            </a>
-         </nav>
+             <a class="chip round{% if selected_status == 'all' %} fill{% endif %}" href="{{ url_for('daily_questions.questions', status='all', q=search_query or None, category=selected_category if selected_category != 'all' else None, year=selected_year, month=selected_month) }}"><i>apps</i><span>Alle</span></a>
+             <a class="chip round{% if selected_status == 'answered' %} fill{% endif %}" href="{{ url_for('daily_questions.questions', status='answered', q=search_query or None, category=selected_category if selected_category != 'all' else None, year=selected_year, month=selected_month) }}"><i>favorite</i><span>Beantwortet</span></a>
+             <a class="chip round{% if selected_status == 'open' %} fill{% endif %}" href="{{ url_for('daily_questions.questions', status='open', q=search_query or None, category=selected_category if selected_category != 'all' else None, year=selected_year, month=selected_month) }}"><i>schedule</i><span>Offen</span></a>
+             <a class="chip round{% if selected_status == 'favorites' %} fill{% endif %}" href="{{ url_for('daily_questions.questions', status='favorites', q=search_query or None, category=selected_category if selected_category != 'all' else None, year=selected_year, month=selected_month) }}"><i>bookmark</i><span>Favoriten</span></a>
+          </nav>
+          <form class="questions-search" method="get">
+             <input type="hidden" name="status" value="{{ selected_status }}">
+             {% if selected_year %}<input type="hidden" name="year" value="{{ selected_year }}">{% endif %}
+             {% if selected_month %}<input type="hidden" name="month" value="{{ selected_month }}">{% endif %}
+             <div class="field prefix border"><i>search</i><input type="search" name="q" value="{{ search_query }}" placeholder="Fragen oder Antworten durchsuchen"></div>
+             <label class="field border"><select name="category"><option value="all">Alle Kategorien</option>{% for category in question_categories %}<option value="{{ category.key }}" {% if selected_category == category.key %}selected{% endif %}>{{ category.label }}</option>{% endfor %}</select></label>
+             <button type="submit" class="round border"><i>filter_alt</i><span>Filtern</span></button>
+          </form>
+          {% if selected_year or selected_month %}<div class="questions-result-context">Rückblick: {% if selected_month %}{{ selected_month }} / {% endif %}{{ selected_year }} · <a href="{{ url_for('daily_questions.questions', status=selected_status) }}">Zeitraum entfernen</a></div>{% endif %}
 
          {% if questions %}
             {% for item in questions %}
@@ -812,6 +819,17 @@
                      </div>
                      {% endfor %}
                   </div>
+                  <div class="question-card-tools">
+                     <form method="post" action="{{ url_for('daily_questions_manage.favorite_question', assignment_id=item.id) }}">
+                        <input type="hidden" name="status" value="{{ selected_status }}"><input type="hidden" name="q" value="{{ search_query }}"><input type="hidden" name="category" value="{{ selected_category }}">{% if selected_year %}<input type="hidden" name="year" value="{{ selected_year }}">{% endif %}{% if selected_month %}<input type="hidden" name="month" value="{{ selected_month }}">{% endif %}
+                        <button type="submit" class="round border"><i>{% if item.favorite %}bookmark_remove{% else %}bookmark_add{% endif %}</i><span>{% if item.favorite %}Favorit entfernen{% else %}Als Favorit merken{% endif %}</span></button>
+                     </form>
+                     {% if item.heart_moment_id %}<span class="chip round"><i>favorite</i><span>Als Herzmoment gespeichert</span></span>{% else %}
+                     <form method="post" action="{{ url_for('daily_questions_manage.question_to_heart_moment', assignment_id=item.id) }}">
+                        <input type="hidden" name="status" value="{{ selected_status }}"><input type="hidden" name="q" value="{{ search_query }}"><input type="hidden" name="category" value="{{ selected_category }}">{% if selected_year %}<input type="hidden" name="year" value="{{ selected_year }}">{% endif %}{% if selected_month %}<input type="hidden" name="month" value="{{ selected_month }}">{% endif %}
+                        <button type="submit" class="round border"><i>favorite</i><span>Als Herzmoment speichern</span></button>
+                     </form>{% endif %}
+                  </div>
                   {% else %}
                      {% if item.own_answer %}
                      <div class="question-open-note">
@@ -825,10 +843,20 @@
                      </div>
                      {% endif %}
 
+                     {% if item.is_today and not item.own_answer %}
+                     <div class="question-skip-tools"><form method="post" action="{{ url_for('daily_questions_manage.skip_question', assignment_id=item.id) }}">
+                        <input type="hidden" name="status" value="{{ selected_status }}"><input type="hidden" name="q" value="{{ search_query }}"><input type="hidden" name="category" value="{{ selected_category }}">{% if selected_year %}<input type="hidden" name="year" value="{{ selected_year }}">{% endif %}{% if selected_month %}<input type="hidden" name="month" value="{{ selected_month }}">{% endif %}
+                        <button type="submit" class="round border"><i>shuffle</i><span>Andere Frage</span></button>
+                     </form></div>
+                     {% endif %}
                      <form class="question-archive-form"
                            method="post"
                            action="{{ url_for('daily_questions.answer_question_page', assignment_id=item.id) }}">
                         <input type="hidden" name="status" value="{{ selected_status }}">
+                        <input type="hidden" name="q" value="{{ search_query }}">
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                        {% if selected_year %}<input type="hidden" name="year" value="{{ selected_year }}">{% endif %}
+                        {% if selected_month %}<input type="hidden" name="month" value="{{ selected_month }}">{% endif %}
                         <div class="field label border extra">
                            <textarea name="answer"
                                      maxlength="500"

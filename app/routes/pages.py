@@ -1261,6 +1261,18 @@ def _build_couple_year_snapshot(
         'plans': len(year_plans),
         'questions': int(daily_question_recap.get('answered', 0)),
     }
+    # DQ MODULAR SUITE V3: merge questions into the existing recap model.
+    from app.daily_questions_extras import enrich_month_groups_with_daily_questions
+    month_groups, daily_question_recap = enrich_month_groups_with_daily_questions(
+        month_groups,
+        selected_year,
+    )
+    stats['questions'] = int(daily_question_recap.get('answered', 0))
+    available_years = sorted(
+        set(available_years)
+        | set(daily_question_recap.get('available_years', [])),
+        reverse=True,
+    )
 
     return {
         'year': selected_year,
@@ -1281,6 +1293,7 @@ def _build_couple_year_snapshot(
         'has_content': bool(
             year_story or year_chapters or year_plans or year_bucket
             or daily_question_recap.get('answered', 0)
+            or stats.get('questions', 0)
         ),
     }
 

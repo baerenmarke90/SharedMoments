@@ -340,7 +340,10 @@
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
          }
 
-       </style>
+       
+         /* DQ MODULAR SUITE V1: monthly recap */
+         .month-stat-questions>i{color:#7b5cff;font-variation-settings:'FILL' 1,'wght' 600,'GRAD' 0,'opsz' 24}
+</style>
    </head>
    <body class="couple-app couple-page-month {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
@@ -371,10 +374,9 @@
             <div class="month-hero-copy">
                <div class="month-kicker"><i>favorite</i><span>Unser Monatsrückblick</span></div>
                <h2>{{ month_snapshot['label'] }} {{ selected_year }}</h2>
-               {% if month_snapshot['total'] %}
-               <p class="month-subtitle">
-                  {{ month_snapshot['total'] }} {% if month_snapshot['total'] == 1 %}Moment{% else %}Momente{% endif %} aus eurer gemeinsamen Geschichte.
-               </p>
+               {% set month_question_count = month_snapshot['stats'].get('questions', 0) %}
+               {% if month_snapshot['total'] or month_question_count %}
+               <p class="month-subtitle">{% if month_snapshot['total'] %}{{ month_snapshot['total'] }} {% if month_snapshot['total'] == 1 %}Moment{% else %}Momente{% endif %}{% endif %}{% if month_snapshot['total'] and month_question_count %} · {% endif %}{% if month_question_count %}{{ month_question_count }} {% if month_question_count == 1 %}gemeinsame Frage{% else %}gemeinsame Fragen{% endif %}{% endif %} in eurem gemeinsamen Monat.</p>
                {% else %}
                <p class="month-subtitle">Ein Monat, der noch auf eure gemeinsamen Momente wartet.</p>
                {% endif %}
@@ -430,6 +432,9 @@
                </span>
             </div>
             {% endif %}
+             {% if month_snapshot['stats'].get('questions', 0) %}
+             <div class="surface-container month-stat month-stat-questions"><i>local_florist</i><span class="month-stat-number">{{ month_snapshot['stats'].get('questions', 0) }}</span><span class="month-stat-label">{% if month_snapshot['stats'].get('questions', 0) == 1 %}Frage beantwortet{% else %}Fragen beantwortet{% endif %}</span></div>
+             {% endif %}
 </section>
 
          {% if month_snapshot['all_entries'] %}

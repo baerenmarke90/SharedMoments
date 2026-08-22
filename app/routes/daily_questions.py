@@ -12,6 +12,7 @@ from app.db_queries import (
     get_user_by_id,
     get_user_setting,
 )
+from app.daily_questions_extras import get_archive_view
 from app.logger import log
 from app.routes.auth import jwt_required
 
@@ -86,10 +87,15 @@ def daily_question_answer():
 def questions():
     if not _couples_only():
         return redirect(url_for('pages.home'))
-
-    selected_status = request.args.get('status', 'all')
     try:
-        history = get_daily_question_history(g.user_id, selected_status)
+        history = get_archive_view(
+            g.user_id,
+            status=request.args.get('status', 'all'),
+            search_query=request.args.get('q', ''),
+            category=request.args.get('category', 'all'),
+            year=request.args.get('year'),
+            month=request.args.get('month'),
+        )
         return render_template(
             'pages/questions.html',
             title=get_setting_by_name('title'),
@@ -101,6 +107,11 @@ def questions():
             questions=history['items'],
             question_stats=history['stats'],
             selected_status=history['selected_status'],
+            search_query=history['search_query'],
+            selected_category=history['selected_category'],
+            selected_year=history['selected_year'],
+            selected_month=history['selected_month'],
+            question_categories=history['categories'],
         )
     except Exception as exc:
         log('error', f'Daily question archive failed: {exc}')
@@ -115,6 +126,11 @@ def answer_question_page(assignment_id):
 
     answer = request.form.get('answer', '')
     selected_status = request.form.get('status', 'all')
+    archive_query = {'status': selected_status}
+    for key in ('q', 'category', 'year', 'month'):
+        value = request.form.get(key)
+        if value not in (None, '', 'all'):
+            archive_query[key] = value
 
     try:
         save_daily_question_answer(
@@ -124,13 +140,13 @@ def answer_question_page(assignment_id):
         )
         return redirect(url_for(
             'daily_questions.questions',
-            status=selected_status,
+            **archive_query,
             _anchor=f'question-{assignment_id}',
         ))
     except (ValueError, PermissionError) as exc:
         return redirect(url_for(
             'daily_questions.questions',
-            status=selected_status,
+            **archive_query,
             error=str(exc),
             _anchor=f'question-{assignment_id}',
         ))
@@ -138,7 +154,7 @@ def answer_question_page(assignment_id):
         log('error', f'Daily question archive answer failed: {exc}')
         return redirect(url_for(
             'daily_questions.questions',
-            status=selected_status,
+            **archive_query,
             error='Die Antwort konnte nicht gespeichert werden.',
             _anchor=f'question-{assignment_id}',
         ))
