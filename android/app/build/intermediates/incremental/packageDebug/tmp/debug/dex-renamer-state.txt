@@ -1,0 +1,7 @@
+#Sun Aug 23 00:14:00 CEST 2026
+base.0=/home/philipp/Projekte/SharedMoments/android/app/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
+base.1=/home/philipp/Projekte/SharedMoments/android/app/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
+path.0=classes.dex
+path.1=0/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex

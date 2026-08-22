@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SideBySide" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/sbs_ground</item>
+        <item name="android:navigationBarColor">@color/sbs_ground</item>
+        <item name="android:windowBackground">@color/sbs_surface_light</item>
+    </style>
+</resources>

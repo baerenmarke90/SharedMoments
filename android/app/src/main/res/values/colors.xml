@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dieselben Werte wie in css/couple.css -->
+    <color name="sbs_ground">#7A4FF0</color>
+    <color name="sbs_rose">#E56AA6</color>
+    <color name="sbs_surface_light">#FAF6FB</color>
+    <color name="sbs_surface_dark">#14111C</color>
+</resources>

@@ -1,0 +1,14 @@
+R_DEF: Internal format may change without notice
+local
+color sbs_ground
+color sbs_rose
+color sbs_surface_dark
+color sbs_surface_light
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+drawable splash
+mipmap ic_launcher
+string app_name
+string asset_statements
+style Theme.SideBySide
+xml filepaths

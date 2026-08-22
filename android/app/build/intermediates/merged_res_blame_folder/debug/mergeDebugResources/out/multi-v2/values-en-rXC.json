@@ -1,0 +1,36 @@
+{
+    "logs": [
+        {
+            "outputFile": "de.sidebyside.app-mergeDebugResources-5:/values-en-rXC/values-en-rXC.xml",
+            "map": [
+                {
+                    "source": "/home/philipp/.gradle/caches/8.10.2/transforms/97b6701a1917d90054a679ff4aed9f3c/transformed/core-1.1.0/res/values-en-rXC/values-en-rXC.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "202",
+                        "endOffsets": "253"
+                    },
+                    "to": {
+                        "startLines": "6",
+                        "startColumns": "4",
+                        "startOffsets": "867",
+                        "endColumns": "202",
+                        "endOffsets": "1065"
+                    }
+                },
+                {
+                    "source": "/home/philipp/.gradle/caches/8.10.2/transforms/a43796a4e810fd84bc6b6dd454fe4007/transformed/browser-1.4.0/res/values-en-rXC/values-en-rXC.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,255,454,665",
+                        "endColumns": "199,198,210,201",
+                        "endOffsets": "250,449,660,862"
+                    }
+                }
+            ]
+        }
+    ]
+}

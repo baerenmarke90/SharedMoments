@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'de.sidebyside.app'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "de.sidebyside.app"
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        // Die Adresse der eigenen Instanz. Wird in die Manifest-Platzhalter
+        // eingesetzt, damit sie nur an einer Stelle steht.
+        manifestPlaceholders = [
+            hostName          : project.findProperty('sbsHost') ?: 'sharedmoments.ur-cloud.de',
+            defaultUrl        : 'https://' + (project.findProperty('sbsHost') ?: 'sharedmoments.ur-cloud.de') + '/home',
+            launcherName      : 'SideBySide',
+            statusBarColor    : '@color/sbs_ground',
+            navigationBarColor: '@color/sbs_ground',
+        ]
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}

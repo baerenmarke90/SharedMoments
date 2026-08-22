@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Herz aus zwei Haelften. Auf 108dp gezeichnet, das Motiv sitzt in der
+     inneren Sicherheitszone von 66dp, damit keine Launcher-Form es anschneidet. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group android:translateX="18" android:translateY="18">
+        <!-- linke Haelfte -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M36,60.5 C13.6,45.5 0.5,33.5 0.5,18.9 C0.5,8.3 8.9,0.3 19.1,0.3 C25.8,0.3 31.8,3.7 36,9.4 L36,60.5 Z"/>
+        <!-- rechte Haelfte, um die Luecke versetzt -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M36,60.5 C58.4,45.5 71.5,33.5 71.5,18.9 C71.5,8.3 63.1,0.3 52.9,0.3 C46.2,0.3 40.2,3.7 36,9.4 L36,60.5 Z"/>
+    </group>
+</vector>

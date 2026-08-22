@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="sbs_ground">#7A4FF0</color>
+    <color name="sbs_rose">#E56AA6</color>
+    <color name="sbs_surface_dark">#14111C</color>
+    <color name="sbs_surface_light">#FAF6FB</color>
+    <string name="app_name">SideBySide</string>
+    <string name="asset_statements" translatable="false">
+        [{
+          \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+          \"target\": {
+            \"namespace\": \"web\",
+            \"site\": \"https://sharedmoments.ur-cloud.de\"
+          }
+        }]
+    </string>
+    <style name="Theme.SideBySide" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/sbs_ground</item>
+        <item name="android:navigationBarColor">@color/sbs_ground</item>
+        <item name="android:windowBackground">@color/sbs_surface_light</item>
+    </style>
+</resources>

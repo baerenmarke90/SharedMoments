@@ -1,0 +1,10 @@
+de.sidebyside.app-core-1.1.0-0 /home/philipp/.gradle/caches/8.10.2/transforms/97b6701a1917d90054a679ff4aed9f3c/transformed/core-1.1.0/res
+de.sidebyside.app-androidbrowserhelper-2.5.0-1 /home/philipp/.gradle/caches/8.10.2/transforms/99200ded135aa9e6743cda0af72c6e31/transformed/androidbrowserhelper-2.5.0/res
+de.sidebyside.app-browser-1.4.0-2 /home/philipp/.gradle/caches/8.10.2/transforms/a43796a4e810fd84bc6b6dd454fe4007/transformed/browser-1.4.0/res
+de.sidebyside.app-pngs-3 /home/philipp/Projekte/SharedMoments/android/app/build/generated/res/pngs/debug
+de.sidebyside.app-resValues-4 /home/philipp/Projekte/SharedMoments/android/app/build/generated/res/resValues/debug
+de.sidebyside.app-packageDebugResources-5 /home/philipp/Projekte/SharedMoments/android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+de.sidebyside.app-packageDebugResources-6 /home/philipp/Projekte/SharedMoments/android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+de.sidebyside.app-debug-7 /home/philipp/Projekte/SharedMoments/android/app/build/intermediates/merged_res/debug/mergeDebugResources
+de.sidebyside.app-debug-8 /home/philipp/Projekte/SharedMoments/android/app/src/debug/res
+de.sidebyside.app-main-9 /home/philipp/Projekte/SharedMoments/android/app/src/main/res

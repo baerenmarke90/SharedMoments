@@ -1,0 +1,177 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="de.sidebyside.app"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="36" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:4:5-66
+11-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:4:22-64
+12    <!-- Fuer die Push-Nachrichten der PWA -->
+13    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+13-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:6:5-76
+13-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:6:22-74
+14
+15    <queries>
+15-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /home/philipp/.gradle/caches/8.10.2/transforms/99200ded135aa9e6743cda0af72c6e31/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:26:5-34:15
+16        <intent>
+16-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /home/philipp/.gradle/caches/8.10.2/transforms/99200ded135aa9e6743cda0af72c6e31/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:27:9-33:18
+17            <action android:name="android.intent.action.VIEW" />
+17-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:57:17-68
+17-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:57:25-66
+18
+19            <category android:name="android.intent.category.BROWSABLE" />
+19-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:59:17-77
+19-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:59:27-75
+20
+21            <data android:scheme="https" />
+21-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:60:23-45
+22        </intent>
+23    </queries>
+24
+25    <application
+25-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:8:5-82:19
+26        android:allowBackup="true"
+26-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:13:9-35
+27        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+27-->[androidx.core:core:1.1.0] /home/philipp/.gradle/caches/8.10.2/transforms/97b6701a1917d90054a679ff4aed9f3c/transformed/core-1.1.0/AndroidManifest.xml:24:18-86
+28        android:debuggable="true"
+29        android:extractNativeLibs="false"
+30        android:icon="@mipmap/ic_launcher"
+30-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:10:9-43
+31        android:label="@string/app_name"
+31-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:9:9-41
+32        android:roundIcon="@mipmap/ic_launcher"
+32-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:11:9-48
+33        android:supportsRtl="true"
+33-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:12:9-35
+34        android:theme="@style/Theme.SideBySide" >
+34-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:14:9-48
+35        <meta-data
+35-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:16:9-18:58
+36            android:name="asset_statements"
+36-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:17:13-44
+37            android:resource="@string/asset_statements" />
+37-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:18:13-56
+38
+39        <activity
+39-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:20:9-62:20
+40            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+40-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:21:13-84
+41            android:exported="true"
+41-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:22:13-36
+42            android:label="@string/app_name" >
+42-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:23:13-45
+43            <meta-data
+44                android:name="android.support.customtabs.trusted.DEFAULT_URL"
+44-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:26:17-78
+45                android:value="https://sharedmoments.ur-cloud.de/home" />
+45-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:27:17-46
+46            <meta-data
+47                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
+47-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:30:17-83
+48                android:resource="@color/sbs_ground" />
+48-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:31:17-53
+49            <meta-data
+50                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
+50-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:34:17-87
+51                android:resource="@color/sbs_ground" />
+51-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:35:17-57
+52            <meta-data
+52-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:37:13-39:54
+53                android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
+53-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:38:17-88
+54                android:resource="@drawable/splash" />
+54-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:39:17-52
+55            <meta-data
+55-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:41:13-43:55
+56                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
+56-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:42:17-97
+57                android:resource="@color/sbs_ground" />
+57-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:43:17-53
+58            <meta-data
+58-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:45:13-47:65
+59                android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
+59-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:46:17-90
+60                android:value="de.sidebyside.app.fileprovider" />
+60-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:47:17-63
+61
+62            <intent-filter>
+62-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:49:13-52:29
+63                <action android:name="android.intent.action.MAIN" />
+63-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:50:17-68
+63-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:50:25-66
+64
+65                <category android:name="android.intent.category.LAUNCHER" />
+65-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:51:17-76
+65-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:51:27-74
+66            </intent-filter>
+67
+68            <!--
+69                 Damit Links auf die eigene Instanz in der App landen und
+70                 nicht im Browser.
+71            -->
+72            <intent-filter android:autoVerify="true" >
+72-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:56:13-61:29
+72-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:56:28-53
+73                <action android:name="android.intent.action.VIEW" />
+73-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:57:17-68
+73-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:57:25-66
+74
+75                <category android:name="android.intent.category.DEFAULT" />
+75-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:58:17-75
+75-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:58:27-73
+76                <category android:name="android.intent.category.BROWSABLE" />
+76-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:59:17-77
+76-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:59:27-75
+77
+78                <data
+79                    android:host="sharedmoments.ur-cloud.de"
+79-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:60:46-72
+80                    android:scheme="https" />
+80-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:60:23-45
+81            </intent-filter>
+82        </activity>
+83
+84        <provider
+84-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:64:9-72:20
+85            android:name="androidx.core.content.FileProvider"
+85-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:65:13-62
+86            android:authorities="de.sidebyside.app.fileprovider"
+86-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:66:13-65
+87            android:exported="false"
+87-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:67:13-37
+88            android:grantUriPermissions="true" >
+88-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:68:13-47
+89            <meta-data
+89-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:69:13-71:52
+90                android:name="android.support.FILE_PROVIDER_PATHS"
+90-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:70:17-67
+91                android:resource="@xml/filepaths" />
+91-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:71:17-50
+92        </provider>
+93
+94        <service
+94-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:74:9-81:19
+95            android:name="com.google.androidbrowserhelper.trusted.DelegationService"
+95-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:75:13-85
+96            android:exported="false" >
+96-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:76:13-37
+97            <intent-filter>
+97-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:77:13-80:29
+98                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
+98-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:78:17-105
+98-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:78:25-103
+99
+100                <category android:name="android.intent.category.DEFAULT" />
+100-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:58:17-75
+100-->/home/philipp/Projekte/SharedMoments/android/app/src/main/AndroidManifest.xml:58:27-73
+101            </intent-filter>
+102        </service>
+103    </application>
+104
+105</manifest>
