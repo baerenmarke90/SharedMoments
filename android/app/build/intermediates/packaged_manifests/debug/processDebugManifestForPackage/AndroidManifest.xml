@@ -42,7 +42,7 @@
             android:label="@string/app_name" >
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="https://sharedmoments.ur-cloud.de/home" />
+                android:value="https://us.ur-cloud.de/home" />
             <meta-data
                 android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
                 android:resource="@color/sbs_ground" />
@@ -76,7 +76,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="sharedmoments.ur-cloud.de"
+                    android:host="us.ur-cloud.de"
                     android:scheme="https" />
             </intent-filter>
         </activity>

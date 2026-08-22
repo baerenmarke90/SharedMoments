@@ -16,8 +16,8 @@ android {
         // Die Adresse der eigenen Instanz. Wird in die Manifest-Platzhalter
         // eingesetzt, damit sie nur an einer Stelle steht.
         manifestPlaceholders = [
-            hostName          : project.findProperty('sbsHost') ?: 'sharedmoments.ur-cloud.de',
-            defaultUrl        : 'https://' + (project.findProperty('sbsHost') ?: 'sharedmoments.ur-cloud.de') + '/home',
+            hostName          : project.findProperty('sbsHost') ?: 'us.ur-cloud.de',
+            defaultUrl        : 'https://' + (project.findProperty('sbsHost') ?: 'us.ur-cloud.de') + '/home',
             launcherName      : 'SideBySide',
             statusBarColor    : '@color/sbs_ground',
             navigationBarColor: '@color/sbs_ground',

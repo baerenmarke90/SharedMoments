@@ -44,7 +44,7 @@ pages_bp = Blueprint('pages', __name__)
 # Paths that bypass the migration gate
 _MIGRATION_ALLOWED_PREFIXES = ('/static/', '/api/v2/migration/', '/migration-complete',
                                 '/migration-progress', '/manifest.json', '/sw.js',
-                                '/offline', '/favicon.ico')
+                                '/offline', '/favicon.ico', '/.well-known/')
 
 
 def _get_migration_target():
@@ -86,6 +86,39 @@ def _migration_gate():
 
 
 # ===== PWA Routes (no auth required) =====
+
+@pages_bp.route('/.well-known/assetlinks.json')
+def asset_links():
+    """Digital Asset Links: der Nachweis, dass diese Domain zur App gehoert.
+
+    Ohne diese Datei zeigt die Android-App eine Adresszeile ueber der Seite -
+    sie laeuft dann als Browser-Tab statt als App. Android laedt sie beim
+    ersten Start und danach gelegentlich neu, immer ohne Anmeldung.
+
+    Der Fingerabdruck kommt aus der Umgebung (ANDROID_APP_FINGERPRINT), damit
+    der Wechsel vom Debug- auf einen eigenen Signaturschluessel keine
+    Codeaenderung braucht. Mehrere Fingerabdruecke mit Komma trennen - so
+    laufen alte und neue Installationen waehrend eines Wechsels parallel.
+    """
+    raw = os.environ.get('ANDROID_APP_FINGERPRINT', '').strip()
+    fingerprints = [f.strip().upper() for f in raw.split(',') if f.strip()]
+
+    payload = [{
+        'relation': ['delegate_permission/common.handle_all_urls'],
+        'target': {
+            'namespace': 'android_app',
+            'package_name': os.environ.get('ANDROID_APP_PACKAGE', 'de.sidebyside.app'),
+            'sha256_cert_fingerprints': fingerprints,
+        },
+    }]
+
+    response = make_response(jsonify(payload))
+    response.headers['Content-Type'] = 'application/json'
+    # Android faellt bei einem 404 dauerhaft auf die Adresszeile zurueck,
+    # deshalb hier keine lange Zwischenspeicherung.
+    response.headers['Cache-Control'] = 'public, max-age=300'
+    return response
+
 
 @pages_bp.route('/manifest.json')
 def manifest():
@@ -4655,7 +4688,7 @@ def private_lists_page():
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
-            page_title='Nur fuer mich',
+            page_title='Nur für mich',
             private_notes_enabled=notes_on,
             private_gifts_enabled=gifts_on,
             private_counts=count_private_entries(g.user_id),

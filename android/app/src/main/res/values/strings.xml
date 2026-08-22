@@ -6,7 +6,7 @@
           \"relation\": [\"delegate_permission/common.handle_all_urls\"],
           \"target\": {
             \"namespace\": \"web\",
-            \"site\": \"https://sharedmoments.ur-cloud.de\"
+            \"site\": \"https://us.ur-cloud.de\"
           }
         }]
     </string>
