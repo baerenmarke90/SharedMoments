@@ -37,8 +37,10 @@ body.couple-app > header {
 }
 
 body.couple-app > header nav {
+   width: 100%;
    max-width: 1040px;
    margin: 0 auto;
+   box-sizing: border-box;
 }
 
 body.couple-app > header h6 {
@@ -397,6 +399,23 @@ body.couple-page-year .year-highlight-list {
 }
 
 @media (max-width: 900px) {
+   body.couple-app > header nav {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding-left: 0.55rem;
+      padding-right: 0.55rem;
+      box-sizing: border-box;
+   }
+
+   body.couple-app #dialog-nav-drawer-trigger {
+      margin-left: 0;
+   }
+
+   body.couple-app #header-profile-btn {
+      margin-right: 0;
+   }
+
    body.couple-app main.responsive {
       padding-bottom: calc(7.2rem + env(safe-area-inset-bottom));
    }
@@ -408,20 +427,23 @@ body.couple-page-year .year-highlight-list {
    .couple-bottom-nav {
       position: fixed;
       z-index: 950;
-      left: 0.7rem;
-      right: 0.7rem;
-      bottom: calc(0.55rem + env(safe-area-inset-bottom));
+      left: 0.8rem;
+      right: 0.8rem;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
       min-height: 64px;
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       align-items: end;
-      padding: 0.35rem 0.25rem;
-      border-radius: 1.35rem;
-      background: color-mix(in srgb, var(--surface-container) 94%, transparent);
-      border: 1px solid color-mix(in srgb, var(--outline-variant) 68%, transparent);
-      box-shadow: 0 12px 34px rgba(28, 20, 40, 0.18);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      padding: 0.38rem 0.3rem 0.42rem;
+      border-radius: 1.75rem;
+      background: color-mix(in srgb, var(--surface-container) 90%, transparent);
+      border: 1px solid color-mix(in srgb, var(--outline-variant) 58%, transparent);
+      box-shadow:
+         0 16px 38px rgba(28, 20, 40, 0.22),
+         0 3px 10px rgba(28, 20, 40, 0.10);
+      backdrop-filter: blur(22px) saturate(145%);
+      -webkit-backdrop-filter: blur(22px) saturate(145%);
+      overflow: visible;
    }
 
    .couple-bottom-nav > a,
@@ -519,9 +541,10 @@ body.couple-page-year .year-highlight-list {
    }
 
    .couple-bottom-nav {
-      left: 0.45rem;
-      right: 0.45rem;
-      bottom: calc(0.35rem + env(safe-area-inset-bottom));
+      left: 0.65rem;
+      right: 0.65rem;
+      bottom: calc(0.65rem + env(safe-area-inset-bottom));
+      border-radius: 1.65rem;
    }
 }
 
