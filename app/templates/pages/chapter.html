@@ -431,6 +431,7 @@
 
       <div class="overlay"
            id="div-overlay-edit-chapter"
+           data-dialog="#dialog-edit-chapter"
            onclick="callUi('#dialog-edit-chapter')"></div>
 
       <dialog class="modal" id="dialog-edit-chapter">
@@ -504,6 +505,7 @@
 
       <div class="overlay"
            id="div-overlay-link-chapter-content"
+           data-dialog="#dialog-link-chapter-content"
            onclick="callUi('#dialog-link-chapter-content')"></div>
 
       <dialog class="max" id="dialog-link-chapter-content">
@@ -617,6 +619,7 @@
       {% include 'layouts/footer.html' %}
 
       {% set couple_nav_active = 'story' %}
+      {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>

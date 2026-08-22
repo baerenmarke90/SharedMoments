@@ -14,12 +14,14 @@
       <span class="couple-bottom-nav-label">Geschichte</span>
    </a>
 
-   <a href="/home?create=1"
-      class="couple-bottom-add"
-      aria-label="Hinzufügen">
+   <button type="button"
+           class="couple-bottom-add"
+           aria-label="Hinzufügen"
+           aria-haspopup="dialog"
+           onclick="openCoupleCreateMenu()">
       <i>add</i>
       <span class="couple-bottom-nav-label">Hinzufügen</span>
-   </a>
+   </button>
 
    <a href="/plans"
       class="{% if _couple_nav == 'plans' %}active{% endif %}"

@@ -465,6 +465,7 @@
 
       <div class="overlay"
            id="div-overlay-create-place"
+           data-dialog="#dialog-create-place"
            onclick="callUi('#dialog-create-place')"></div>
       <dialog class="max" id="dialog-create-place">
          <form method="post" action="{{ url_for('pages.create_place_page') }}">
@@ -536,6 +537,7 @@
          };
       </script>
       {% set couple_nav_active = 'more' %}
+      {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>

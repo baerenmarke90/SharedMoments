@@ -567,6 +567,7 @@
 
       <div class="overlay"
            id="div-overlay-edit-place"
+           data-dialog="#dialog-edit-place"
            onclick="callUi('#dialog-edit-place')"></div>
       <dialog class="max" id="dialog-edit-place">
          <form method="post" action="{{ url_for('pages.update_place_page', place_id=place.id) }}">
@@ -630,6 +631,7 @@
 
       <div class="overlay"
            id="div-overlay-link-place-content"
+           data-dialog="#dialog-link-place-content"
            onclick="callUi('#dialog-link-place-content')"></div>
       <dialog class="max" id="dialog-link-place-content">
          <form method="post" action="{{ url_for('pages.update_place_links_page', place_id=place.id) }}">
@@ -729,6 +731,7 @@
          };
       </script>
       {% set couple_nav_active = 'more' %}
+      {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>

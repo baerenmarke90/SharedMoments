@@ -426,6 +426,7 @@
             {% if plan.is_owner %}
             <div class="overlay"
                  id="div-overlay-edit-plan-{{ plan.id }}"
+                 data-dialog="#dialog-edit-plan-{{ plan.id }}"
                  onclick="callUi('#dialog-edit-plan-{{ plan.id }}')"></div>
 
             <dialog class="modal" id="dialog-edit-plan-{{ plan.id }}">
@@ -529,6 +530,7 @@
 
       <div class="overlay"
            id="div-overlay-create-plan"
+           data-dialog="#dialog-create-plan"
            onclick="callUi('#dialog-create-plan')"></div>
 
       <dialog class="modal" id="dialog-create-plan">
@@ -598,6 +600,7 @@
       {% include 'layouts/footer.html' %}
 
       {% set couple_nav_active = 'plans' %}
+      {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>

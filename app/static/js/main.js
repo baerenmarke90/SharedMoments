@@ -25,6 +25,13 @@ window.addEventListener('popstate', function() {
    }
 });
 
+// Overlay eines Dialogs ueber <div class="overlay" data-dialog="#dialog-x">
+function setDialogOverlay(id, active) {
+   document.querySelectorAll('.overlay[data-dialog="' + id + '"]').forEach((overlay) => {
+      overlay.classList.toggle("active", active);
+   });
+}
+
 // Umschalten zwischen Modal anzeigen und verstecken
 function callUi(id) {
    if (document.querySelector(id).classList.contains("active")) { // Wenn Modal angezeigt wird
@@ -74,6 +81,9 @@ function callUi(id) {
       } else if (id == "#dialog-share-item") {
          document.getElementById("div-overlay-share-item").classList.remove("active");
       }
+      // Neuere Dialoge melden ihr Overlay ueber data-dialog an, statt die
+      // Kette oben zu verlaengern.
+      setDialogOverlay(id, false);
       document.body.style.overflow = "auto"; // Scrollen wieder erlauben
    } else {
       // Modal anzeigen
@@ -120,6 +130,7 @@ function callUi(id) {
       } else if (id == "#dialog-share-item") {
          document.getElementById("div-overlay-share-item").classList.add("active");
       }
+      setDialogOverlay(id, true);
       document.body.style.overflow = "hidden"; // Scrollen verhindern
       history.pushState({modal: id}, '');
    }

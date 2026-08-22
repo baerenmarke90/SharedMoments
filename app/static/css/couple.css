@@ -396,6 +396,103 @@ body.couple-page-year .year-highlight-list {
    border-left: 4px solid color-mix(in srgb, var(--primary) 62%, var(--couple-heart));
 }
 
+/* Zentrales Erstellen-Menue (layouts/couple-create-sheet.html) */
+body.couple-app #dialog-couple-create {
+   transition: transform 160ms ease-out;
+   will-change: transform;
+   border-radius: 1.6rem 1.6rem 0 0;
+   padding-bottom: calc(0.7rem + env(safe-area-inset-bottom));
+}
+
+body.couple-app #dialog-couple-create.couple-create-dragging {
+   transition: none;
+}
+
+body.couple-app .couple-create-drag-zone {
+   touch-action: none;
+   user-select: none;
+   cursor: grab;
+   padding-top: 0.15rem;
+}
+
+body.couple-app .couple-create-drag-zone:active {
+   cursor: grabbing;
+}
+
+body.couple-app .couple-create-drag-handle {
+   width: 46px;
+   height: 5px;
+   border-radius: 999px;
+   margin: 0 auto 0.35rem;
+   background: var(--outline-variant);
+   pointer-events: none;
+}
+
+body.couple-app .couple-create-title {
+   margin: 0;
+   line-height: 1.3;
+   white-space: normal;
+}
+
+body.couple-app .couple-create-item {
+   border-radius: 1rem;
+   color: inherit;
+   text-decoration: none;
+}
+
+body.couple-app .couple-create-item:hover,
+body.couple-app .couple-create-item:focus-visible {
+   background: color-mix(in srgb, var(--primary-container) 34%, transparent);
+}
+
+body.couple-app .couple-create-item > i:first-child {
+   flex: 0 0 auto;
+   width: 2.4rem;
+   height: 2.4rem;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 0.85rem;
+   font-size: 1.25rem;
+}
+
+body.couple-app .couple-create-item > i:last-child {
+   color: color-mix(in srgb, var(--on-surface) 45%, transparent);
+}
+
+/* Farbe kommt aus dem Inhaltstyp, damit Sheet, Karten und Filter dieselbe
+   Sprache sprechen. */
+body.couple-app .couple-create-item[data-couple-create="memory"] > i:first-child {
+   color: var(--couple-memory);
+   background: var(--couple-memory-soft);
+}
+
+body.couple-app .couple-create-item[data-couple-create="heart"] > i:first-child,
+body.couple-app .couple-create-item[data-couple-create="bucket"] > i:first-child {
+   color: var(--couple-heart);
+   background: var(--couple-heart-soft);
+}
+
+body.couple-app .couple-create-item[data-couple-create="milestone"] > i:first-child {
+   color: var(--couple-star);
+   background: var(--couple-star-soft);
+}
+
+body.couple-app .couple-create-item[data-couple-create="plan"] > i:first-child {
+   color: var(--couple-plan);
+   background: var(--couple-plan-soft);
+}
+
+body.couple-app .couple-create-item[data-couple-create="chapter"] > i:first-child {
+   color: var(--couple-chapter);
+   background: var(--couple-chapter-soft);
+}
+
+body.couple-app .couple-create-item[data-couple-create="place"] > i:first-child {
+   color: var(--couple-place);
+   background: var(--couple-place-soft);
+}
+
 /* Mobile relationship navigation */
 .couple-bottom-nav {
    display: none;

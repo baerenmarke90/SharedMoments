@@ -624,6 +624,7 @@
 
       <div class="overlay"
            id="div-overlay-edit-bucket-item"
+           data-dialog="#dialog-edit-bucket-item"
            onclick="callUi('#dialog-edit-bucket-item')"></div>
 
       <dialog class="modal" id="dialog-edit-bucket-item">
@@ -651,6 +652,7 @@
       {% include 'layouts/footer.html' %}
 
       {% set couple_nav_active = 'more' %}
+      {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>

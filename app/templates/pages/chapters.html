@@ -244,6 +244,7 @@
 
       <div class="overlay"
            id="div-overlay-create-chapter"
+           data-dialog="#dialog-create-chapter"
            onclick="callUi('#dialog-create-chapter')"></div>
 
       <dialog class="modal" id="dialog-create-chapter">
@@ -300,6 +301,7 @@
       {% include 'layouts/footer.html' %}
 
       {% set couple_nav_active = 'story' %}
+      {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}
 
       <script src="{{ static_versioned('js/main.js') }}"></script>
