@@ -235,10 +235,33 @@ def _build_couple_home_upcoming(
     muted_ids,
     can_view_countdowns,
     can_view_reminders,
+    private_gifts=None,
 ):
-    """Build a small, permission-aware list for the couple dashboard."""
+    """Build a small, permission-aware list for the couple dashboard.
+
+    Geschenke mit Anlassdatum kommen mit hinein, aber nur die eigenen: die
+    Startseite wird pro Anmeldung gerendert, der Partner bekommt seine eigene
+    Liste. Der Titel bleibt bewusst neutral - wer neben einem sitzt, soll
+    nicht mitlesen koennen, was er bekommt.
+    """
     today = date.today()
     upcoming = []
+
+    for gift in private_gifts or []:
+        target_date = gift.get('targetDate')
+        if not target_date or target_date < today or gift.get('status') == 'given':
+            continue
+
+        upcoming.append({
+            'type': 'gift',
+            'icon': 'card_giftcard',
+            'title': gift.get('occasion') or 'Geschenkidee',
+            'date': target_date,
+            'date_label': target_date.strftime('%d.%m.%Y'),
+            'relative_label': _relative_day_label(target_date, today),
+            'private': True,
+            'href': '/private?kind=gift',
+        })
 
     if can_view_countdowns:
         for item, _user in countdowns:
@@ -1980,12 +2003,19 @@ def home():
             else set()
         )
 
+        private_gifts = (
+            get_private_entries(g.user_id, 'gift')
+            if is_feature_enabled('private_gifts')
+            else []
+        )
+
         couple_home_upcoming = _build_couple_home_upcoming(
             countdowns,
             reminder_list,
             muted_ids,
             can_view_countdowns,
             can_view_reminders,
+            private_gifts,
         )
 
         shared_heart_moments = list_heart_moments(

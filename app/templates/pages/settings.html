@@ -353,11 +353,13 @@
                 </div>
               </div>
               {% elif user_setting.name == 'language' %}
-              <a class="row padding primary-container wave" onclick="editSetting('{{user_setting.name}}', 'language')">
+              {# Nur noch Anzeige: SideBySide ist deutschsprachig. Die Auswahl
+                 kommt zurueck, sobald auch die Paar-Seiten uebersetzt sind. #}
+              <a class="row padding primary-container">
                 <i>{{ user_setting.icon }}</i>
                 <div class="max">
                   <h6 class="small" id="{{ user_setting.name }}-name">{{ _(user_setting.name) }}</h6>
-                  <div id="{{user_setting.name}}-value">{{ user_setting.value }}</div>
+                  <div id="{{user_setting.name}}-value">Deutsch</div>
                 </div>
               </a>
               {% elif user_setting.name == 'accent_color' %}

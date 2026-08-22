@@ -1,6 +1,6 @@
 from app import app
 from app.models import Base, engine
-from app.db_queries import init_db, sync_version_to_db, ensure_reminder_permissions
+from app.db_queries import init_db, sync_version_to_db, ensure_reminder_permissions, ensure_product_language
 from app.db_migrations import ensure_schema_up_to_date
 from app.translation import load_translation_in_cache, migrateTranslations
 from app.logger import log
@@ -14,6 +14,7 @@ Base.metadata.create_all(engine)
 ensure_schema_up_to_date()
 init_db()
 sync_version_to_db()
+ensure_product_language()
 ensure_reminder_permissions()
 migrateTranslations(overwrite=True)
 load_translation_in_cache()

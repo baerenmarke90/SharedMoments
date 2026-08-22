@@ -31,6 +31,13 @@ def _(fieldName):
     else:
         return get_translation(fieldName, languageCode)
 
+# SideBySide ist eine deutschsprachige App. Die neuen Paar-Seiten sind fest
+# deutsch geschrieben, die aelteren laufen ueber die Uebersetzungstabelle -
+# ohne gemeinsame Vorgabe stuenden auf einer Seite deutsche und auf der
+# naechsten englische Texte.
+DEFAULT_LOCALE = 'de-DE'
+
+
 def set_locale(userID=None):
     try:
         if userID is None:
@@ -39,7 +46,7 @@ def set_locale(userID=None):
             locale = get_user_setting(userID, 'language').value
 
         if locale is None:
-            locale = 'en-US'
+            locale = DEFAULT_LOCALE
 
         session['lang'] = locale
         os.environ['LANG'] = locale

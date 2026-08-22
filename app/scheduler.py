@@ -18,12 +18,12 @@ def _t(key, lang):
 
 
 def _get_user_lang(user_id):
-    """Get the language setting for a user, defaulting to 'en'."""
+    """Sprache eines Nutzers, im Zweifel die Produktsprache."""
     try:
         setting = get_user_setting(user_id, 'language')
-        return setting.value if setting else 'en-US'
+        return setting.value if setting else 'de-DE'
     except Exception:
-        return 'en-US'
+        return 'de-DE'
 
 _scheduler = None
 

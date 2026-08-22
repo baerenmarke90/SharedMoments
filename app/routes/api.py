@@ -2361,6 +2361,15 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
                 from app.daily_questions_backup import import_daily_questions_data
                 daily_questions_imported = import_daily_questions_data(data.get('dailyQuestionsFeature'), user_email_to_id)
 
+            # Aeltere Sicherungen kennen den privaten Bereich nicht - dann
+            # bleibt der aktuelle Bestand unangetastet.
+            private_entries_imported = {'entries': 0, 'skipped': 0}
+            if data.get('privateEntries'):
+                from app.private_backup import import_private_entries_data
+                private_entries_imported = import_private_entries_data(
+                    data.get('privateEntries'), user_email_to_id,
+                )
+
             # Import reminders
             reminders_imported = 0
             for r_data in data.get('reminders', []):
@@ -2499,7 +2508,8 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
                 'users_imported': users_imported,
                 'user_settings_imported': user_settings_imported,
                 'reminders_imported': reminders_imported,
-                'daily_questions_imported': daily_questions_imported
+                'daily_questions_imported': daily_questions_imported,
+                'private_entries_imported': private_entries_imported
             }
 
             # If setup import, mark setup as complete
@@ -2577,6 +2587,11 @@ def _run_export(export_id, user_id, app_ref):
             # DQ MODULAR SUITE V1: Daily Questions backup.
             from app.daily_questions_backup import export_daily_questions_data
             export_data_json['dailyQuestionsFeature'] = export_daily_questions_data()
+
+            # Privater Bereich: haengt an Nutzern, nicht an Listen, und wuerde
+            # in der Item-Schleife sonst gar nicht auftauchen.
+            from app.private_backup import export_private_entries_data
+            export_data_json['privateEntries'] = export_private_entries_data()
 
             for s in settings_all:
                 export_data_json['settings'].append({

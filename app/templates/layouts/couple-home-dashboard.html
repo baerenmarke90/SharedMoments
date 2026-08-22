@@ -270,6 +270,18 @@
 .couple-clickable {
    cursor: pointer;
 }
+.couple-upcoming-link {
+   display: block;
+   color: inherit;
+   text-decoration: none;
+}
+.couple-upcoming-private {
+   position: static !important;
+   margin-left: var(--sm-space-1);
+   font-size: var(--sm-text-md);
+   vertical-align: -2px;
+   opacity: 0.6;
+}
 .couple-flashback-card {
    display: block;
    color: inherit;
@@ -628,11 +640,18 @@
          <div class="padding">
             {% if couple_home_upcoming %}
                {% for entry in couple_home_upcoming %}
+               {% if entry.href %}<a class="couple-upcoming-link" href="{{ entry.href }}">{% endif %}
                <div class="couple-upcoming-row">
                   <i class="couple-upcoming-icon">{{ entry.icon }}</i>
 
                   <div class="couple-row-main">
-                     <div class="couple-row-title">{{ entry.title }}</div>
+                     <div class="couple-row-title">
+                        {{ entry.title }}
+                        {% if entry.private %}
+                        {# Nur auf diesem Geraet sichtbar - das Schloss sagt es. #}
+                        <i class="couple-upcoming-private" title="Nur für dich sichtbar">lock</i>
+                        {% endif %}
+                     </div>
                      <div class="couple-row-meta">{{ entry.date_label }}</div>
                   </div>
 
@@ -640,6 +659,7 @@
                      {{ entry.relative_label }}
                   </span>
                </div>
+               {% if entry.href %}</a>{% endif %}
                {% endfor %}
             {% else %}
                <div class="couple-empty">

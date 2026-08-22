@@ -130,7 +130,7 @@ def init_db():
         ]
         session.add_all(settings)
         # Default user setting
-        session.add(UserSetting(userID=system_user.id, name='language', value='en-US'))
+        session.add(UserSetting(userID=system_user.id, name='language', value='de-DE'))
 
         # Seed translations for list type titles
         list_type_translations = {
@@ -2220,6 +2220,40 @@ def get_list_type_by_title(title):
     try:
         list_type = session.query(ListType).filter(ListType.title == title).first()
         return list_type
+    finally:
+        session.close()
+
+
+def ensure_product_language():
+    """Zieht Konten auf die Produktsprache, solange es nur eine gibt.
+
+    Die neuen Paar-Seiten sind fest deutsch geschrieben, die aelteren laufen
+    ueber die Uebersetzungstabelle. Steht ein Konto auf en-US, mischen sich
+    beide Welten im selben Menue. Die Einstellung bleibt in der Datenbank -
+    sobald der Paar-Layer uebersetzt ist, kann sie wieder frei werden.
+    """
+    session = SessionLocal()
+    try:
+        rows = (
+            session.query(UserSetting)
+            .filter(
+                UserSetting.name == 'language',
+                UserSetting.value != 'de-DE',
+            )
+            .all()
+        )
+        if not rows:
+            return False
+
+        for row in rows:
+            row.value = 'de-DE'
+        session.commit()
+        log('info', f'{len(rows)} Konten auf de-DE gesetzt (Produktsprache)')
+        return True
+    except Exception as exc:
+        session.rollback()
+        log('error', f'Produktsprache konnte nicht gesetzt werden: {exc}')
+        return False
     finally:
         session.close()
 

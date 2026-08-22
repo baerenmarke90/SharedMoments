@@ -5,7 +5,29 @@
       {% include 'layouts/head.html' %}
       <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <style>
-         .reminder-card { margin-bottom: 1rem; }
+         .reminders-page {
+            max-width: 760px;
+            margin: 0 auto;
+            padding-bottom: 5.5rem;
+         }
+
+         .reminders-intro {
+            margin: var(--sm-space-3) 0 var(--sm-space-6);
+            line-height: 1.5;
+            opacity: 0.78;
+         }
+
+         .reminders-empty {
+            text-align: center;
+            padding: 3rem var(--sm-space-6);
+         }
+
+         .reminders-empty > i {
+            font-size: 3rem;
+            opacity: 0.7;
+         }
+
+         .reminder-card { margin-bottom: var(--sm-space-6); }
          .reminder-type-chip { font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; }
          .channel-section { margin-bottom: 1.5rem; }
          .channel-status { font-size: 0.85rem; opacity: 0.7; }
@@ -22,8 +44,12 @@
    <div class="overlay" id="div-overlay-create-reminder" onclick="callUi('#dialog-create-reminder')"></div>
    <div class="overlay" id="div-overlay-edit-reminder" onclick="callUi('#dialog-edit-reminder')"></div>
 
-   <main class="responsive">
-      <h5 class="small">{{ _('Reminders') }}</h5>
+   <main class="responsive reminders-page">
+      <p class="reminders-intro">
+         Jahrestage, einmalige Termine und Countdowns an einem Ort. Automatisch
+         angelegte Termine erkennt ihr am Hinweis „Auto" – sie folgen euren
+         Daten aus den Einstellungen.
+      </p>
 
       <!-- Erinnerungen-Liste -->
       <div id="reminders-container">
@@ -90,10 +116,20 @@
          {% endfor %}
 
          {% if not reminders %}
-         <div class="center-align padding">
-            <i class="extra" style="opacity: 0.3;">notifications</i>
-            <p style="opacity: 0.5;">{{ _('No reminders yet') }}</p>
-         </div>
+         <article class="surface-container reminders-empty">
+            <i>notifications</i>
+            <h5>Noch keine Termine</h5>
+            <p>
+               Legt fest, woran euch die App erinnern soll – einmalig, jährlich
+               oder als Countdown auf ein Datum hin.
+            </p>
+            {% if has_permission('Create Reminder') %}
+            <button class="round" type="button" onclick="callUi('#dialog-create-reminder')">
+               <i>add</i>
+               <span>Ersten Termin anlegen</span>
+            </button>
+            {% endif %}
+         </article>
          {% endif %}
       </div>
       {% include 'layouts/footer.html' %}

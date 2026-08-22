@@ -23,7 +23,8 @@ def static_versioned(path):
     return f'/static/{path}?v={_static_hash_cache[path]}'
 
 def _get_babel_locale():
-    lang = session.get('lang', 'en-US')
+    # Datumsformate folgen derselben Vorgabe wie die Texte.
+    lang = session.get('lang', 'de-DE')
     return lang.replace('-', '_')
 
 def _get_full_date_pattern(locale):
