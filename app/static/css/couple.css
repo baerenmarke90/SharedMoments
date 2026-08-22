@@ -2740,3 +2740,32 @@ body.couple-app.settings-page dialog {
       border-radius: 0.95rem;
    }
 }
+
+/* SideBySide: hard drawer column alignment
+   Every drawer row uses the exact same icon/text columns. No Admin exception. */
+body.couple-app #dialog-nav-drawer .drawer > a {
+   display: grid !important;
+   grid-template-columns: 1.5rem minmax(0, 1fr) !important;
+   align-items: center !important;
+   column-gap: var(--sm-space-4) !important;
+}
+body.couple-app #dialog-nav-drawer .drawer > a > i {
+   grid-column: 1 !important;
+   position: static !important;
+   display: grid !important;
+   place-items: center !important;
+   width: 1.5rem !important;
+   min-width: 1.5rem !important;
+   max-width: 1.5rem !important;
+   margin: 0 !important;
+   padding: 0 !important;
+   line-height: 1 !important;
+   transform: none !important;
+}
+body.couple-app #dialog-nav-drawer .drawer > a > span {
+   grid-column: 2 !important;
+   min-width: 0 !important;
+   margin: 0 !important;
+   padding: 0 !important;
+   text-indent: 0 !important;
+}

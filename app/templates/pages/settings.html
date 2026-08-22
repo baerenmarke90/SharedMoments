@@ -55,7 +55,7 @@
             <legend>{{ _('About') }}</legend>
             {% if settings_type == 'settings' %}
             {% for setting in settings %}
-            {% if setting.category == 'about' %}
+            {% if setting.category == 'about' and setting.name == 'sm_version' %}
               {% if setting.name == 'sm_version' %}
               {# Version: nur Anzeige, nicht editierbar #}
               <a class="row padding primary-container">
@@ -302,6 +302,7 @@
                 <i>chevron_right</i>
               </a>
 
+              {% if passkey_login_enabled %}
               <!-- Passkeys Section -->
               <legend>{{ _('Passkeys') }}</legend>
 
@@ -334,6 +335,7 @@
                 </div>
               </a>
 
+              {% endif %}
               {% for user_setting in user_settings %}
               {% if user_setting.name == 'darkmode' %}
               <div class="row padding primary-container" style="margin:0;">

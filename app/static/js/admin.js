@@ -61,6 +61,7 @@ function openCreateUser() {
 
     // Roles: default Adult checked
     renderRoleCheckboxes('edit-user-roles-checkboxes', [3]);
+    hideAdminUserSystemSettings();
 
     callUi('#dialog-edit-user');
 }
@@ -89,8 +90,58 @@ function editUser(userId, firstName, lastName, email, birthDate, profilePicture)
     // Roles
     const currentRoles = userRolesMap[userId] || [];
     renderRoleCheckboxes('edit-user-roles-checkboxes', currentRoles);
+    renderAdminUserSystemSettings(userId);
 
     callUi('#dialog-edit-user');
+}
+
+function hideAdminUserSystemSettings() {
+    const section = document.getElementById('edit-user-system-settings-section');
+    const list = document.getElementById('edit-user-system-settings-list');
+    if (section) section.style.display = 'none';
+    if (list) list.innerHTML = '';
+}
+
+function renderAdminUserSystemSettings(userId) {
+    const section = document.getElementById('edit-user-system-settings-section');
+    const list = document.getElementById('edit-user-system-settings-list');
+    if (!section || !list) return;
+
+    const values = adminUserSystemSettings[String(userId)] || [];
+    list.innerHTML = '';
+
+    if (!values.length) {
+        section.style.display = 'none';
+        return;
+    }
+
+    values.forEach(item => {
+        const row = document.createElement('div');
+        row.style.padding = '0.45rem 0';
+        row.style.borderBottom = '1px solid var(--outline-variant)';
+
+        const key = document.createElement('div');
+        key.style.fontSize = '0.78rem';
+        key.style.fontWeight = '650';
+        key.style.wordBreak = 'break-all';
+        key.textContent = item.name;
+
+        const value = document.createElement('div');
+        value.style.marginTop = '0.1rem';
+        value.style.fontSize = '0.82rem';
+        value.style.opacity = '0.72';
+        value.style.wordBreak = 'break-word';
+        value.textContent = item.value || '—';
+
+        row.appendChild(key);
+        row.appendChild(value);
+        list.appendChild(row);
+    });
+
+    const last = list.lastElementChild;
+    if (last) last.style.borderBottom = '0';
+
+    section.style.display = '';
 }
 
 function renderRoleCheckboxes(containerId, selectedRoleIds) {

@@ -3800,7 +3800,15 @@ def user_settings():
         title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
-        user_settings = get_user_settings(g.user_id)
+        all_user_settings = get_user_settings(g.user_id)
+        user_settings = [
+            setting for setting in all_user_settings
+            if (
+                setting.name in {'darkmode', 'language', 'accent_color'}
+                or setting.name.startswith('notification_')
+                or setting.name.startswith('pwa_')
+            )
+        ]
         settings_type = 'user-settings'
         supported_languages = get_supported_languages()
 
@@ -3809,6 +3817,10 @@ def user_settings():
         telegram_chat_id_setting = get_user_setting(g.user_id, 'notification_telegram_chat_id')
         telegram_chat_id = telegram_chat_id_setting.value if telegram_chat_id_setting else ''
         passkeys = get_passkeys_by_user(g.user_id)
+        from app.auth_settings import get_effective_auth_settings
+        passkey_login_enabled = bool(
+            get_effective_auth_settings()['passkey_login_enabled']
+        )
 
         from app.oidc import oidc_configured
         from app.oidc_identity import (
@@ -3836,6 +3848,7 @@ def user_settings():
             telegram_available=telegram_available,
             telegram_chat_id=telegram_chat_id,
             passkeys=passkeys,
+            passkey_login_enabled=passkey_login_enabled,
             oidc_enabled=oidc_configured(),
             oidc_identity=oidc_identity,
             oidc_provider_name=(

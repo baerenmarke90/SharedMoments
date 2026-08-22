@@ -284,6 +284,12 @@
                     <h6 class="small">{{ _('Roles') }}</h6>
                     <div id="edit-user-roles-checkboxes"></div>
                 </div>
+                <div class="s12" id="edit-user-system-settings-section" style="display:none;">
+                    <h6 class="small" style="margin-bottom:0.5rem;">Interne Benutzerdaten</h6>
+                    <div id="edit-user-system-settings-list"
+                         class="surface-container"
+                         style="border-radius:1rem; padding:0.65rem 0.8rem;"></div>
+                </div>
             </div>
         </div>
     </dialog>
@@ -351,6 +357,7 @@
 
         const rolePermissionsMap = {{ role_permissions_map | tojson }};
         const userRolesMap = {{ user_roles_map | tojson }};
+        const adminUserSystemSettings = {{ admin_user_system_settings | tojson }};
     </script>
     <script src="{{ static_versioned('js/main.js') }}"></script>
     <script src="{{ static_versioned('js/admin.js') }}"></script>

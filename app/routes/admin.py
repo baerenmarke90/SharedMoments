@@ -41,6 +41,35 @@ def admin_panel():
         )
         active_shares = get_all_active_shares()
 
+        admin_user_system_settings = {}
+        admin_settings_session = SessionLocal()
+        try:
+            for user_setting in (
+                admin_settings_session.query(UserSetting)
+                .filter(UserSetting.userID != 1)
+                .all()
+            ):
+                is_user_facing = (
+                    user_setting.name in {'darkmode', 'language', 'accent_color'}
+                    or user_setting.name.startswith('notification_')
+                    or user_setting.name.startswith('pwa_')
+                )
+                if is_user_facing:
+                    continue
+
+                admin_user_system_settings.setdefault(
+                    str(user_setting.userID),
+                    []
+                ).append({
+                    'name': user_setting.name,
+                    'value': user_setting.value or '',
+                })
+        finally:
+            admin_settings_session.close()
+
+        for values in admin_user_system_settings.values():
+            values.sort(key=lambda item: item['name'])
+
         from app.auth_settings import get_auth_settings, get_effective_auth_settings
         from app.oidc import oidc_configured
         from app.oidc_identity import get_oidc_identity_for_user
@@ -64,6 +93,7 @@ def admin_panel():
                                settings=settings,
                                daily_questions_enabled=daily_questions_enabled,
                                active_shares=active_shares,
+                               admin_user_system_settings=admin_user_system_settings,
                                auth_settings=auth_settings,
                                auth_effective_settings=auth_effective_settings,
                                auth_oidc_enabled=oidc_configured(),
