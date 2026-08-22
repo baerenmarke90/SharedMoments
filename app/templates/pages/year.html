@@ -238,7 +238,7 @@
             color: var(--on-primary-container);
          }
 
-         .year-stat-heart > i {
+         .year-stat-hearts > i {
             color: #e56aa6;
             background: rgba(229, 106, 166, 0.12);
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
@@ -608,43 +608,37 @@
             {% endif %}
          </article>
 
+         {#
+            Ein Rückblick soll zeigen, was war – nicht was fehlt.
+            Kacheln mit 0 werden ausgeblendet; die Farbe kommt über die
+            Typ-Klasse (year-stat-<key>) statt über :nth-child, damit sie
+            beim Ausblenden nicht verrutscht.
+         #}
+         {% set year_stat_defs = [
+            ('memories',   'photo_library', 'Erinnerungen',    year_snapshot.stats.memories),
+            ('hearts',     'favorite',      'Herzmomente',     year_snapshot.stats.hearts),
+            ('milestones', 'star',          'Meilensteine',    year_snapshot.stats.milestones),
+            ('chapters',   'auto_stories',  'Kapitel',         year_snapshot.stats.chapters),
+            ('places',     'location_on',   'Orte',            year_snapshot.stats.places),
+            ('bucket',     'checklist',     'Wünsche erfüllt', year_snapshot.stats.bucket),
+            ('plans',      'done_all',      'Pläne erlebt',    year_snapshot.stats.plans)
+         ] %}
+         {% set year_stats_ns = namespace(tiles=[]) %}
+         {% for stat in year_stat_defs %}
+            {% if stat[3] %}{% set year_stats_ns.tiles = year_stats_ns.tiles + [stat] %}{% endif %}
+         {% endfor %}
+
+         {% if year_stats_ns.tiles %}
          <section class="year-stats">
-            <div class="surface-container year-stat">
-               <i>photo_library</i>
-               <span class="year-stat-number">{{ year_snapshot.stats.memories }}</span>
-               <span class="year-stat-label">Erinnerungen</span>
+            {% for key, icon, label, value in year_stats_ns.tiles %}
+            <div class="surface-container year-stat year-stat-{{ key }}">
+               <i>{{ icon }}</i>
+               <span class="year-stat-number">{{ value }}</span>
+               <span class="year-stat-label">{{ label }}</span>
             </div>
-            <div class="surface-container year-stat year-stat-heart">
-               <i>favorite</i>
-               <span class="year-stat-number">{{ year_snapshot.stats.hearts }}</span>
-               <span class="year-stat-label">Herzmomente</span>
-            </div>
-            <div class="surface-container year-stat">
-               <i>star</i>
-               <span class="year-stat-number">{{ year_snapshot.stats.milestones }}</span>
-               <span class="year-stat-label">Meilensteine</span>
-            </div>
-            <div class="surface-container year-stat">
-               <i>auto_stories</i>
-               <span class="year-stat-number">{{ year_snapshot.stats.chapters }}</span>
-               <span class="year-stat-label">Kapitel</span>
-            </div>
-            <div class="surface-container year-stat">
-               <i>location_on</i>
-               <span class="year-stat-number">{{ year_snapshot.stats.places }}</span>
-               <span class="year-stat-label">Orte</span>
-            </div>
-            <div class="surface-container year-stat">
-               <i>checklist</i>
-               <span class="year-stat-number">{{ year_snapshot.stats.bucket }}</span>
-               <span class="year-stat-label">Wünsche erfüllt</span>
-            </div>
-            <div class="surface-container year-stat">
-               <i>done_all</i>
-               <span class="year-stat-number">{{ year_snapshot.stats.plans }}</span>
-               <span class="year-stat-label">Pläne erlebt</span>
-            </div>
+            {% endfor %}
          </section>
+         {% endif %}
 
          {% if year_snapshot.has_content %}
          <section class="year-section">

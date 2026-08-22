@@ -1,0 +1,168 @@
+diff --git a/app/static/css/couple.css b/app/static/css/couple.css
+index 271dec6..1a7a2c9 100644
+--- a/app/static/css/couple.css
++++ b/app/static/css/couple.css
+@@ -548,6 +548,38 @@ body.couple-page-year .year-highlight-list {
+    }
+ }
+ 
++/* Nav-Drawer: aktive Seite sichtbar machen */
++body.couple-app #dialog-nav-drawer a.nav-current {
++   background: color-mix(in srgb, var(--primary-container) 55%, transparent);
++   color: var(--primary);
++   font-weight: 650;
++   border-radius: 999px;
++}
++
++body.couple-app #dialog-nav-drawer .nav-drawer-group {
++   margin: 0.9rem 0 0.2rem;
++   padding: 0 0.75rem;
++   font-size: 0.72rem;
++   font-weight: 650;
++   letter-spacing: 0.06em;
++   text-transform: uppercase;
++   color: color-mix(in srgb, var(--on-surface) 55%, transparent);
++}
++
++/* Fixierter Footer + Back-to-Top kollidieren mobil mit der Bottom-Nav */
++@media (max-width: 900px) {
++   body.couple-app footer.fixed {
++      position: static;
++      padding: 0.4rem 0 0;
++      opacity: 0.55;
++      font-size: 0.72rem;
++   }
++
++   body.couple-app #btn-back-to-top {
++      bottom: calc(6.4rem + env(safe-area-inset-bottom)) !important;
++   }
++}
++
+ @media (prefers-reduced-motion: reduce) {
+    body.couple-app *,
+    body.couple-app *::before,
+diff --git a/app/templates/layouts/header.html b/app/templates/layouts/header.html
+index 6d748ee..9f39f98 100755
+--- a/app/templates/layouts/header.html
++++ b/app/templates/layouts/header.html
+@@ -8,7 +8,7 @@
+         </a>
+         <span style="position:relative;">
+             <button class="circle transparent" id="header-profile-btn" data-ui="#header-user-menu">
+-                <img class="responsive" id="header-profile-picture" style="pointer-events:none;"
++                <img class="responsive" id="header-profile-picture" style="pointer-events:none;" alt=""
+                     src="/api/v2/media/static/{{ user_data.profilePicture or 'profile-placeholder.jpg' }}">
+             </button>
+             <!-- Usermenü -->
+diff --git a/app/templates/layouts/nav-drawer.html b/app/templates/layouts/nav-drawer.html
+index 676fdd7..921832f 100755
+--- a/app/templates/layouts/nav-drawer.html
++++ b/app/templates/layouts/nav-drawer.html
+@@ -1,25 +1,34 @@
++{%- macro nav_state(path) -%}
++{%- if request.path == path or request.path.startswith(path ~ '/') %} class="nav-current" aria-current="page"{% endif -%}
++{%- endmacro -%}
+ <dialog class="left scroll {% if render_after_change == true %}active{% endif %}" id="dialog-nav-drawer">
+     <nav class="drawer">
+        <header>
+           <nav>
+              <img class="circle"
++                alt=""
+                 src="/api/v2/media/static/setup-{{ nav_edition }}.jpg">
+-             <h8>SharedMoments {{ nav_edition|capitalize }}</h8>
++             <h6 class="small no-margin">SharedMoments {{ nav_edition|capitalize }}</h6>
+           </nav>
+        </header>
+ 
++       {% if nav_edition == 'couples' %}
++       <div class="nav-drawer-group">Wir</div>
++       {% endif %}
++
+        <!-- Listenelemente -->
+        {% for list_type in list_types %}
+        {% if list_type.navbar == 1
+              and has_list_permission('View', list_type.title)
+              and (list_type.edition == 'all' or list_type.edition == nav_edition)
+              and not (nav_edition == 'couples' and list_type.contentURL == 'bucket-list') %}
+-       <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}">
++       <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}"
++          {%- if request.path == '/' ~ list_type.contentURL %} class="nav-current" aria-current="page"{% endif %}>
+        <i>{{ list_type.icon }}</i>
+        <span>{% if nav_edition == 'couples' and list_type.title == 'Home' %}Wir{% else %}{{ _(list_type.title) }}{% endif %}</span>
+        </a>
+        {% if nav_edition == 'couples' and list_type.title == 'Home' %}
+-       <a href="/story">
++       <a href="/story"{{ nav_state('/story') }}>
+           <i>auto_stories</i>
+           <span>Unsere Geschichte</span>
+        </a>
+@@ -29,22 +38,12 @@
+ 
+        <!-- COUPLES CONTENT NAV -->
+        {% if nav_edition == 'couples' %}
+-       <a href="/year">
++       <a href="/year"{{ nav_state('/year') }}>
+           <i>calendar_view_month</i>
+           <span>Unser Jahr</span>
+        </a>
+-       <a href="/chapters">
+-          <i>auto_stories</i>
+-          <span>Kapitel</span>
+-       </a>
+-       <a href="/places">
+-          <i>map</i>
+-          <span>Unsere Orte</span>
+-       </a>
+-       <a href="/plans">
+-          <i>explore</i>
+-          <span>Unsere Pläne</span>
+-       </a>
++
++       <div class="nav-drawer-group">Wunsch → Plan → Kapitel</div>
+        {% set bucket_nav = namespace(visible=false) %}
+        {% for list_type in list_types %}
+           {% if list_type.contentURL == 'bucket-list' and has_list_permission('View', list_type.title) %}
+@@ -52,25 +51,39 @@
+           {% endif %}
+        {% endfor %}
+        {% if bucket_nav.visible %}
+-       <a href="/bucketlist">
++       <a href="/bucketlist"{{ nav_state('/bucketlist') }}>
+           <i>checklist</i>
+           <span>Bucketlist</span>
+        </a>
+        {% endif %}
+-       <a href="/memories">
++       <a href="/plans"{{ nav_state('/plans') }}>
++          <i>explore</i>
++          <span>Unsere Pläne</span>
++       </a>
++       <a href="/chapters"{{ nav_state('/chapters') }}>
++          <i>auto_stories</i>
++          <span>Kapitel</span>
++       </a>
++
++       <div class="nav-drawer-group">Inhalte</div>
++       <a href="/memories"{{ nav_state('/memories') }}>
+           <i>photo_library</i>
+           <span>Erinnerungen</span>
+        </a>
+        {% if has_list_permission('View', 'Moments') %}
+-       <a href="/milestones">
++       <a href="/milestones"{{ nav_state('/milestones') }}>
+           <i>star</i>
+           <span>Meilensteine</span>
+        </a>
+        {% endif %}
+-       <a href="/heart-moments">
++       <a href="/heart-moments"{{ nav_state('/heart-moments') }}>
+           <i>favorite</i>
+           <span>{{ _('Heart Moments') }}</span>
+        </a>
++       <a href="/places"{{ nav_state('/places') }}>
++          <i>map</i>
++          <span>Unsere Orte</span>
++       </a>
+        {% endif %}
+ 
+        {% if has_permission('Manage Lists') %}

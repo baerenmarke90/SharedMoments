@@ -382,12 +382,15 @@ body.couple-page-year .year-stat::after {
    height: 3px;
    background: var(--couple-memory);
 }
-body.couple-page-year .year-stat:nth-child(2)::after { background: var(--couple-heart); }
-body.couple-page-year .year-stat:nth-child(3)::after { background: var(--couple-star); }
-body.couple-page-year .year-stat:nth-child(4)::after { background: var(--couple-chapter); }
-body.couple-page-year .year-stat:nth-child(5)::after { background: var(--couple-place); }
-body.couple-page-year .year-stat:nth-child(6)::after { background: var(--couple-heart); }
-body.couple-page-year .year-stat:nth-child(7)::after { background: var(--couple-plan); }
+/* Farbe an den Inhaltstyp binden, nicht an die Position – sonst verrutschen
+   die Akzente, sobald leere Kacheln ausgeblendet werden. */
+body.couple-page-year .year-stat-memories::after   { background: var(--couple-memory); }
+body.couple-page-year .year-stat-hearts::after     { background: var(--couple-heart); }
+body.couple-page-year .year-stat-milestones::after { background: var(--couple-star); }
+body.couple-page-year .year-stat-chapters::after   { background: var(--couple-chapter); }
+body.couple-page-year .year-stat-places::after     { background: var(--couple-place); }
+body.couple-page-year .year-stat-bucket::after     { background: var(--couple-heart); }
+body.couple-page-year .year-stat-plans::after      { background: var(--couple-plan); }
 
 body.couple-page-year .year-highlight-list {
    border-left: 4px solid color-mix(in srgb, var(--primary) 62%, var(--couple-heart));
@@ -545,6 +548,38 @@ body.couple-page-year .year-highlight-list {
       right: 0.65rem;
       bottom: calc(0.65rem + env(safe-area-inset-bottom));
       border-radius: 1.65rem;
+   }
+}
+
+/* Nav-Drawer: aktive Seite sichtbar machen */
+body.couple-app #dialog-nav-drawer a.nav-current {
+   background: color-mix(in srgb, var(--primary-container) 55%, transparent);
+   color: var(--primary);
+   font-weight: 650;
+   border-radius: 999px;
+}
+
+body.couple-app #dialog-nav-drawer .nav-drawer-group {
+   margin: 0.9rem 0 0.2rem;
+   padding: 0 0.75rem;
+   font-size: 0.72rem;
+   font-weight: 650;
+   letter-spacing: 0.06em;
+   text-transform: uppercase;
+   color: color-mix(in srgb, var(--on-surface) 55%, transparent);
+}
+
+/* Fixierter Footer + Back-to-Top kollidieren mobil mit der Bottom-Nav */
+@media (max-width: 900px) {
+   body.couple-app footer.fixed {
+      position: static;
+      padding: 0.4rem 0 0;
+      opacity: 0.55;
+      font-size: 0.72rem;
+   }
+
+   body.couple-app #btn-back-to-top {
+      bottom: calc(6.4rem + env(safe-area-inset-bottom)) !important;
    }
 }
 

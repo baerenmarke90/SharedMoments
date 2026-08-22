@@ -20,11 +20,27 @@
       let timer = null;
       let paused = false;
 
+      // Nur manuelle Navigation wird angesagt. Sonst liest ein Screenreader
+      // alle 4,2 Sekunden ungefragt den neuen Bildbereich vor.
+      let announceNext = false;
+
       function updateStatus() {
          if (!status) return;
          const first = index + 1;
          const last = Math.min(index + visibleCount(), items.length);
+         status.setAttribute('aria-live', announceNext ? 'polite' : 'off');
          status.textContent = `${first}–${last} / ${items.length}`;
+         announceNext = false;
+      }
+
+      function goTo(nextIndex, dir) {
+         const max = maxIndex();
+         if (max <= 0) return;
+         index = Math.max(0, Math.min(nextIndex, max));
+         direction = dir;
+         announceNext = true;
+         updatePosition();
+         restartAutoPlay();
       }
 
       function updatePosition(animate = true) {
@@ -74,20 +90,59 @@
       }
 
       prevButton?.addEventListener('click', () => {
-         const max = maxIndex();
-         index = index <= 0 ? max : index - 1;
-         direction = -1;
-         updatePosition();
-         restartAutoPlay();
+         goTo(index <= 0 ? maxIndex() : index - 1, -1);
       });
 
       nextButton?.addEventListener('click', () => {
-         const max = maxIndex();
-         index = index >= max ? 0 : index + 1;
-         direction = 1;
-         updatePosition();
-         restartAutoPlay();
+         goTo(index >= maxIndex() ? 0 : index + 1, 1);
       });
+
+      // Wischen ist auf dem Handy die naheliegende Geste – bisher gab es nur
+      // die beiden Pfeil-Buttons.
+      let swipeStartX = null;
+      let swipeStartY = null;
+
+      track.addEventListener('touchstart', (event) => {
+         if (event.touches.length !== 1) return;
+         swipeStartX = event.touches[0].clientX;
+         swipeStartY = event.touches[0].clientY;
+         paused = true;
+         stopAutoPlay();
+      }, { passive: true });
+
+      track.addEventListener('touchend', (event) => {
+         const startX = swipeStartX;
+         const startY = swipeStartY;
+         swipeStartX = null;
+         swipeStartY = null;
+         paused = false;
+
+         if (startX === null) {
+            startAutoPlay();
+            return;
+         }
+
+         const touch = event.changedTouches[0];
+         const deltaX = touch.clientX - startX;
+         const deltaY = touch.clientY - startY;
+
+         // Horizontale Geste, aber kein versehentliches Scrollen und kein Tap
+         // (sonst würde der Link auf dem Bild nicht mehr funktionieren).
+         if (Math.abs(deltaX) < 40 || Math.abs(deltaX) < Math.abs(deltaY) * 1.5) {
+            startAutoPlay();
+            return;
+         }
+
+         if (deltaX < 0) goTo(index >= maxIndex() ? 0 : index + 1, 1);
+         else goTo(index <= 0 ? maxIndex() : index - 1, -1);
+      }, { passive: true });
+
+      track.addEventListener('touchcancel', () => {
+         swipeStartX = null;
+         swipeStartY = null;
+         paused = false;
+         startAutoPlay();
+      }, { passive: true });
 
       shell.addEventListener('mouseenter', () => {
          paused = true;

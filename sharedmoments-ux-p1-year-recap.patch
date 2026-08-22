@@ -1,0 +1,214 @@
+diff --git a/app/static/css/couple.css b/app/static/css/couple.css
+index 271dec6..f3a565c 100644
+--- a/app/static/css/couple.css
++++ b/app/static/css/couple.css
+@@ -382,12 +382,15 @@ body.couple-page-year .year-stat::after {
+    height: 3px;
+    background: var(--couple-memory);
+ }
+-body.couple-page-year .year-stat:nth-child(2)::after { background: var(--couple-heart); }
+-body.couple-page-year .year-stat:nth-child(3)::after { background: var(--couple-star); }
+-body.couple-page-year .year-stat:nth-child(4)::after { background: var(--couple-chapter); }
+-body.couple-page-year .year-stat:nth-child(5)::after { background: var(--couple-place); }
+-body.couple-page-year .year-stat:nth-child(6)::after { background: var(--couple-heart); }
+-body.couple-page-year .year-stat:nth-child(7)::after { background: var(--couple-plan); }
++/* Farbe an den Inhaltstyp binden, nicht an die Position – sonst verrutschen
++   die Akzente, sobald leere Kacheln ausgeblendet werden. */
++body.couple-page-year .year-stat-memories::after   { background: var(--couple-memory); }
++body.couple-page-year .year-stat-hearts::after     { background: var(--couple-heart); }
++body.couple-page-year .year-stat-milestones::after { background: var(--couple-star); }
++body.couple-page-year .year-stat-chapters::after   { background: var(--couple-chapter); }
++body.couple-page-year .year-stat-places::after     { background: var(--couple-place); }
++body.couple-page-year .year-stat-bucket::after     { background: var(--couple-heart); }
++body.couple-page-year .year-stat-plans::after      { background: var(--couple-plan); }
+ 
+ body.couple-page-year .year-highlight-list {
+    border-left: 4px solid color-mix(in srgb, var(--primary) 62%, var(--couple-heart));
+diff --git a/app/static/js/year.js b/app/static/js/year.js
+index 4b637e1..d7ec0d5 100644
+--- a/app/static/js/year.js
++++ b/app/static/js/year.js
+@@ -20,11 +20,27 @@
+       let timer = null;
+       let paused = false;
+ 
++      // Nur manuelle Navigation wird angesagt. Sonst liest ein Screenreader
++      // alle 4,2 Sekunden ungefragt den neuen Bildbereich vor.
++      let announceNext = false;
++
+       function updateStatus() {
+          if (!status) return;
+          const first = index + 1;
+          const last = Math.min(index + visibleCount(), items.length);
++         status.setAttribute('aria-live', announceNext ? 'polite' : 'off');
+          status.textContent = `${first}–${last} / ${items.length}`;
++         announceNext = false;
++      }
++
++      function goTo(nextIndex, dir) {
++         const max = maxIndex();
++         if (max <= 0) return;
++         index = Math.max(0, Math.min(nextIndex, max));
++         direction = dir;
++         announceNext = true;
++         updatePosition();
++         restartAutoPlay();
+       }
+ 
+       function updatePosition(animate = true) {
+@@ -74,21 +90,60 @@
+       }
+ 
+       prevButton?.addEventListener('click', () => {
+-         const max = maxIndex();
+-         index = index <= 0 ? max : index - 1;
+-         direction = -1;
+-         updatePosition();
+-         restartAutoPlay();
++         goTo(index <= 0 ? maxIndex() : index - 1, -1);
+       });
+ 
+       nextButton?.addEventListener('click', () => {
+-         const max = maxIndex();
+-         index = index >= max ? 0 : index + 1;
+-         direction = 1;
+-         updatePosition();
+-         restartAutoPlay();
++         goTo(index >= maxIndex() ? 0 : index + 1, 1);
+       });
+ 
++      // Wischen ist auf dem Handy die naheliegende Geste – bisher gab es nur
++      // die beiden Pfeil-Buttons.
++      let swipeStartX = null;
++      let swipeStartY = null;
++
++      track.addEventListener('touchstart', (event) => {
++         if (event.touches.length !== 1) return;
++         swipeStartX = event.touches[0].clientX;
++         swipeStartY = event.touches[0].clientY;
++         paused = true;
++         stopAutoPlay();
++      }, { passive: true });
++
++      track.addEventListener('touchend', (event) => {
++         const startX = swipeStartX;
++         const startY = swipeStartY;
++         swipeStartX = null;
++         swipeStartY = null;
++         paused = false;
++
++         if (startX === null) {
++            startAutoPlay();
++            return;
++         }
++
++         const touch = event.changedTouches[0];
++         const deltaX = touch.clientX - startX;
++         const deltaY = touch.clientY - startY;
++
++         // Horizontale Geste, aber kein versehentliches Scrollen und kein Tap
++         // (sonst würde der Link auf dem Bild nicht mehr funktionieren).
++         if (Math.abs(deltaX) < 40 || Math.abs(deltaX) < Math.abs(deltaY) * 1.5) {
++            startAutoPlay();
++            return;
++         }
++
++         if (deltaX < 0) goTo(index >= maxIndex() ? 0 : index + 1, 1);
++         else goTo(index <= 0 ? maxIndex() : index - 1, -1);
++      }, { passive: true });
++
++      track.addEventListener('touchcancel', () => {
++         swipeStartX = null;
++         swipeStartY = null;
++         paused = false;
++         startAutoPlay();
++      }, { passive: true });
++
+       shell.addEventListener('mouseenter', () => {
+          paused = true;
+          stopAutoPlay();
+diff --git a/app/templates/pages/year.html b/app/templates/pages/year.html
+index d952c57..5c18428 100644
+--- a/app/templates/pages/year.html
++++ b/app/templates/pages/year.html
+@@ -238,7 +238,7 @@
+             color: var(--on-primary-container);
+          }
+ 
+-         .year-stat-heart > i {
++         .year-stat-hearts > i {
+             color: #e56aa6;
+             background: rgba(229, 106, 166, 0.12);
+             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+@@ -608,43 +608,37 @@
+             {% endif %}
+          </article>
+ 
++         {#
++            Ein Rückblick soll zeigen, was war – nicht was fehlt.
++            Kacheln mit 0 werden ausgeblendet; die Farbe kommt über die
++            Typ-Klasse (year-stat-<key>) statt über :nth-child, damit sie
++            beim Ausblenden nicht verrutscht.
++         #}
++         {% set year_stat_defs = [
++            ('memories',   'photo_library', 'Erinnerungen',    year_snapshot.stats.memories),
++            ('hearts',     'favorite',      'Herzmomente',     year_snapshot.stats.hearts),
++            ('milestones', 'star',          'Meilensteine',    year_snapshot.stats.milestones),
++            ('chapters',   'auto_stories',  'Kapitel',         year_snapshot.stats.chapters),
++            ('places',     'location_on',   'Orte',            year_snapshot.stats.places),
++            ('bucket',     'checklist',     'Wünsche erfüllt', year_snapshot.stats.bucket),
++            ('plans',      'done_all',      'Pläne erlebt',    year_snapshot.stats.plans)
++         ] %}
++         {% set year_stats_ns = namespace(tiles=[]) %}
++         {% for stat in year_stat_defs %}
++            {% if stat[3] %}{% set year_stats_ns.tiles = year_stats_ns.tiles + [stat] %}{% endif %}
++         {% endfor %}
++
++         {% if year_stats_ns.tiles %}
+          <section class="year-stats">
+-            <div class="surface-container year-stat">
+-               <i>photo_library</i>
+-               <span class="year-stat-number">{{ year_snapshot.stats.memories }}</span>
+-               <span class="year-stat-label">Erinnerungen</span>
+-            </div>
+-            <div class="surface-container year-stat year-stat-heart">
+-               <i>favorite</i>
+-               <span class="year-stat-number">{{ year_snapshot.stats.hearts }}</span>
+-               <span class="year-stat-label">Herzmomente</span>
+-            </div>
+-            <div class="surface-container year-stat">
+-               <i>star</i>
+-               <span class="year-stat-number">{{ year_snapshot.stats.milestones }}</span>
+-               <span class="year-stat-label">Meilensteine</span>
+-            </div>
+-            <div class="surface-container year-stat">
+-               <i>auto_stories</i>
+-               <span class="year-stat-number">{{ year_snapshot.stats.chapters }}</span>
+-               <span class="year-stat-label">Kapitel</span>
+-            </div>
+-            <div class="surface-container year-stat">
+-               <i>location_on</i>
+-               <span class="year-stat-number">{{ year_snapshot.stats.places }}</span>
+-               <span class="year-stat-label">Orte</span>
+-            </div>
+-            <div class="surface-container year-stat">
+-               <i>checklist</i>
+-               <span class="year-stat-number">{{ year_snapshot.stats.bucket }}</span>
+-               <span class="year-stat-label">Wünsche erfüllt</span>
+-            </div>
+-            <div class="surface-container year-stat">
+-               <i>done_all</i>
+-               <span class="year-stat-number">{{ year_snapshot.stats.plans }}</span>
+-               <span class="year-stat-label">Pläne erlebt</span>
++            {% for key, icon, label, value in year_stats_ns.tiles %}
++            <div class="surface-container year-stat year-stat-{{ key }}">
++               <i>{{ icon }}</i>
++               <span class="year-stat-number">{{ value }}</span>
++               <span class="year-stat-label">{{ label }}</span>
+             </div>
++            {% endfor %}
+          </section>
++         {% endif %}
+ 
+          {% if year_snapshot.has_content %}
+          <section class="year-section">

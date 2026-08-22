@@ -1,12 +1,20 @@
+{%- macro nav_state(path) -%}
+{%- if request.path == path or request.path.startswith(path ~ '/') %} class="nav-current" aria-current="page"{% endif -%}
+{%- endmacro -%}
 <dialog class="left scroll {% if render_after_change == true %}active{% endif %}" id="dialog-nav-drawer">
     <nav class="drawer">
        <header>
           <nav>
              <img class="circle"
+                alt=""
                 src="/api/v2/media/static/setup-{{ nav_edition }}.jpg">
-             <h8>SharedMoments {{ nav_edition|capitalize }}</h8>
+             <h6 class="small no-margin">SharedMoments {{ nav_edition|capitalize }}</h6>
           </nav>
        </header>
+
+       {% if nav_edition == 'couples' %}
+       <div class="nav-drawer-group">Wir</div>
+       {% endif %}
 
        <!-- Listenelemente -->
        {% for list_type in list_types %}
@@ -14,12 +22,13 @@
              and has_list_permission('View', list_type.title)
              and (list_type.edition == 'all' or list_type.edition == nav_edition)
              and not (nav_edition == 'couples' and list_type.contentURL == 'bucket-list') %}
-       <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}">
+       <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}"
+          {%- if request.path == '/' ~ list_type.contentURL %} class="nav-current" aria-current="page"{% endif %}>
        <i>{{ list_type.icon }}</i>
        <span>{% if nav_edition == 'couples' and list_type.title == 'Home' %}Wir{% else %}{{ _(list_type.title) }}{% endif %}</span>
        </a>
        {% if nav_edition == 'couples' and list_type.title == 'Home' %}
-       <a href="/story">
+       <a href="/story"{{ nav_state('/story') }}>
           <i>auto_stories</i>
           <span>Unsere Geschichte</span>
        </a>
@@ -29,22 +38,12 @@
 
        <!-- COUPLES CONTENT NAV -->
        {% if nav_edition == 'couples' %}
-       <a href="/year">
+       <a href="/year"{{ nav_state('/year') }}>
           <i>calendar_view_month</i>
           <span>Unser Jahr</span>
        </a>
-       <a href="/chapters">
-          <i>auto_stories</i>
-          <span>Kapitel</span>
-       </a>
-       <a href="/places">
-          <i>map</i>
-          <span>Unsere Orte</span>
-       </a>
-       <a href="/plans">
-          <i>explore</i>
-          <span>Unsere Pläne</span>
-       </a>
+
+       <div class="nav-drawer-group">Wunsch → Plan → Kapitel</div>
        {% set bucket_nav = namespace(visible=false) %}
        {% for list_type in list_types %}
           {% if list_type.contentURL == 'bucket-list' and has_list_permission('View', list_type.title) %}
@@ -52,24 +51,38 @@
           {% endif %}
        {% endfor %}
        {% if bucket_nav.visible %}
-       <a href="/bucketlist">
+       <a href="/bucketlist"{{ nav_state('/bucketlist') }}>
           <i>checklist</i>
           <span>Bucketlist</span>
        </a>
        {% endif %}
-       <a href="/memories">
+       <a href="/plans"{{ nav_state('/plans') }}>
+          <i>explore</i>
+          <span>Unsere Pläne</span>
+       </a>
+       <a href="/chapters"{{ nav_state('/chapters') }}>
+          <i>auto_stories</i>
+          <span>Kapitel</span>
+       </a>
+
+       <div class="nav-drawer-group">Inhalte</div>
+       <a href="/memories"{{ nav_state('/memories') }}>
           <i>photo_library</i>
           <span>Erinnerungen</span>
        </a>
        {% if has_list_permission('View', 'Moments') %}
-       <a href="/milestones">
+       <a href="/milestones"{{ nav_state('/milestones') }}>
           <i>star</i>
           <span>Meilensteine</span>
        </a>
        {% endif %}
-       <a href="/heart-moments">
+       <a href="/heart-moments"{{ nav_state('/heart-moments') }}>
           <i>favorite</i>
           <span>{{ _('Heart Moments') }}</span>
+       </a>
+       <a href="/places"{{ nav_state('/places') }}>
+          <i>map</i>
+          <span>Unsere Orte</span>
        </a>
        {% endif %}
 
