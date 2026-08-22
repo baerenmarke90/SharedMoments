@@ -438,7 +438,7 @@
          <form class="bucket-tools" method="get" action="{{ url_for('pages.bucketlist') }}">
             <input type="hidden" name="status" value="{{ selected_status }}">
             <div class="bucket-search">
-               <div class="field border prefix">
+               <div class="field border prefix couple-filter-field">
                   <i>search</i>
                   <input type="search"
                          name="q"
@@ -446,7 +446,7 @@
                          placeholder="Bucketlist durchsuchen">
                </div>
             </div>
-            <div class="field border suffix bucket-sort">
+            <div class="field border suffix couple-filter-field bucket-sort">
                <select name="sort" aria-label="Bucketlist sortieren" onchange="this.form.submit()">
                   <option value="created_desc" {% if selected_sort == 'created_desc' %}selected{% endif %}>Neueste zuerst</option>
                   <option value="created_asc" {% if selected_sort == 'created_asc' %}selected{% endif %}>Älteste zuerst</option>
@@ -459,20 +459,20 @@
             </div>
          </form>
 
-         <nav class="bucket-filters">
-            <a class="chip round bucket-filter-chip{% if selected_status == 'open' %} fill{% endif %}"
+         <nav class="bucket-filters couple-filter-bar">
+            <a class="chip round couple-filter-chip bucket-filter-chip{% if selected_status == 'open' %} fill{% endif %}"
                href="{{ url_for('pages.bucketlist', status='open', q=search_query, sort=selected_sort) }}">
                <i>radio_button_unchecked</i><span>Offen {{ open_count }}</span>
             </a>
-            <a class="chip round bucket-filter-chip{% if selected_status == 'planned' %} fill{% endif %}"
+            <a class="chip round couple-filter-chip bucket-filter-chip{% if selected_status == 'planned' %} fill{% endif %}"
                href="{{ url_for('pages.bucketlist', status='planned', q=search_query, sort=selected_sort) }}">
                <i>event_available</i><span>In Planung {{ planned_count }}</span>
             </a>
-            <a class="chip round bucket-filter-chip{% if selected_status == 'done' %} fill{% endif %}"
+            <a class="chip round couple-filter-chip bucket-filter-chip{% if selected_status == 'done' %} fill{% endif %}"
                href="{{ url_for('pages.bucketlist', status='done', q=search_query, sort=selected_sort) }}">
                <i>check_circle</i><span>Erledigt {{ done_count }}</span>
             </a>
-            <a class="chip round bucket-filter-chip{% if selected_status == 'all' %} fill{% endif %}"
+            <a class="chip round couple-filter-chip bucket-filter-chip{% if selected_status == 'all' %} fill{% endif %}"
                href="{{ url_for('pages.bucketlist', status='all', q=search_query, sort=selected_sort) }}">
                <i>apps</i><span>Alle {{ total_count }}</span>
             </a>

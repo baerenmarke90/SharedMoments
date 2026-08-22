@@ -316,30 +316,30 @@
          </nav>
 
          <section class="story-controls">
-            <nav class="story-filter-row">
+            <nav class="story-filter-row couple-filter-bar">
                {% set year_arg = story_year if story_year else None %}
                {% set query_arg = story_query if story_query else None %}
                {% set order_arg = story_order if story_order != 'new' else None %}
 
-               <a class="chip round {% if story_type == 'all' %}fill{% endif %}"
+               <a class="chip round couple-filter-chip {% if story_type == 'all' %}fill{% endif %}"
                   href="{{ url_for('pages.story', type='all', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>all_inclusive</i>
                   <span>Alles</span>
                </a>
 
-               <a class="chip round {% if story_type == 'memory' %}fill{% endif %}"
+               <a class="chip round couple-filter-chip {% if story_type == 'memory' %}fill{% endif %}"
                   href="{{ url_for('pages.story', type='memory', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>photo_library</i>
                   <span>Erinnerungen</span>
                </a>
 
-               <a class="chip round {% if story_type == 'heart' %}fill{% endif %}"
+               <a class="chip round couple-filter-chip {% if story_type == 'heart' %}fill{% endif %}"
                   href="{{ url_for('pages.story', type='heart', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>favorite</i>
                   <span>Herzmomente</span>
                </a>
 
-               <a class="chip round {% if story_type == 'milestone' %}fill{% endif %}"
+               <a class="chip round couple-filter-chip {% if story_type == 'milestone' %}fill{% endif %}"
                   href="{{ url_for('pages.story', type='milestone', year=year_arg, q=query_arg, order=order_arg) }}">
                   <i>star</i>
                   <span>Meilensteine</span>
@@ -350,7 +350,7 @@
                <input type="hidden" name="type" value="{{ story_type }}">
 
                <div class="story-search-row">
-                  <div class="field border round story-search-field">
+                  <div class="field border round couple-filter-field story-search-field">
                      <input type="search"
                             name="q"
                             value="{{ story_query }}"
@@ -363,7 +363,7 @@
                      </button>
                   </div>
 
-                  <div class="field border round suffix story-year-field">
+                  <div class="field border round suffix couple-filter-field story-year-field">
                      <select name="year" onchange="this.form.submit()">
                         <option value="">Alle Jahre</option>
                         {% for year in story_years %}
