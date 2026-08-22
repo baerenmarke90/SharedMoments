@@ -34,11 +34,6 @@ from app.permissions import require_permission, has_list_permission, has_permiss
 
 pages_bp = Blueprint('pages', __name__)
 
-
-def get_display_title():
-    """Returns the title setting."""
-    return get_setting_by_name('title')
-
 # Paths that bypass the migration gate
 _MIGRATION_ALLOWED_PREFIXES = ('/static/', '/api/v2/migration/', '/migration-complete',
                                 '/migration-progress', '/manifest.json', '/sw.js',
@@ -1797,7 +1792,7 @@ def home():
         sm_edition = get_setting_by_name('sm_edition').value
         items = get_items_by_type(list_type, 'desc', edition=sm_edition)
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings = get_all_settings()
@@ -2180,7 +2175,7 @@ def memories():
         )
 
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         shared_item_ids = get_shared_item_ids()
@@ -2239,7 +2234,7 @@ def milestones():
         )
 
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 
@@ -2324,7 +2319,7 @@ def places():
 
         return render_template(
             'pages/places.html',
-            title=get_display_title(),
+            title=None,
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
@@ -2435,7 +2430,7 @@ def place(place_id):
 
         return render_template(
             'pages/place.html',
-            title=get_display_title(),
+            title=None,
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
@@ -2765,7 +2760,7 @@ def bucketlist():
 
         return render_template(
             'pages/bucketlist.html',
-            title=get_display_title(),
+            title=None,
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
@@ -3028,7 +3023,7 @@ def plans():
             ]
         )
 
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         list_types = get_all_list_types()
@@ -3252,7 +3247,7 @@ def chapters():
     try:
         sm_edition = get_setting_by_name('sm_edition').value
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 
@@ -3336,7 +3331,7 @@ def chapter(chapter_id):
             return redirect(url_for('pages.chapters'))
 
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 
@@ -3528,7 +3523,7 @@ def couple_year(selected_year=None):
 
         return render_template(
             'pages/year.html',
-            title=get_display_title(),
+            title=None,
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
@@ -3550,7 +3545,7 @@ def story():
     try:
         sm_edition = get_setting_by_name('sm_edition').value
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 
@@ -3703,7 +3698,7 @@ def manage_translations():
     try:
         dev = request.args.get('dev')
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings = get_all_settings()
@@ -3724,7 +3719,7 @@ def settings():
     try:
         settings = get_all_settings()
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings_type = 'settings'
@@ -3758,7 +3753,7 @@ def user_settings():
         ensure_notification_settings(g.user_id)
         settings = get_all_settings()
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         user_settings = get_user_settings(g.user_id)
@@ -3827,7 +3822,7 @@ def gallery(id):
             return redirect(url_for('pages.home'))
 
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 
@@ -4000,7 +3995,7 @@ def _translate_reminder_description(reminder):
 def reminders():
     try:
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         reminder_list = get_all_reminders()
@@ -4039,7 +4034,7 @@ def list_view(content_url):
 
         items = get_items_by_type(list_type.id, edition=sm_edition, checked_last=True)
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 
@@ -4053,7 +4048,8 @@ def list_view(content_url):
                                user_data=user_data,
                                error_msg=error_msg,
                                list_type_title=list_type.title,
-                               sm_edition=sm_edition)
+                               sm_edition=sm_edition,
+                               page_title=_(list_type.mainTitle or list_type.title))
     except Exception as e:
         log('error', f'Error while processing the list view: {e}')
         return "An error occurred while processing your request. Page not found.", 500
@@ -4070,7 +4066,7 @@ def heart_moments_page():
         sm_edition = get_setting_by_name('sm_edition').value
 
         list_types = get_all_list_types()
-        title = get_display_title()
+        title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 

@@ -91,15 +91,11 @@ def setup_complete():
         if sm_edition_setting:
             sm_edition_setting.value = 'couples'
 
-        title = settings[0]['title']
         relationship_status = settings[0]['relationshipStatus']
         anniversary_date = settings[0]['anniversary']
         wedding_date = settings[0]['weddingAnniversary']
         engaged_date = settings[0]['engagement']
 
-        title_setting = db_session.query(Setting).filter_by(name='title').first()
-        if title_setting:
-            title_setting.value = title
 
         relationship_status_setting = db_session.query(Setting).filter_by(name='relationship_status').first()
         if relationship_status_setting:
@@ -257,12 +253,6 @@ def update_settings():
         setting = request.form['setting']
         value = request.form['value']
 
-        if setting == 'title' and not value.strip():
-            return jsonify({
-                'status': 'error',
-                'message': _('Title cannot be empty'),
-                'data': {'error_code': 400}
-            }), 400
 
         if setting in ('banner_image', 'family_banner_image', 'friends_banner_image') and value:
             ext = value.rsplit('.', 1)[-1].lower() if '.' in value else ''

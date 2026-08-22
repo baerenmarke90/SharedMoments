@@ -105,7 +105,6 @@ function callUi(id) {
             document.getElementById("div-overlay-setup-add-user").classList.remove("active");
         } else if (id === '#edit-settings') {
             document.getElementById("div-overlay-setup-edit-settings").classList.remove("active");
-            document.getElementById('title').closest('.s12').classList.add('hidden');
             document.getElementById('relationship-status').closest('.s6').classList.add('hidden');
             document.getElementById('anniversary').closest('.s6').classList.add('hidden');
             document.getElementById('engagement').closest('.s6').classList.add('hidden');
@@ -127,7 +126,6 @@ function callUi(id) {
             if (childOption) childOption.style.display = 'none';
         } else if (id === '#edit-settings') {
             document.getElementById("div-overlay-setup-edit-settings").classList.add("active");
-            document.getElementById('title').closest('.hidden').classList.remove('hidden');
             document.getElementById('relationship-status').closest('.hidden').classList.remove('hidden');
             document.getElementById('anniversary').closest('.hidden').classList.remove('hidden');
             // Apply date requirements based on current relationship status
@@ -359,7 +357,6 @@ function setupUpdateDateFields() {
 }
 
 function saveSettings() {
-    var title = document.getElementById('title').value;
     var anniversary = document.getElementById('anniversary').value;
     var engagement = document.getElementById('engagement').value;
     var weddingAnniversary = document.getElementById('wedding-anniversary').value;
@@ -377,7 +374,6 @@ function saveSettings() {
     }
 
     settings = [{
-        title: title,
         anniversary: anniversary,
         engagement: engagement,
         weddingAnniversary: weddingAnniversary,

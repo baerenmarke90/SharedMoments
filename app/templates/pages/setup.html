@@ -61,7 +61,7 @@
 
             </div>
             <div class="page padding" id="setup-tab-2">
-    
+
                 <div class="">
                     <h5>{{ _('Add user') }}</h5>
                     <br>
@@ -71,16 +71,16 @@
                     <br>
                     <p id="p-add-user-text">{{ _('Add users who will use SharedMoments') }}.</p>
                     <p style="display: none;" id="p-added-users">{{ _('Added users') }}:</p>
-    
+
                     <div id="users">
                     </div>
                     <br>
                     <button onclick="callUi('#dialog-add-user')" class="border center white">{{ _('Add user') }}</button>
-    
-    
-    
-    
-    
+
+
+
+
+
                     <dialog class="bottom" id="dialog-add-user">
                         <h5>{{ _('Add user') }}</h5>
                         <div class="grid">
@@ -138,8 +138,8 @@
                                 </label>
                              </div>
 
-    
-    
+
+
                             <div class="s6">
                                 <button>
                                     <i>add_photo_alternate</i>
@@ -148,7 +148,7 @@
                                         onchange="renderFile(this.files[0], 'preview')">
                                 </button>
                             </div>
-    
+
                             <div class="s6">
                                 <span>{{ _('Preview') }}: </span>
                                 <img class="circle large" id="add-user-render-profile-picture"
@@ -189,40 +189,35 @@
                     <br>
                     <br>
                     <p>{{ _('Now make the final adjustments to get started!') }}</p>
-    
+
                     <br>
                     <button onclick="callUi('#edit-settings')" class="border center white">{{ _('Adjust settings') }}</button>
                     <br>
                     <br>
                     <button onclick="exitSetup()" class="border center white" id="button-exit-setup" disabled>{{ _('Complete setup') }}</button>
-    
-    
+
+
                     <dialog class="bottom" id="edit-settings">
                         <h5>{{ _('Adjust settings') }}</h5>
                         <div class="grid">
-                            <div class="s12 hidden">
-                                <div class="field label border">
-                                    <input type="text" id="title">
-                                    <label>{{ _('Title') }}</label>
-                                </div>
-                            </div>
+
 
                             <div class="s6 hidden">
-    
+
                                 <div class="field label suffix border">
                                     <select id="relationship-status">
 
                                         {% for relationship_status in relationship_statuses_translated %}
                                         <option value="{{ relationship_status.id }}">{{ relationship_status.translatedText }}</option>
                                         {% endfor %}
-                                        
-                                    
+
+
                                     </select>
                                     <label>{{ _('Relationship status') }}</label>
                                     <i>arrow_drop_down</i>
                                 </div>
                             </div>
-    
+
                             <div class="s6 hidden">
                                 <div class="field label border">
                                     <input type="date" id="anniversary">
@@ -253,12 +248,12 @@
             <button class="transparent circle absolute middle right" id="button-next-setting-tab" onclick="nextSetupTab()">
                 <i>chevron_right</i>
             </button>
-    
+
             <button class="transparent circle absolute middle left" id="button-previous-setting-tab" style="display: none;"
                 onclick="previousSetupTab()">
                 <i>chevron_left</i>
             </button>
-    
+
             <!-- Footer -->
             {% include 'layouts/footer.html' %}
     </main>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ title.value }} - {{ _('Admin') }}</title>
+    <title>SharedMoments - {{ _('Admin') }}</title>
     {% include 'layouts/head.html' %}
     <style>
         .user-roles-chips { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -37,6 +37,42 @@
         }
         .admin-auth-warning > i { position: static !important; }
         .admin-auth-actions { margin-top: 0.9rem; }
+
+        /* SharedMoments: admin authentication right alignment */
+        .admin-auth-row {
+            display: grid !important;
+            grid-template-columns: 2rem minmax(0, 1fr) auto;
+            align-items: center;
+            column-gap: 0.85rem;
+            width: 100%;
+        }
+        .admin-auth-row > i {
+            grid-column: 1;
+            position: static !important;
+            width: 2rem;
+            min-width: 2rem;
+            margin: 0 !important;
+            text-align: center;
+        }
+        .admin-auth-row > .max {
+            grid-column: 2;
+            min-width: 0;
+        }
+        .admin-auth-row > label.switch,
+        .admin-auth-row > a.button,
+        .admin-auth-row > button {
+            grid-column: 3;
+            justify-self: end;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        .admin-auth-actions {
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: center;
+            width: 100%;
+            margin-top: 0.9rem;
+        }
     </style>
 </head>
 <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">

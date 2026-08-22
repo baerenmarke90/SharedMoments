@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>{{ title.value }}</title>
+      <title>SharedMoments</title>
       {% include 'layouts/head.html' %}
       <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <style>
@@ -293,13 +293,6 @@
                <span>Von mir</span>
             </button>
 
-            {% if has_list_permission('Create', list_type_title) %}
-            <button class="chip fill couple-page-action"
-                    onclick="openCreateDialog()">
-               <i>add</i>
-               <span>Erinnerung</span>
-            </button>
-            {% endif %}
          </nav>
 
          <div id="div-render-home-items">

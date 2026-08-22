@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>{{ title.value }}</title>
+      <title>SharedMoments</title>
       {% include 'layouts/head.html' %}
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery.min.css">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-video.min.css">
@@ -27,8 +27,8 @@
      object-fit: cover;
    }
  </style>
- 
- 
+
+
    </head>
    <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
    <!-- Header -->
@@ -78,8 +78,8 @@
                    {% endif %}
                    {% endfor %}
            </div>
-           
-              
+
+
          </div>
       </article>
 
@@ -89,7 +89,7 @@
       {% include 'layouts/footer.html' %}
    </main>
 
-   
+
 
    <div class="snackbar" id="home-snackbar">
       <div class="max" id="home-snackbar-text" onclick="document.getElementById('home-snackbar').classList.remove('active');"></div>
@@ -144,6 +144,6 @@
     }
   })();
 </script>
-   
+
    </body>
 </html>

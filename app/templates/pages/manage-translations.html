@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>{{ title.value }}</title>
+      <title>SharedMoments</title>
       {% include 'layouts/head.html' %}
-      
+
    </head>
    <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
    <!-- Header -->
@@ -69,7 +69,7 @@
                   <input type="text" id="focusmode-helpText-new-value">
                   <label>{{ _('Set Help Text') }}</label>
                </div>
-               
+
                <div class="field label border">
                   <input type="text" id="focusmode-translation" onkeydown="if(event.keyCode === 13) saveTranslation()">
                   <label>{{ _('Translation') }}</label>
@@ -118,7 +118,7 @@
    <script src="{{ static_versioned('js/main.js') }}"></script>
 
    <script>
-   
+
    function createNewLanguage() {
       if (!navigator.onLine) {
          showSnackbar('home', true, 'error', _('You are offline'), null, false);
@@ -132,7 +132,7 @@
       }
 
       var formData = new FormData();
-      
+
       formData.append("languageCode", language);
 
       fetch("/api/v2/translations", {
@@ -145,7 +145,7 @@
                   if (result.status === "success") {
                      document.getElementById("div-render-available-translations").innerHTML = result.data.rendered_languages; // Neue Items in die Seite einfügen
                      callUi("#dialog-new-language"); // Modal schließen
-               
+
                      // Eingabefelder der Modal leeren
                      document.getElementById('input-new-language').value = "";
                      showSnackbar('home', true, 'green', result.message, null, false);
@@ -211,7 +211,7 @@ function getTranslations(language) {
          }
          showSnackbar('home', true, 'error', error, null, false);
       })
-      
+
    }
 
    function focusmode(isEdit=false, translationId=null) {
@@ -225,8 +225,8 @@ function getTranslations(language) {
             translationsToTranslateOrigLength = translationsToTranslate.length;
          }
       }
-      
-      
+
+
       document.getElementById("div-render-translations-for-language").style.display = "none";
       document.getElementById("div-render-available-translations").style.display = "none";
       document.getElementById("div-render-focusmode").style.display = "";

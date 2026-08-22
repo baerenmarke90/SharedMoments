@@ -13,7 +13,6 @@ from app.db_queries import (
 from app.models import User, Role, Permission, Passkey, RolePermission, UserRole, UserSetting, SessionLocal
 from app.logger import log
 from app.utils import generate_admin_filename
-from app.routes.pages import get_display_title
 from datetime import datetime
 import os
 
@@ -31,7 +30,6 @@ def admin_panel():
         role_permissions_map = get_role_permissions_map()
         user_roles_map = get_user_roles_map()
         list_types = get_all_list_types()
-        title = get_display_title()
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings = get_all_settings()
@@ -55,7 +53,6 @@ def admin_panel():
                                role_permissions_map=role_permissions_map,
                                user_roles_map=user_roles_map,
                                list_types=list_types,
-                               title=title,
                                darkmode=darkmode,
                                user_data=user_data,
                                settings=settings,

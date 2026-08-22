@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>{{ title.value }} </title>
+      <title>SharedMoments </title>
       {% include 'layouts/head.html' %}
    </head>
    <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
@@ -89,7 +89,7 @@
               <legend>{{ _('General') }}</legend>
 
               {% for setting in settings %}
-              {% if setting.category == 'general' and setting.edition == 'couples' and setting.name not in ['banner_song', 'banner_image'] %}
+              {% if setting.category == 'general' and setting.edition == 'couples' and setting.name in ['relationship_status', 'anniversary_date', 'engaged_date', 'wedding_date'] %}
               <a class="row padding primary-container{% if has_permission('Update Setting') %} wave" onclick="editSetting('{{setting.name}}', '{{setting.type}}'){% endif %}"
                 {% if setting.name in ['anniversary_date', 'engaged_date', 'wedding_date'] %} data-date-setting="{{ setting.name }}"{% endif %}>
                 <i>{{ setting.icon }}</i>

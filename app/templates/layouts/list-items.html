@@ -1,12 +1,9 @@
 <article class="primary-container custom-list-card">
 
+    {% if items and has_list_permission('Delete', list_type_title) %}
     <nav class="custom-list-header">
-        <h5 class="max">
-            {{ _(mainTitle) }}
-        </h5>
-
-        {% if items and has_list_permission('Delete', list_type_title) %}
-        <button
+        <div class="max"></div>
+<button
             type="button"
             class="circle transparent small"
             title="{{ _('Select') }}"
@@ -17,8 +14,8 @@
             ">
             <i>checklist</i>
         </button>
-        {% endif %}
     </nav>
+    {% endif %}
 
 
     {% if not items %}

@@ -121,7 +121,6 @@ def init_db():
             Setting(name='sm_edition', value='couples', icon='stacks', edition='all', category='about', type='text'),
             Setting(name='sm_version', value=__version__, icon='update', edition='all', category='about', type='text'),
             Setting(name='setup_complete', value='False', icon='', edition='all', category='', type='text'),
-            Setting(name='title', value='', icon='title', edition='couples', category='general', type='text'),
             Setting(name='relationship_status', value='', icon='favorite', edition='couples', category='general', type='text'),
             Setting(name='anniversary_date', value='', icon='event', edition='couples', category='general', type='date'),
             Setting(name='engaged_date', value='', icon='event', edition='couples', category='general', type='date'),
