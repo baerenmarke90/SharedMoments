@@ -449,6 +449,43 @@ class CouplePlaceLink(Base):
     )
 
 
+class PrivateEntry(Base):
+    """Eintraege, die ausschliesslich der eigenen Person gehoeren.
+
+    Bewusst getrennt von HeartMoment: dort steuert `visibility`, ob der
+    Partner mitliest, und der Standard ist "geteilt". Hier gibt es diesen
+    Schalter nicht - ein Eintrag ohne passende userID wird nie geladen.
+    Geschenkideen und Notizen teilen sich eine Tabelle, weil sie dieselbe
+    Liste, dieselbe Suche und dieselben Rechte haben; `kind` trennt sie.
+    """
+
+    __tablename__ = 'privateEntries'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    userID = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    kind = Column(String(16), nullable=False, default='note', index=True)
+    title = Column(String(255), nullable=False)
+    content = Column(Text, default='')
+
+    # Nur fuer Geschenke gefuellt
+    recipient = Column(String(255), nullable=True)
+    occasion = Column(String(255), nullable=True)
+    targetDate = Column(Date, nullable=True, index=True)
+    price = Column(String(64), nullable=True)
+    link = Column(Text, nullable=True)
+    status = Column(String(16), nullable=False, default='idea', index=True)
+
+    pinned = Column(Boolean, nullable=False, default=False, index=True)
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    owner = relationship('User', foreign_keys=[userID])
+
+
 class ListType(Base):
     __tablename__ = 'listTypes'
     id = Column(Integer, primary_key=True, autoincrement=True)

@@ -198,6 +198,14 @@
        {% endif %}
        {% endif %}
 
+       {% if feature_enabled('private_notes') or feature_enabled('private_gifts') %}
+       <div class="nav-drawer-group">Nur für mich</div>
+       <a href="/private"{{ nav_state('/private') }}>
+          <i>lock</i>
+          <span>Mein Bereich</span>
+       </a>
+       {% endif %}
+
        {% if feature_enabled('custom_lists') and nav_ns.extra %}
        <div class="nav-drawer-group">Listen</div>
        {% for list_type in nav_ns.extra %}

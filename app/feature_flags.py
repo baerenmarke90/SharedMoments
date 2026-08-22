@@ -141,6 +141,28 @@ FEATURE_GROUPS = (
         ),
     },
     {
+        'key': 'personal',
+        'label': 'Nur für mich',
+        'icon': 'lock',
+        'description': 'Persönlicher Bereich, den der Partner nie zu sehen bekommt.',
+        'features': (
+            {
+                'key': 'private_notes',
+                'setting': 'feature_private_notes_enabled',
+                'label': 'Private Notizen',
+                'icon': 'sticky_note_2',
+                'description': 'Eigene Notizen, die zu keinem gemeinsamen Inhalt gehören.',
+            },
+            {
+                'key': 'private_gifts',
+                'setting': 'feature_private_gifts_enabled',
+                'label': 'Geschenkideen',
+                'icon': 'card_giftcard',
+                'description': 'Geschenkideen mit Anlass, Preisrahmen und Link.',
+            },
+        ),
+    },
+    {
         'key': 'dashboard',
         'label': 'Wir-Bildschirm',
         'icon': 'dashboard',

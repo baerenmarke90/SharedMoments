@@ -198,11 +198,49 @@ def check_names():
                 _check_function(node, known, rel)
 
 
+def check_private_scope():
+    """Jede Abfrage auf privateEntries muss nach dem Eigentuemer filtern.
+
+    Der private Bereich ist die einzige Stelle der App, an der ein Fehler
+    nicht nur haesslich, sondern peinlich waere: eine vergessene Bedingung
+    zeigt dem Partner Notizen und Geschenkideen.
+    """
+    source = (ROOT / 'app' / 'db_queries.py').read_text()
+    tree = ast.parse(source)
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if not (isinstance(node.func, ast.Attribute) and node.func.attr == 'query'):
+            continue
+        if not any(
+            isinstance(arg, ast.Name) and arg.id == 'PrivateEntry'
+            or isinstance(arg, ast.Attribute) and getattr(arg.value, 'id', '') == 'PrivateEntry'
+            for arg in node.args
+        ):
+            continue
+
+        # Die gesamte Kette ab dieser Abfrage einsammeln
+        statement = None
+        for parent in ast.walk(tree):
+            for child in ast.walk(parent):
+                if child is node and isinstance(parent, (ast.Assign, ast.Return, ast.Expr)):
+                    statement = parent
+        chain = ast.unparse(statement) if statement else ast.unparse(node)
+
+        if 'PrivateEntry.userID == user_id' not in chain:
+            problems.append(
+                f'app/db_queries.py:{node.lineno}: Abfrage auf PrivateEntry '
+                'ohne Filter auf userID'
+            )
+
+
 def main():
     files = check_templates()
     check_tokens(files)
     check_imports()
     check_names()
+    check_private_scope()
 
     if problems:
         print('Probleme gefunden:')

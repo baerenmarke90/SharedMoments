@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Nur für mich · SideBySide</title>
+      {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
+      <style>
+         .private-page {
+            max-width: 760px;
+            margin: 0 auto;
+            padding-bottom: 5.5rem;
+         }
+
+         .private-hint {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--sm-space-4);
+            margin: 0 0 var(--sm-space-6);
+            padding: var(--sm-space-5);
+            border-radius: var(--sm-radius-lg);
+            background: color-mix(in srgb, var(--surface-container) 78%, transparent);
+            border: 1px solid color-mix(in srgb, var(--outline-variant) 46%, transparent);
+            line-height: 1.5;
+         }
+
+         .private-hint > i {
+            color: var(--primary);
+         }
+
+         .private-tabs {
+            display: flex;
+            gap: var(--sm-space-3);
+            margin-bottom: var(--sm-space-6);
+         }
+
+         .private-tabs a {
+            flex: 0 0 auto;
+            text-decoration: none;
+         }
+
+         .private-card {
+            margin-bottom: var(--sm-space-5);
+            scroll-margin-top: 5rem;
+         }
+
+         .private-card-head {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--sm-space-4);
+         }
+
+         .private-card-title {
+            margin: 0;
+            min-width: 0;
+            flex: 1 1 auto;
+            line-height: 1.3;
+         }
+
+         .private-card-text {
+            margin: var(--sm-space-4) 0 0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+         }
+
+         .private-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--sm-space-3);
+            margin-top: var(--sm-space-4);
+            font-size: var(--sm-text-sm);
+            opacity: 0.76;
+         }
+
+         .private-meta > span {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--sm-space-1);
+         }
+
+         .private-meta i {
+            position: static !important;
+            font-size: var(--sm-text-md);
+         }
+
+         .private-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--sm-space-2);
+            margin-top: var(--sm-space-3);
+         }
+
+         .private-pinned {
+            color: var(--primary);
+         }
+
+         .private-empty {
+            text-align: center;
+            padding: 3rem var(--sm-space-6);
+         }
+
+         .private-empty > i {
+            font-size: 3rem;
+            opacity: 0.7;
+         }
+
+         .private-gift-fields {
+            display: none;
+         }
+
+         .private-gift-fields.active {
+            display: block;
+         }
+      </style>
+   </head>
+
+   <body class="couple-app couple-page-private {% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay"
+           id="div-overlay-nav-drawer"
+           onclick="callUi('#dialog-nav-drawer')"></div>
+
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive private-page">
+         {% if private_error %}
+         <article class="error-container" style="margin-bottom:var(--sm-space-5);">
+            {{ private_error }}
+         </article>
+         {% endif %}
+
+         <div class="private-hint">
+            <i>lock</i>
+            <div>
+               Dieser Bereich gehört nur dir. Weder Notizen noch Geschenkideen
+               tauchen in eurer Story, im Jahresrückblick oder auf dem Gerät
+               deines Partners auf.
+            </div>
+         </div>
+
+         {% if private_notes_enabled and private_gifts_enabled %}
+         <nav class="private-tabs">
+            <a class="chip round {% if private_kind == 'note' %}fill{% endif %}"
+               href="{{ url_for('pages.private_area', kind='note') }}">
+               <i>sticky_note_2</i>
+               <span>Notizen ({{ private_counts.note }})</span>
+            </a>
+
+            <a class="chip round {% if private_kind == 'gift' %}fill{% endif %}"
+               href="{{ url_for('pages.private_area', kind='gift') }}">
+               <i>card_giftcard</i>
+               <span>Geschenke ({{ private_counts.gift }})</span>
+            </a>
+         </nav>
+         {% endif %}
+
+         {% if private_entries %}
+         {% for entry in private_entries %}
+         <article class="surface-container private-card" id="private-{{ entry.id }}">
+            <div class="padding">
+               <div class="private-card-head">
+                  <h6 class="private-card-title">{{ entry.title }}</h6>
+
+                  <form method="post"
+                        action="{{ url_for('pages.pin_private_entry_page', entry_id=entry.id) }}">
+                     <button class="circle transparent{% if entry.pinned %} private-pinned{% endif %}"
+                             type="submit"
+                             aria-label="{% if entry.pinned %}Nicht mehr anheften{% else %}Anheften{% endif %}">
+                        <i>{% if entry.pinned %}push_pin{% else %}push_pin{% endif %}</i>
+                     </button>
+                  </form>
+               </div>
+
+               {% if entry.content %}
+               <p class="private-card-text">{{ entry.content }}</p>
+               {% endif %}
+
+               {% if entry.kind == 'gift' %}
+               <div class="private-meta">
+                  <span>
+                     <i>{{ entry.status_icon }}</i>
+                     {{ entry.status_label }}
+                  </span>
+
+                  {% if entry.recipient %}
+                  <span><i>person</i>{{ entry.recipient }}</span>
+                  {% endif %}
+
+                  {% if entry.occasion %}
+                  <span><i>celebration</i>{{ entry.occasion }}</span>
+                  {% endif %}
+
+                  {% if entry.date_label %}
+                  <span><i>event</i>{{ entry.date_label }}</span>
+                  {% endif %}
+
+                  {% if entry.price %}
+                  <span><i>sell</i>{{ entry.price }}</span>
+                  {% endif %}
+
+                  {% if entry.link %}
+                  <span>
+                     <i>link</i>
+                     <a href="{{ entry.link }}" target="_blank" rel="noopener noreferrer">Link öffnen</a>
+                  </span>
+                  {% endif %}
+               </div>
+               {% endif %}
+
+               <div class="private-actions">
+                  <button class="chip small round"
+                          type="button"
+                          onclick="callUi('#dialog-edit-private-{{ entry.id }}')">
+                     <i>edit</i>
+                     <span>Bearbeiten</span>
+                  </button>
+
+                  <button class="chip small round"
+                          type="button"
+                          onclick="callUi('#dialog-delete-private-{{ entry.id }}')">
+                     <i>delete</i>
+                     <span>Löschen</span>
+                  </button>
+               </div>
+            </div>
+         </article>
+
+         <div class="overlay" data-dialog="#dialog-edit-private-{{ entry.id }}"
+              onclick="callUi('#dialog-edit-private-{{ entry.id }}')"></div>
+         <dialog class="bottom" id="dialog-edit-private-{{ entry.id }}">
+            <form method="post"
+                  action="{{ url_for('pages.update_private_entry_page', entry_id=entry.id) }}">
+               <h5>{% if entry.kind == 'gift' %}Geschenkidee bearbeiten{% else %}Notiz bearbeiten{% endif %}</h5>
+
+               <div class="field label border">
+                  <input type="text" name="title" maxlength="255" value="{{ entry.title }}" required>
+                  <label>Titel</label>
+               </div>
+
+               <div class="field label border extra">
+                  <textarea name="content">{{ entry.content }}</textarea>
+                  <label>Notiz (optional)</label>
+               </div>
+
+               {% if entry.kind == 'gift' %}
+               <div class="field label border suffix">
+                  <select name="status">
+                     {% for key, meta in private_statuses.items() %}
+                     <option value="{{ key }}" {% if entry.status == key %}selected{% endif %}>
+                        {{ meta.label }}
+                     </option>
+                     {% endfor %}
+                  </select>
+                  <label>Status</label>
+                  <i>arrow_drop_down</i>
+               </div>
+
+               <div class="grid">
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="recipient" maxlength="255" value="{{ entry.recipient }}">
+                        <label>Für wen (optional)</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="occasion" maxlength="255" value="{{ entry.occasion }}">
+                        <label>Anlass (optional)</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="date" name="target_date" value="{{ entry.date_input }}">
+                        <label>Bis wann (optional)</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="price" maxlength="64" value="{{ entry.price }}">
+                        <label>Preis (optional)</label>
+                     </div>
+                  </div>
+               </div>
+
+               <div class="field label border prefix">
+                  <i>link</i>
+                  <input type="url" name="link" value="{{ entry.link }}">
+                  <label>Link (optional)</label>
+               </div>
+               {% endif %}
+
+               <nav class="right-align no-space">
+                  <button type="button"
+                          class="transparent link"
+                          onclick="callUi('#dialog-edit-private-{{ entry.id }}')">
+                     Abbrechen
+                  </button>
+                  <button type="submit" class="transparent link">Speichern</button>
+               </nav>
+            </form>
+         </dialog>
+
+         <div class="overlay" data-dialog="#dialog-delete-private-{{ entry.id }}"
+              onclick="callUi('#dialog-delete-private-{{ entry.id }}')"></div>
+         <dialog id="dialog-delete-private-{{ entry.id }}">
+            <h5>Eintrag löschen?</h5>
+            <p>„{{ entry.title }}" wird endgültig entfernt.</p>
+            <form method="post"
+                  action="{{ url_for('pages.delete_private_entry_page', entry_id=entry.id) }}">
+               <nav class="right-align no-space">
+                  <button type="button"
+                          class="transparent link"
+                          onclick="callUi('#dialog-delete-private-{{ entry.id }}')">
+                     Abbrechen
+                  </button>
+                  <button type="submit" class="transparent link">Löschen</button>
+               </nav>
+            </form>
+         </dialog>
+         {% endfor %}
+
+         {% else %}
+         <article class="surface-container private-empty">
+            <i>{% if private_kind == 'gift' %}card_giftcard{% else %}sticky_note_2{% endif %}</i>
+            {% if private_kind == 'gift' %}
+            <h5>Noch keine Geschenkideen</h5>
+            <p>
+               Halte fest, was du verschenken möchtest – mit Anlass, Preisrahmen
+               und Link. Dein Partner sieht davon nichts.
+            </p>
+            {% else %}
+            <h5>Noch keine Notizen</h5>
+            <p>
+               Für alles, was du für dich behalten willst: Gedanken, Vorhaben,
+               Dinge, die du nicht vergessen möchtest.
+            </p>
+            {% endif %}
+            <button class="round" type="button" onclick="openPrivateCreateDialog()">
+               <i>add</i>
+               {% if private_kind == 'gift' %}Erste Geschenkidee{% else %}Erste Notiz{% endif %}
+            </button>
+         </article>
+         {% endif %}
+
+         {% include 'layouts/footer.html' %}
+      </main>
+
+      <div id="div-fab-create-private"
+           class="fixed bottom right"
+           style="margin-right:8px;margin-bottom:16px;z-index: 40;"
+           onclick="openPrivateCreateDialog()">
+         <button class="square round extra"
+                 aria-label="{% if private_kind == 'gift' %}Geschenkidee hinzufügen{% else %}Notiz hinzufügen{% endif %}"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
+
+      <div class="overlay" data-dialog="#dialog-create-private"
+           onclick="callUi('#dialog-create-private')"></div>
+      <dialog class="bottom" id="dialog-create-private">
+         <form method="post" action="{{ url_for('pages.create_private_entry_page') }}">
+            <input type="hidden" name="kind" id="private-create-kind" value="{{ private_kind }}">
+
+            <h5 id="private-create-heading">
+               {% if private_kind == 'gift' %}Neue Geschenkidee{% else %}Neue Notiz{% endif %}
+            </h5>
+
+            <div class="field label border">
+               <input type="text" name="title" maxlength="255" required>
+               <label>Titel</label>
+            </div>
+
+            <div class="field label border extra">
+               <textarea name="content"></textarea>
+               <label>Notiz (optional)</label>
+            </div>
+
+            <div class="private-gift-fields{% if private_kind == 'gift' %} active{% endif %}"
+                 id="private-create-gift-fields">
+               <div class="field label border suffix">
+                  <select name="status">
+                     {% for key, meta in private_statuses.items() %}
+                     <option value="{{ key }}">{{ meta.label }}</option>
+                     {% endfor %}
+                  </select>
+                  <label>Status</label>
+                  <i>arrow_drop_down</i>
+               </div>
+
+               <div class="grid">
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="recipient" maxlength="255">
+                        <label>Für wen (optional)</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="occasion" maxlength="255">
+                        <label>Anlass (optional)</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="date" name="target_date">
+                        <label>Bis wann (optional)</label>
+                     </div>
+                  </div>
+                  <div class="s12 m6">
+                     <div class="field label border">
+                        <input type="text" name="price" maxlength="64">
+                        <label>Preis (optional)</label>
+                     </div>
+                  </div>
+               </div>
+
+               <div class="field label border prefix">
+                  <i>link</i>
+                  <input type="url" name="link">
+                  <label>Link (optional)</label>
+               </div>
+            </div>
+
+            <nav class="right-align no-space">
+               <button type="button"
+                       class="transparent link"
+                       onclick="callUi('#dialog-create-private')">
+                  Abbrechen
+               </button>
+               <button type="submit" class="transparent link">Speichern</button>
+            </nav>
+         </form>
+      </dialog>
+
+      {% set couple_nav_active = 'more' %}
+      {% include 'layouts/couple-create-sheet.html' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
+
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+      <script>
+         // Der Dialog bedient beide Arten; die Geschenkfelder blenden sich
+         // nach der gerade offenen Registerkarte ein.
+         function openPrivateCreateDialog(kind) {
+            const target = kind || '{{ private_kind }}';
+            document.getElementById('private-create-kind').value = target;
+            document.getElementById('private-create-heading').textContent =
+               target === 'gift' ? 'Neue Geschenkidee' : 'Neue Notiz';
+            document.getElementById('private-create-gift-fields')
+               .classList.toggle('active', target === 'gift');
+            callUi('#dialog-create-private');
+         }
+      </script>
+   </body>
+</html>

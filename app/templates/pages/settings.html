@@ -565,6 +565,10 @@
       {% include 'layouts/footer.html' %}
    </main>
 
+   {% set couple_nav_active = 'more' %}
+   {% include 'layouts/couple-create-sheet.html' %}
+   {% include 'layouts/couple-bottom-nav.html' %}
+
    <div class="snackbar" id="settings-snackbar">
       <div class="max" id="settings-snackbar-text" onclick="document.getElementById('settings-snackbar').classList.remove('active');"></div>
       <a id="settings-snackbar-more-link"></a>

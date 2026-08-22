@@ -3,11 +3,11 @@ from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, 
     UserSetting, Item, ItemShare, ListType, SessionLocal, Translation,
     Reminder, ReminderMute, PushSubscription, NotificationLog, CoupleChapter,
     CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan, CoupleBucketPlanLink,
-    CouplePlace, CouplePlaceLink)
+    CouplePlace, CouplePlaceLink, PrivateEntry)
 from sqlalchemy.orm import joinedload
 from datetime import date
 import math
-from sqlalchemy import desc, asc, and_, or_
+from sqlalchemy import desc, asc, and_, or_, func
 from app.logger import log
 from app.version import __version__
 
@@ -1922,12 +1922,28 @@ def sync_couple_source_location(
         session.close()
 
 
-def bootstrap_couple_places_from_existing_locations():
+# Einmal je Prozess. Die Funktion wandert Altbestand in die Ortstabellen -
+# das ist eine Migration, keine Seitenlogik. Sie hing an sieben Routen und
+# hat damit bei jedem Seitenaufruf saemtliche Plaene und Kapitel gescannt.
+_places_bootstrapped = False
+
+
+def invalidate_place_bootstrap():
+    """Nach einem Datenimport muss der Altbestand erneut geprueft werden."""
+    global _places_bootstrapped
+    _places_bootstrapped = False
+
+
+def bootstrap_couple_places_from_existing_locations(force=False):
     """Idempotently preserve and connect existing Plan/Chapter location text.
 
     No existing row is rewritten or deleted. The legacy locationName remains the
     source text while the new place/link tables add map semantics on top.
     """
+    global _places_bootstrapped
+    if _places_bootstrapped and not force:
+        return
+
     session = SessionLocal()
     try:
         sources = []
@@ -1986,6 +2002,7 @@ def bootstrap_couple_places_from_existing_locations():
             ))
 
         session.commit()
+        _places_bootstrapped = True
     except Exception:
         session.rollback()
         raise
@@ -2925,5 +2942,182 @@ def approve_new_translations_to_all_languages():
                 translation.translatedText = translation.fieldName
 
         session.commit()
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# Privater Bereich
+#
+# Jede Funktion nimmt die Nutzerkennung als erstes Argument und filtert
+# damit. Es gibt bewusst kein get_private_entry(entry_id) ohne Nutzer:
+# eine Abfrage, die man ohne Eigentuemer aufrufen kann, wird irgendwann
+# auch ohne Eigentuemer aufgerufen.
+# ---------------------------------------------------------------------------
+
+PRIVATE_KINDS = ('note', 'gift')
+PRIVATE_GIFT_STATUSES = ('idea', 'reserved', 'bought', 'given')
+
+
+def _serialize_private_entry(entry):
+    return {
+        'id': entry.id,
+        'userID': entry.userID,
+        'kind': entry.kind,
+        'title': entry.title,
+        'content': entry.content or '',
+        'recipient': entry.recipient or '',
+        'occasion': entry.occasion or '',
+        'targetDate': entry.targetDate,
+        'price': entry.price or '',
+        'link': entry.link or '',
+        'status': entry.status,
+        'pinned': bool(entry.pinned),
+        'dateCreated': entry.dateCreated,
+        'dateModified': entry.dateModified,
+    }
+
+
+def get_private_entries(user_id, kind=None):
+    """Alle eigenen Eintraege, angeheftete zuerst."""
+    session = SessionLocal()
+    try:
+        query = session.query(PrivateEntry).filter(PrivateEntry.userID == user_id)
+        if kind in PRIVATE_KINDS:
+            query = query.filter(PrivateEntry.kind == kind)
+
+        rows = query.order_by(
+            PrivateEntry.pinned.desc(),
+            PrivateEntry.dateModified.desc(),
+            PrivateEntry.id.desc(),
+        ).all()
+        return [_serialize_private_entry(row) for row in rows]
+    finally:
+        session.close()
+
+
+def get_private_entry(user_id, entry_id):
+    """Ein eigener Eintrag - oder None, auch wenn es ihn bei jemand anderem gibt."""
+    session = SessionLocal()
+    try:
+        entry = (
+            session.query(PrivateEntry)
+            .filter(
+                PrivateEntry.id == entry_id,
+                PrivateEntry.userID == user_id,
+            )
+            .first()
+        )
+        return _serialize_private_entry(entry) if entry else None
+    finally:
+        session.close()
+
+
+def create_private_entry(user_id, kind, title, content='', recipient=None,
+                         occasion=None, target_date=None, price=None,
+                         link=None, status='idea'):
+    if kind not in PRIVATE_KINDS:
+        raise ValueError('Invalid private entry kind')
+    if status not in PRIVATE_GIFT_STATUSES:
+        status = 'idea'
+
+    session = SessionLocal()
+    try:
+        entry = PrivateEntry(
+            userID=user_id,
+            kind=kind,
+            title=title,
+            content=content or '',
+            recipient=recipient or None,
+            occasion=occasion or None,
+            targetDate=target_date,
+            price=price or None,
+            link=link or None,
+            status=status if kind == 'gift' else 'idea',
+        )
+        session.add(entry)
+        session.commit()
+        session.refresh(entry)
+        return entry.id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def update_private_entry(user_id, entry_id, **changes):
+    """Aendert einen eigenen Eintrag. Fremde Eintraege bleiben unberuehrt."""
+    allowed = {
+        'title', 'content', 'recipient', 'occasion',
+        'target_date', 'price', 'link', 'status', 'pinned',
+    }
+    columns = {
+        'target_date': 'targetDate',
+    }
+
+    session = SessionLocal()
+    try:
+        entry = (
+            session.query(PrivateEntry)
+            .filter(
+                PrivateEntry.id == entry_id,
+                PrivateEntry.userID == user_id,
+            )
+            .first()
+        )
+        if not entry:
+            return False
+
+        for key, value in changes.items():
+            if key not in allowed:
+                continue
+            if key == 'status' and value not in PRIVATE_GIFT_STATUSES:
+                continue
+            setattr(entry, columns.get(key, key), value)
+
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def delete_private_entry(user_id, entry_id):
+    session = SessionLocal()
+    try:
+        deleted = (
+            session.query(PrivateEntry)
+            .filter(
+                PrivateEntry.id == entry_id,
+                PrivateEntry.userID == user_id,
+            )
+            .delete()
+        )
+        session.commit()
+        return bool(deleted)
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def count_private_entries(user_id):
+    """Zaehlt nach Art - fuer die Uebersicht auf der Startseite."""
+    session = SessionLocal()
+    try:
+        counts = {kind: 0 for kind in PRIVATE_KINDS}
+        rows = (
+            session.query(PrivateEntry.kind, func.count(PrivateEntry.id))
+            .filter(PrivateEntry.userID == user_id)
+            .group_by(PrivateEntry.kind)
+            .all()
+        )
+        for kind, total in rows:
+            counts[kind] = total
+        return counts
     finally:
         session.close()

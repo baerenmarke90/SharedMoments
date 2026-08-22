@@ -20,7 +20,12 @@ from app.db_queries import (get_all_list_types, get_items_by_type,
     create_couple_place, update_couple_place, delete_couple_place,
     sync_couple_source_location, bootstrap_couple_places_from_existing_locations,
     get_couple_place_link_map, replace_couple_place_manual_links,
-    copy_couple_place_links)
+    copy_couple_place_links,
+    get_private_entries, get_private_entry, create_private_entry,
+    update_private_entry, delete_private_entry, count_private_entries,
+    PRIVATE_GIFT_STATUSES
+)
+from app.feature_flags import is_feature_enabled
 from app.logger import log
 import os
 from urllib.parse import urlencode
@@ -4224,3 +4229,208 @@ def heart_moments_page():
 # ============================================================
 # HEART MOMENTS PAGE END
 # ============================================================
+
+
+# ============================================================
+# PRIVATER BEREICH
+#
+# Alles hier gehoert genau einer Person. Die Abfragen filtern immer nach
+# g.user_id, es gibt keinen Weg, fremde Eintraege zu laden - auch nicht
+# ueber eine geratene ID in der URL.
+# ============================================================
+
+_PRIVATE_GIFT_STATUS_META = {
+    'idea': {'label': 'Idee', 'icon': 'lightbulb'},
+    'reserved': {'label': 'Vorgemerkt', 'icon': 'bookmark'},
+    'bought': {'label': 'Gekauft', 'icon': 'shopping_bag'},
+    'given': {'label': 'Verschenkt', 'icon': 'redeem'},
+}
+
+
+def _private_form_values(kind):
+    title = str(request.form.get('title', '')).strip()
+    content = str(request.form.get('content', '')).strip()
+
+    if not title:
+        raise ValueError('Bitte gib dem Eintrag einen Titel.')
+    if len(title) > 255:
+        raise ValueError('Der Titel darf höchstens 255 Zeichen lang sein.')
+
+    values = {
+        'title': title,
+        'content': content,
+        'recipient': None,
+        'occasion': None,
+        'target_date': None,
+        'price': None,
+        'link': None,
+        'status': 'idea',
+    }
+
+    if kind != 'gift':
+        return values
+
+    recipient = str(request.form.get('recipient', '')).strip()
+    occasion = str(request.form.get('occasion', '')).strip()
+    price = str(request.form.get('price', '')).strip()
+    link = str(request.form.get('link', '')).strip()
+    status = str(request.form.get('status', 'idea')).strip()
+
+    if len(recipient) > 255 or len(occasion) > 255:
+        raise ValueError('Empfänger und Anlass dürfen höchstens 255 Zeichen lang sein.')
+    if len(price) > 64:
+        raise ValueError('Der Preis darf höchstens 64 Zeichen lang sein.')
+    if status not in PRIVATE_GIFT_STATUSES:
+        status = 'idea'
+
+    try:
+        target_date = _parse_optional_form_date(request.form.get('target_date'))
+    except ValueError as exc:
+        raise ValueError('Bitte verwende ein gültiges Datum.') from exc
+
+    values.update({
+        'recipient': recipient or None,
+        'occasion': occasion or None,
+        'target_date': target_date,
+        'price': price or None,
+        'link': link or None,
+        'status': status,
+    })
+    return values
+
+
+def _present_private_entry(entry):
+    presented = dict(entry)
+    meta = _PRIVATE_GIFT_STATUS_META.get(
+        entry.get('status'),
+        _PRIVATE_GIFT_STATUS_META['idea'],
+    )
+    presented.update({
+        'status_label': meta['label'],
+        'status_icon': meta['icon'],
+        'date_input': (
+            entry['targetDate'].isoformat() if entry.get('targetDate') else ''
+        ),
+        'date_label': (
+            entry['targetDate'].strftime('%d.%m.%Y')
+            if entry.get('targetDate') else ''
+        ),
+    })
+    return presented
+
+
+@pages_bp.route('/private')
+@jwt_required
+def private_area():
+    try:
+        # Beide Arten sind einzeln abschaltbar. Ist nur eine aktiv, zeigt die
+        # Seite nur diese - sind beide aus, gibt es die Seite nicht.
+        notes_on = is_feature_enabled('private_notes')
+        gifts_on = is_feature_enabled('private_gifts')
+        if not notes_on and not gifts_on:
+            return redirect(url_for('pages.home'))
+
+        kind = str(request.args.get('kind', 'note')).strip().lower()
+        if kind not in ('note', 'gift'):
+            kind = 'note'
+        if kind == 'note' and not notes_on:
+            kind = 'gift'
+        if kind == 'gift' and not gifts_on:
+            kind = 'note'
+
+        entries = [
+            _present_private_entry(entry)
+            for entry in get_private_entries(g.user_id, kind)
+        ]
+        counts = count_private_entries(g.user_id)
+
+        return render_template(
+            'pages/private.html',
+            title=None,
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            page_title='Nur für mich',
+            private_kind=kind,
+            private_notes_enabled=notes_on,
+            private_gifts_enabled=gifts_on,
+            private_entries=entries,
+            private_counts=counts,
+            private_statuses=_PRIVATE_GIFT_STATUS_META,
+            private_error=request.args.get('error', ''),
+        )
+    except Exception as e:
+        log('error', f'Error while rendering private area: {e}')
+        return "An error occurred while rendering the page. Please check the server logs for details.", 500
+
+
+@pages_bp.route('/private/create', methods=['POST'])
+@jwt_required
+def create_private_entry_page():
+    kind = str(request.form.get('kind', 'note')).strip().lower()
+    if kind not in ('note', 'gift'):
+        kind = 'note'
+    if not is_feature_enabled('private_notes' if kind == 'note' else 'private_gifts'):
+        return redirect(url_for('pages.home'))
+
+    try:
+        values = _private_form_values(kind)
+        entry_id = create_private_entry(g.user_id, kind, **values)
+        return redirect(url_for('pages.private_area', kind=kind) + f'#private-{entry_id}')
+    except ValueError as exc:
+        return redirect(url_for('pages.private_area', kind=kind, error=str(exc)))
+    except Exception as e:
+        log('error', f'Error while creating private entry: {e}')
+        return redirect(url_for(
+            'pages.private_area',
+            kind=kind,
+            error='Der Eintrag konnte nicht gespeichert werden.',
+        ))
+
+
+@pages_bp.route('/private/<int:entry_id>/update', methods=['POST'])
+@jwt_required
+def update_private_entry_page(entry_id):
+    entry = get_private_entry(g.user_id, entry_id)
+    if not entry:
+        return redirect(url_for('pages.private_area'))
+
+    try:
+        values = _private_form_values(entry['kind'])
+        update_private_entry(g.user_id, entry_id, **values)
+        return redirect(
+            url_for('pages.private_area', kind=entry['kind']) + f'#private-{entry_id}'
+        )
+    except ValueError as exc:
+        return redirect(url_for(
+            'pages.private_area', kind=entry['kind'], error=str(exc),
+        ))
+    except Exception as e:
+        log('error', f'Error while updating private entry {entry_id}: {e}')
+        return redirect(url_for(
+            'pages.private_area',
+            kind=entry['kind'],
+            error='Der Eintrag konnte nicht gespeichert werden.',
+        ))
+
+
+@pages_bp.route('/private/<int:entry_id>/pin', methods=['POST'])
+@jwt_required
+def pin_private_entry_page(entry_id):
+    entry = get_private_entry(g.user_id, entry_id)
+    if not entry:
+        return redirect(url_for('pages.private_area'))
+
+    update_private_entry(g.user_id, entry_id, pinned=not entry['pinned'])
+    return redirect(url_for('pages.private_area', kind=entry['kind']))
+
+
+@pages_bp.route('/private/<int:entry_id>/delete', methods=['POST'])
+@jwt_required
+def delete_private_entry_page(entry_id):
+    entry = get_private_entry(g.user_id, entry_id)
+    if not entry:
+        return redirect(url_for('pages.private_area'))
+
+    delete_private_entry(g.user_id, entry_id)
+    return redirect(url_for('pages.private_area', kind=entry['kind']))

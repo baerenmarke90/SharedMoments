@@ -32,6 +32,7 @@ assert hasattr(run, 'app'), 'run.py stellt kein app-Objekt bereit'
 # Jede registrierte Seite muss eine aufloesbare Funktion haben.
 rules = sorted(str(rule) for rule in run.app.url_map.iter_rules())
 assert '/story' in rules, '/story ist nicht registriert'
+assert '/private' in rules, '/private ist nicht registriert'
 assert '/home' in rules, '/home ist nicht registriert'
 
 with run.app.test_client() as client:

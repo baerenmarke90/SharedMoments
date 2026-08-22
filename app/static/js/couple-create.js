@@ -23,7 +23,9 @@
       plan: '#dialog-create-plan',
       chapter: '#dialog-create-chapter',
       place: '#dialog-create-place',
-      bucket: '#bucket-quick-add'
+      bucket: '#bucket-quick-add',
+      'private-note': '#dialog-create-private',
+      'private-gift': '#dialog-create-private'
    };
 
    function dialogElement() {
@@ -92,6 +94,11 @@
 
       if (type === 'heart' && typeof window.openCreateHeartMoment === 'function') {
          window.openCreateHeartMoment();
+         return;
+      }
+
+      if (type.startsWith('private-') && typeof window.openPrivateCreateDialog === 'function') {
+         window.openPrivateCreateDialog(type === 'private-gift' ? 'gift' : 'note');
          return;
       }
 

@@ -3,6 +3,7 @@
    <head>
       <title>SideBySide - {{ _('Reminders') }}</title>
       {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
       <style>
          .reminder-card { margin-bottom: 1rem; }
          .reminder-type-chip { font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; }
@@ -10,7 +11,7 @@
          .channel-status { font-size: 0.85rem; opacity: 0.7; }
       </style>
    </head>
-   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="couple-app couple-page-reminders {% if darkmode.value == 'TRUE' %}dark{% endif %}">
    {% include 'layouts/header.html' %}
    <div class="overlay" id="div-overlay-nav-drawer" onclick="callUi('#dialog-nav-drawer')"></div>
    <div id="div-render-nav-drawer">
@@ -95,7 +96,12 @@
          </div>
          {% endif %}
       </div>
+      {% include 'layouts/footer.html' %}
    </main>
+
+   {% set couple_nav_active = 'more' %}
+   {% include 'layouts/couple-create-sheet.html' %}
+   {% include 'layouts/couple-bottom-nav.html' %}
 
    <!-- FAB: Create Reminder -->
    {% if has_permission('Create Reminder') %}

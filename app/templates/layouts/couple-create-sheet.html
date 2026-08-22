@@ -111,6 +111,36 @@
       </div>
       <i>chevron_right</i>
    </a>
+
+   {% if feature_enabled('private_notes') or feature_enabled('private_gifts') %}
+   <div class="couple-create-divider">Nur für mich</div>
+
+   {% if feature_enabled('private_notes') %}
+   <a class="row padding couple-create-item"
+      data-couple-create="private-note"
+      href="{{ url_for('pages.private_area', kind='note') }}">
+      <i>sticky_note_2</i>
+      <div class="max">
+         <strong>Notiz</strong>
+         <div class="small">Nur für dich – dein Partner sieht sie nicht</div>
+      </div>
+      <i>chevron_right</i>
+   </a>
+   {% endif %}
+
+   {% if feature_enabled('private_gifts') %}
+   <a class="row padding couple-create-item"
+      data-couple-create="private-gift"
+      href="{{ url_for('pages.private_area', kind='gift') }}">
+      <i>card_giftcard</i>
+      <div class="max">
+         <strong>Geschenkidee</strong>
+         <div class="small">Anlass, Preisrahmen und Link – privat gespeichert</div>
+      </div>
+      <i>chevron_right</i>
+   </a>
+   {% endif %}
+   {% endif %}
 </dialog>
 
 <script src="{{ static_versioned('js/couple-create.js') }}"></script>
