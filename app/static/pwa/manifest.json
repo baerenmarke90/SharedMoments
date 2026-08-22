@@ -1,6 +1,6 @@
 {
-  "name": "SharedMoments",
-  "short_name": "SharedMoments",
+  "name": "Faden",
+  "short_name": "Faden",
   "start_url": "/home",
   "display": "standalone",
   "background_color": "#faf6fb",
@@ -54,5 +54,6 @@
       "form_factor": "narrow",
       "label": "Gallery"
     }
-  ]
+  ],
+  "description": "Euer gemeinsamer roter Faden: Wünsche, Pläne, Erlebnisse, Orte und eure Story."
 }

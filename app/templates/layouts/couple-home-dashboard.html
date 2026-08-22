@@ -172,12 +172,66 @@
    gap: var(--sm-space-1);
 }
 .couple-empty {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: var(--sm-space-3);
    text-align: center;
-   padding: var(--sm-space-6) 0;
+   padding: var(--sm-space-6) var(--sm-space-3);
+}
+.couple-empty > p {
+   margin: 0;
    opacity: 0.75;
+   max-width: 30ch;
 }
 .couple-clickable {
    cursor: pointer;
+}
+.couple-flashback-card {
+   display: block;
+   color: inherit;
+   text-decoration: none;
+   margin-bottom: var(--sm-space-4);
+}
+.couple-flashback-card > article {
+   overflow: hidden;
+   padding: 0;
+}
+.couple-flashback-image {
+   display: block;
+   width: 100%;
+   max-height: 15rem;
+   object-fit: cover;
+}
+.couple-flashback-meta {
+   display: flex;
+   align-items: center;
+   gap: var(--sm-space-2);
+   font-size: var(--sm-text-xxs);
+   text-transform: uppercase;
+   letter-spacing: 0.05em;
+   opacity: 0.7;
+}
+.couple-flashback-meta > i {
+   font-size: var(--sm-text-base);
+}
+.couple-flashback-date {
+   margin-left: auto;
+   text-transform: none;
+   letter-spacing: 0;
+}
+.couple-flashback-title {
+   margin-top: var(--sm-space-1);
+   font-weight: 650;
+   letter-spacing: -0.015em;
+}
+.couple-flashback-text {
+   margin: var(--sm-space-1) 0 0;
+   opacity: 0.78;
+   display: -webkit-box;
+   -webkit-line-clamp: 3;
+   -webkit-box-orient: vertical;
+   overflow: hidden;
 }
 .couple-year-card {
    color: inherit;
@@ -286,6 +340,40 @@
    </div>
    {% endif %}
 
+   {# Verdichtung statt Liste: ein Moment, der von selbst zurueckkommt. #}
+   {% if couple_home_flashback|default([]) %}
+   <section class="couple-section couple-flashback">
+      <h5 class="couple-section-title">
+         <i>history_toggle_off</i>
+         <span>{{ couple_home_flashback[0].flashback_label }}</span>
+      </h5>
+
+      {% for entry in couple_home_flashback %}
+      <a class="couple-flashback-card" href="{{ entry.href }}">
+         <article class="surface-container">
+            {% if entry.image_url %}
+            <img class="couple-flashback-image"
+                 src="{{ entry.image_url }}"
+                 alt=""
+                 loading="lazy">
+            {% endif %}
+            <div class="padding">
+               <div class="couple-flashback-meta">
+                  <i>{{ entry.icon }}</i>
+                  <span>{{ entry.type_label }}</span>
+                  <span class="couple-flashback-date">{{ entry.date_label }}</span>
+               </div>
+               <div class="couple-flashback-title">{{ entry.title }}</div>
+               {% if entry.text %}
+               <p class="couple-flashback-text">{{ entry.text }}</p>
+               {% endif %}
+            </div>
+         </article>
+      </a>
+      {% endfor %}
+   </section>
+   {% endif %}
+
    {% if couple_home_year %}
    <section class="couple-section">
       <a class="couple-year-card"
@@ -336,7 +424,13 @@
                {% endfor %}
             {% else %}
                <div class="couple-empty">
-                  Gerade steht nichts unmittelbar bevor.
+                  <p>Gerade steht nichts unmittelbar bevor.</p>
+                  {% if has_permission('View Reminders') %}
+                  <a class="button round small" href="/reminders">
+                     <i>event</i>
+                     <span>Termin anlegen</span>
+                  </a>
+                  {% endif %}
                </div>
             {% endif %}
 
@@ -388,7 +482,11 @@
                {% endfor %}
             {% else %}
                <div class="couple-empty">
-                  Noch keine gemeinsamen Pläne. Was wollt ihr als Nächstes zusammen erleben?
+                  <p>Noch keine gemeinsamen Pläne. Was wollt ihr als Nächstes zusammen erleben?</p>
+                  <button class="round small" type="button" onclick="openCoupleCreateMenu()">
+                     <i>explore</i>
+                     <span>Ersten Plan festhalten</span>
+                  </button>
                </div>
             {% endif %}
 
@@ -485,7 +583,11 @@
                {% endfor %}
             {% else %}
                <div class="couple-empty">
-                  Eure gemeinsame Story beginnt hier.
+                  <p>Eure gemeinsame Story beginnt hier – mit dem ersten Foto oder Herzmoment.</p>
+                  <button class="round small" type="button" onclick="openCoupleCreateMenu()">
+                     <i>add</i>
+                     <span>Ersten Moment festhalten</span>
+                  </button>
                </div>
             {% endif %}
 

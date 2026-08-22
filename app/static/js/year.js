@@ -191,3 +191,60 @@
       initYearCollage();
    }
 })();
+
+/* Jahresrückblick als Bild teilen.
+ *
+ * html2canvas kommt erst beim Klick dazu (loadScriptOnce in main.js) - die
+ * Bibliothek wiegt rund 195 KB und wird auf 99 % der Seitenaufrufe nie
+ * gebraucht. Auf dem Handy landet das Bild im nativen Teilen-Dialog, am
+ * Desktop im Download.
+ */
+window.shareYearRecap = async function (year) {
+   const source = document.getElementById('year-share-source');
+   const button = document.getElementById('btn-share-year');
+   if (!source) return;
+
+   if (typeof loadScriptOnce !== 'function') {
+      showSnackbar('navbar', true, 'error', 'Teilen ist gerade nicht verfügbar.', null, false);
+      return;
+   }
+
+   const icon = button?.querySelector('i');
+   const previousIcon = icon?.textContent;
+   if (icon) icon.textContent = 'hourglass_top';
+   if (button) button.disabled = true;
+
+   try {
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+
+      const canvas = await html2canvas(source, {
+         scale: 2,
+         useCORS: true,
+         backgroundColor: getComputedStyle(document.body).backgroundColor,
+      });
+
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Bild konnte nicht erzeugt werden');
+
+      const file = new File([blob], `unser-jahr-${year}.png`, { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+         await navigator.share({ files: [file], title: `Unser Jahr ${year}` });
+      } else {
+         const url = URL.createObjectURL(blob);
+         const link = document.createElement('a');
+         link.href = url;
+         link.download = file.name;
+         link.click();
+         URL.revokeObjectURL(url);
+      }
+   } catch (error) {
+      // Ein abgebrochener Teilen-Dialog ist kein Fehler.
+      if (error?.name !== 'AbortError') {
+         showSnackbar('navbar', true, 'error', 'Der Rückblick konnte nicht geteilt werden.', null, false);
+      }
+   } finally {
+      if (icon && previousIcon) icon.textContent = previousIcon;
+      if (button) button.disabled = false;
+   }
+};

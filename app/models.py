@@ -371,6 +371,9 @@ class CouplePlan(Base):
     status = Column(String(20), nullable=False, default='idea', index=True)
     targetStartDate = Column(Date, nullable=True, index=True)
     targetEndDate = Column(Date, nullable=True)
+    # Wann es tatsaechlich passiert ist. Ohne dieses Datum konnte ein Kapitel
+    # aus einem erlebten Plan keinen Zeitraum uebernehmen.
+    experiencedDate = Column(Date, nullable=True, index=True)
     locationName = Column(String(255), nullable=True)
     createdByUser = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     chapterID = Column(Integer, ForeignKey('coupleChapters.id'), nullable=True, index=True)

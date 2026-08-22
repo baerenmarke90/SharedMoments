@@ -6,6 +6,7 @@ from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, 
     CouplePlace, CouplePlaceLink)
 from sqlalchemy.orm import joinedload
 from datetime import date
+import math
 from sqlalchemy import desc, asc, and_, or_
 from app.logger import log
 from app.version import __version__
@@ -1212,6 +1213,7 @@ def _serialize_couple_plan(plan, creator=None, chapter=None):
         'status': plan.status,
         'targetStartDate': plan.targetStartDate,
         'targetEndDate': plan.targetEndDate,
+        'experiencedDate': plan.experiencedDate,
         'locationName': plan.locationName or '',
         'createdByUser': plan.createdByUser,
         'chapterID': plan.chapterID,
@@ -1271,9 +1273,14 @@ def create_couple_plan(
     target_end_date,
     location_name,
     created_by_user,
+    experienced_date=None,
 ):
     if status not in _PLAN_STATUSES:
         raise ValueError('Invalid plan status')
+
+    # Ein erlebter Plan ohne Datum waere spaeter ein Kapitel ohne Zeitraum.
+    if status == 'experienced' and not experienced_date:
+        experienced_date = target_end_date or target_start_date or date.today()
 
     session = SessionLocal()
     try:
@@ -1283,6 +1290,7 @@ def create_couple_plan(
             status=status,
             targetStartDate=target_start_date,
             targetEndDate=target_end_date,
+            experiencedDate=experienced_date if status == 'experienced' else None,
             locationName=location_name or '',
             createdByUser=created_by_user,
         )
@@ -1305,6 +1313,7 @@ def update_couple_plan(
     target_start_date,
     target_end_date,
     location_name,
+    experienced_date=None,
 ):
     if status not in _PLAN_STATUSES:
         raise ValueError('Invalid plan status')
@@ -1325,6 +1334,18 @@ def update_couple_plan(
         plan.targetStartDate = target_start_date
         plan.targetEndDate = target_end_date
         plan.locationName = location_name or ''
+
+        if status == 'experienced':
+            plan.experiencedDate = (
+                experienced_date
+                or plan.experiencedDate
+                or target_end_date
+                or target_start_date
+                or date.today()
+            )
+        else:
+            # Zurueck auf Idee/Geplant: das Erlebt-Datum gilt nicht mehr.
+            plan.experiencedDate = None
 
         # If a plan originated from the Bucketlist, reaching "Erlebt" also
         # completes the original wish. The Bucketlist remains the long-term
@@ -1605,6 +1626,50 @@ def get_couple_place(place_id):
         session.close()
 
 
+# Zwei Orte gelten als derselbe, wenn sie naeher als das hier beieinander
+# liegen. 0.002 Grad Breite sind rund 220 Meter - genug, um "Nieuwpoort" und
+# "Nieuwpoort, Belgien" zusammenzufuehren, zu wenig, um zwei Restaurants in
+# derselben Strasse zu verwechseln.
+_PLACE_MATCH_DEGREES = 0.002
+
+
+def _find_matching_place(session, normalized, latitude=None, longitude=None):
+    """Sucht einen bestehenden Ort: erst ueber den Namen, dann ueber die Lage.
+
+    Ohne die zweite Stufe entsteht bei jeder Schreibweise ein neuer Eintrag,
+    und nach ein paar Reisen steht derselbe Ort mehrfach in der Liste.
+    """
+    place = (
+        session.query(CouplePlace)
+        .filter(CouplePlace.normalizedName == normalized)
+        .order_by(CouplePlace.id.asc())
+        .first()
+    )
+    if place or latitude is None or longitude is None:
+        return place
+
+    # Laengengrade ruecken zu den Polen hin zusammen.
+    lon_span = _PLACE_MATCH_DEGREES / max(math.cos(math.radians(latitude)), 0.1)
+
+    return (
+        session.query(CouplePlace)
+        .filter(
+            CouplePlace.latitude.isnot(None),
+            CouplePlace.longitude.isnot(None),
+            CouplePlace.latitude.between(
+                latitude - _PLACE_MATCH_DEGREES,
+                latitude + _PLACE_MATCH_DEGREES,
+            ),
+            CouplePlace.longitude.between(
+                longitude - lon_span,
+                longitude + lon_span,
+            ),
+        )
+        .order_by(CouplePlace.id.asc())
+        .first()
+    )
+
+
 def _get_or_create_place_in_session(
     session,
     name,
@@ -1617,12 +1682,7 @@ def _get_or_create_place_in_session(
     if not normalized:
         return None
 
-    place = (
-        session.query(CouplePlace)
-        .filter(CouplePlace.normalizedName == normalized)
-        .order_by(CouplePlace.id.asc())
-        .first()
-    )
+    place = _find_matching_place(session, normalized, latitude, longitude)
 
     if not place:
         place = CouplePlace(
@@ -1661,12 +1721,7 @@ def create_couple_place(
         if not normalized:
             raise ValueError('Place name is required')
 
-        existing = (
-            session.query(CouplePlace)
-            .filter(CouplePlace.normalizedName == normalized)
-            .order_by(CouplePlace.id.asc())
-            .first()
-        )
+        existing = _find_matching_place(session, normalized, latitude, longitude)
         if existing:
             if description and not existing.description:
                 existing.description = description

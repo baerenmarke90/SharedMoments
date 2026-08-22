@@ -1,12 +1,17 @@
 from app import app
 from app.models import Base, engine
 from app.db_queries import init_db, sync_version_to_db, ensure_reminder_permissions, ensure_list_type_edition_column
+from app.db_migrations import ensure_schema_up_to_date
 from app.translation import load_translation_in_cache, migrateTranslations
 from app.logger import log
 from app.version import __version__
 
 # Database initialization
 Base.metadata.create_all(engine)
+# Direkt nach create_all: unmarkierte Datenbanken bekommen die Baseline,
+# danach laufen ausstehende Migrationen. Migrationen liegen im selben Image
+# wie der Code - sie duerfen nicht hinterherhinken.
+ensure_schema_up_to_date()
 init_db()
 sync_version_to_db()
 ensure_reminder_permissions()

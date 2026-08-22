@@ -379,6 +379,17 @@ def _build_couple_home_recent(
             })
 
     for heart_moment in shared_heart_moments:
+        # Zweite Schranke neben dem Query-Filter: ein privater Herzmoment darf
+        # niemals in Story, Startseite oder Jahresrueckblick auftauchen. Die
+        # Aufrufer holen bereits nur 'shared' - hier wird es garantiert.
+        if str(heart_moment.get('visibility') or 'shared') != 'shared':
+            log(
+                'warning',
+                'Privater Herzmoment wurde aus der Chronik gefiltert '
+                f"(id={heart_moment.get('id')})",
+            )
+            continue
+
         try:
             event_dt = datetime.fromisoformat(heart_moment['momentDate'])
         except (TypeError, ValueError, KeyError):
@@ -424,6 +435,74 @@ _STORY_MONTH_NAMES = (
     'November',
     'Dezember',
 )
+
+
+def _build_couple_flashback(
+    items,
+    moments,
+    shared_heart_moments,
+    can_view_items,
+    can_view_moments,
+    today=None,
+):
+    """Was heute vor einem Jahr (oder mehr) passiert ist.
+
+    Baut auf denselben Eintraegen auf wie die Story - keine zusaetzliche
+    Tabelle, keine Kopien. Zuerst wird der exakte Tag gesucht; ist dort nichts,
+    darf es die Woche drumherum sein, damit die Startseite nicht an neun von
+    zehn Tagen leer bleibt.
+    """
+    today = today or date.today()
+
+    entries = _build_story_entries(
+        items,
+        moments,
+        shared_heart_moments,
+        can_view_items,
+        can_view_moments,
+    )
+
+    exact = []
+    nearby = []
+
+    for entry in entries:
+        event_date = entry['event_date'].date() if isinstance(
+            entry['event_date'], datetime
+        ) else entry['event_date']
+
+        years_ago = today.year - event_date.year
+        if years_ago < 1:
+            continue
+
+        try:
+            anniversary = event_date.replace(year=today.year)
+        except ValueError:
+            # 29. Februar in einem Nicht-Schaltjahr
+            anniversary = event_date.replace(year=today.year, day=28)
+
+        distance = abs((anniversary - today).days)
+        if distance > 3:
+            continue
+
+        label = (
+            'Heute vor einem Jahr' if years_ago == 1
+            else f'Heute vor {years_ago} Jahren'
+        )
+        if distance:
+            label = (
+                'Vor einem Jahr' if years_ago == 1
+                else f'Vor {years_ago} Jahren'
+            )
+
+        enriched = dict(entry)
+        enriched['years_ago'] = years_ago
+        enriched['flashback_label'] = label
+
+        (exact if distance == 0 else nearby).append(enriched)
+
+    selected = exact or nearby
+    selected.sort(key=lambda entry: entry['event_date'], reverse=True)
+    return selected[:3]
 
 
 def _story_month_label(value):
@@ -1274,6 +1353,9 @@ _PLAN_STATUS_META = {
 
 
 def _plan_date_label(plan):
+    if plan.get('status') == 'experienced' and plan.get('experiencedDate'):
+        return 'Erlebt am ' + plan['experiencedDate'].strftime('%d.%m.%Y')
+
     start = plan.get('targetStartDate')
     end = plan.get('targetEndDate')
 
@@ -1305,6 +1387,10 @@ def _present_couple_plan(plan, current_user_id=None):
         'end_input': (
             plan['targetEndDate'].isoformat()
             if plan.get('targetEndDate') else ''
+        ),
+        'experienced_input': (
+            plan['experiencedDate'].isoformat()
+            if plan.get('experiencedDate') else ''
         ),
         'is_owner': (
             current_user_id is not None
@@ -1362,6 +1448,9 @@ def _plan_form_values():
         target_end_date = _parse_optional_form_date(
             request.form.get('target_end_date')
         )
+        experienced_date = _parse_optional_form_date(
+            request.form.get('experienced_date')
+        )
     except ValueError as exc:
         raise ValueError('Bitte verwende gültige Datumsangaben.') from exc
 
@@ -1372,12 +1461,16 @@ def _plan_form_values():
     ):
         raise ValueError('Das Enddatum darf nicht vor dem Startdatum liegen.')
 
+    if status != 'experienced':
+        experienced_date = None
+
     return {
         'title': title,
         'description': description,
         'status': status,
         'target_start_date': target_start_date,
         'target_end_date': target_end_date,
+        'experienced_date': experienced_date,
         'location_name': location_name,
     }
 
@@ -1657,6 +1750,7 @@ def home():
         couple_home_recent = []
         couple_home_plans = []
         couple_home_year = None
+        couple_home_flashback = []
 
         if sm_edition == 'couples':
             from app.heart_moments import (
@@ -1720,6 +1814,14 @@ def home():
                 shared_heart_moments=shared_heart_moments,
             )
 
+            couple_home_flashback = _build_couple_flashback(
+                items,
+                moments,
+                shared_heart_moments,
+                has_list_permission('View', 'Home'),
+                has_list_permission('View', 'Moments'),
+            )
+
         return render_template(
             'pages/home.html',
             items=items,
@@ -1744,6 +1846,7 @@ def home():
             couple_home_recent=couple_home_recent,
             couple_home_plans=couple_home_plans,
             couple_home_year=couple_home_year,
+            couple_home_flashback=couple_home_flashback,
             page_title='Wir' if sm_edition == 'couples' else None,
             memories_page=False,
             milestones_page=False,
@@ -1875,9 +1978,6 @@ def milestones():
 def places():
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         # Existing text locations from 4C/4D are kept as-is and mirrored into
         # the new place graph on first use. This is additive and idempotent.
         bootstrap_couple_places_from_existing_locations()
@@ -1972,9 +2072,6 @@ def create_place_page():
 def place(place_id):
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         bootstrap_couple_places_from_existing_locations()
         place_data = get_couple_place(place_id)
         if not place_data:
@@ -2090,8 +2187,6 @@ def update_place_page(place_id):
 @jwt_required
 def update_place_links_page(place_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
     if not get_couple_place(place_id):
         return redirect(url_for('pages.places'))
 
@@ -2226,9 +2321,6 @@ def _bucket_item_or_none(item_id, list_type):
 def bucketlist():
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         list_type = _get_bucket_list_type()
         if not list_type:
             return "Bucket List not found.", 404
@@ -2539,9 +2631,6 @@ def delete_bucket_item_page(item_id):
 @jwt_required
 def bucket_item_to_plan_page(item_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     list_type = _get_bucket_list_type()
     if not list_type or not has_list_permission('Update', list_type.title):
         return redirect(url_for('pages.bucketlist'))
@@ -2586,9 +2675,6 @@ def bucket_item_to_plan_page(item_id):
 def plans():
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         selected_status = str(
             request.args.get('status', 'all')
         ).strip()
@@ -2673,9 +2759,6 @@ def plans():
 @jwt_required
 def create_plan_page():
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     try:
         values = _plan_form_values()
         plan_id = create_couple_plan(
@@ -2684,6 +2767,7 @@ def create_plan_page():
             status=values['status'],
             target_start_date=values['target_start_date'],
             target_end_date=values['target_end_date'],
+            experienced_date=values['experienced_date'],
             location_name=values['location_name'],
             created_by_user=g.user_id,
         )
@@ -2708,9 +2792,6 @@ def create_plan_page():
 @jwt_required
 def update_plan_page(plan_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -2729,6 +2810,7 @@ def update_plan_page(plan_id):
             status=values['status'],
             target_start_date=values['target_start_date'],
             target_end_date=values['target_end_date'],
+            experienced_date=values['experienced_date'],
             location_name=values['location_name'],
         )
         sync_couple_source_location(
@@ -2755,9 +2837,6 @@ def update_plan_page(plan_id):
 @jwt_required
 def delete_plan_page(plan_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -2782,9 +2861,6 @@ def delete_plan_page(plan_id):
 @jwt_required
 def plan_back_to_bucketlist_page(plan_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -2824,9 +2900,6 @@ def plan_back_to_bucketlist_page(plan_id):
 @jwt_required
 def plan_to_chapter_page(plan_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -2847,11 +2920,16 @@ def plan_to_chapter_page(plan_id):
         ) + f'#plan-{plan_id}')
 
     try:
+        # Reihenfolge: was wirklich war schlaegt, was geplant war.
+        experienced = plan.get('experiencedDate')
+        chapter_start = plan['targetStartDate'] or experienced
+        chapter_end = plan['targetEndDate'] or experienced
+
         chapter_id = create_couple_chapter(
             title=plan['title'],
             description=plan['description'],
-            start_date=plan['targetStartDate'],
-            end_date=plan['targetEndDate'],
+            start_date=chapter_start,
+            end_date=chapter_end,
             location_name=plan['locationName'],
             created_by_user=g.user_id,
         )
@@ -2877,9 +2955,6 @@ def plan_to_chapter_page(plan_id):
 def chapters():
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         list_types = get_all_list_types()
         title = get_display_title()
         darkmode = get_user_setting(g.user_id, 'darkmode')
@@ -2928,9 +3003,6 @@ def chapters():
 @jwt_required
 def create_chapter_page():
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     try:
         values = _chapter_form_values()
         chapter_id = create_couple_chapter(
@@ -2963,9 +3035,6 @@ def create_chapter_page():
 def chapter(chapter_id):
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         chapter_data = get_couple_chapter(chapter_id)
         if not chapter_data:
             return redirect(url_for('pages.chapters'))
@@ -3028,9 +3097,6 @@ def chapter(chapter_id):
 @jwt_required
 def update_chapter_page(chapter_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     existing_chapter = get_couple_chapter(chapter_id)
     if not existing_chapter:
         return redirect(url_for('pages.chapters'))
@@ -3071,9 +3137,6 @@ def update_chapter_page(chapter_id):
 @jwt_required
 def update_chapter_links_page(chapter_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     if not get_couple_chapter(chapter_id):
         return redirect(url_for('pages.chapters'))
 
@@ -3131,9 +3194,6 @@ def update_chapter_links_page(chapter_id):
 @jwt_required
 def delete_chapter_page(chapter_id):
     sm_edition = get_setting_by_name('sm_edition').value
-    if sm_edition != 'couples':
-        return redirect(url_for('pages.home'))
-
     try:
         delete_couple_chapter(chapter_id)
     except Exception as e:
@@ -3154,9 +3214,6 @@ def couple_year(selected_year=None):
     """Automatic yearly relationship recap for the Couples edition."""
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         if selected_year is None:
             selected_year = date.today().year
 
@@ -3196,9 +3253,6 @@ def story():
     """Relationship-first chronology for the Couples edition."""
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         list_types = get_all_list_types()
         title = get_display_title()
         darkmode = get_user_setting(g.user_id, 'darkmode')
@@ -3742,9 +3796,6 @@ def list_view(content_url):
 def heart_moments_page():
     try:
         sm_edition = get_setting_by_name('sm_edition').value
-
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
 
         list_types = get_all_list_types()
         title = get_display_title()

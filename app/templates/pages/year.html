@@ -25,6 +25,15 @@
             margin: 0;
          }
 
+         .year-share-button {
+            flex: 0 0 auto;
+         }
+
+         .year-share-card {
+            padding: var(--sm-space-6);
+            background: var(--surface);
+         }
+
          .year-hero {
             overflow: hidden;
             border-radius: var(--sm-radius-lg);
@@ -565,9 +574,16 @@
                </select>
                <i>calendar_month</i>
             </div>
+
+            <button class="circle transparent year-share-button"
+                    id="btn-share-year"
+                    aria-label="Jahresrückblick teilen"
+                    onclick="shareYearRecap({{ selected_year }})">
+               <i>ios_share</i>
+            </button>
          </div>
 
-         <article class="primary-container year-hero">
+         <article class="primary-container year-hero" id="year-share-source">
             <div class="year-hero-main">
                <div class="year-kicker">
                   <i>favorite</i>
@@ -774,7 +790,13 @@
             <p>
                Sobald Erinnerungen, Herzmomente, Kapitel oder erfüllte Pläne dazukommen, entsteht euer Jahresrückblick automatisch.
             </p>
-            <a class="button round" href="/home">Zurück zu Wir</a>
+            <nav class="center-align" style="gap:var(--sm-space-3);flex-wrap:wrap;">
+               <button class="round" type="button" onclick="openCoupleCreateMenu()">
+                  <i>add</i>
+                  <span>Moment festhalten</span>
+               </button>
+               <a class="button round border" href="/story">Unsere Story ansehen</a>
+            </nav>
          </article>
          {% endif %}
       </main>

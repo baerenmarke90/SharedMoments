@@ -170,10 +170,13 @@ body.couple-app .small {
 body.couple-app > header {
    /* Der Header hat durch backdrop-filter einen eigenen Stapelkontext.
       Ohne z-index landet er hinter spaeteren positionierten Elementen -
-      genau deshalb verschwand das Profilmenue hinter der Hero-Karte. */
+      genau deshalb verschwand das Profilmenue hinter der Hero-Karte.
+      Bewusst eine kleine Zahl: sie schlaegt Seiteninhalt, bleibt aber
+      unter den BeerCSS-Dialogen. Mit z-index 900 lag der Header ueber dem
+      Nav-Drawer und hat dessen obere Eintraege verdeckt. */
    position: sticky;
    top: 0;
-   z-index: 900;
+   z-index: 5;
    /* Glas statt Kante: die harte Trennlinie liess die Seite wie ein
       Formular wirken. */
    border-bottom: 0;
@@ -184,7 +187,12 @@ body.couple-app > header {
 }
 
 body.couple-app #header-user-menu {
-   z-index: 901;
+   z-index: 6;
+}
+
+/* Bei offenem Dialog raeumt der Header komplett aus dem Weg. */
+body.couple-app.dialog-open > header {
+   z-index: 0;
 }
 
 body.couple-app > header nav {
@@ -986,6 +994,31 @@ body.couple-app #dialog-nav-drawer a.nav-current {
       dem Tap-Feedback des Nachbareintrags. */
    margin-inline: var(--sm-space-2);
    width: auto;
+}
+
+body.couple-app #dialog-nav-drawer .nav-drawer-brand {
+   display: flex;
+   flex-direction: column;
+   gap: 0.1rem;
+   padding: var(--sm-space-1) 0 var(--sm-space-2);
+}
+
+body.couple-app #dialog-nav-drawer .nav-drawer-brand-name {
+   font-size: var(--sm-text-xl);
+   font-weight: 700;
+   letter-spacing: -0.025em;
+   line-height: 1.1;
+   background: linear-gradient(120deg, var(--primary), var(--couple-heart));
+   -webkit-background-clip: text;
+   background-clip: text;
+   color: transparent;
+}
+
+body.couple-app #dialog-nav-drawer .nav-drawer-brand-claim {
+   font-size: var(--sm-text-xxs);
+   letter-spacing: 0.05em;
+   text-transform: uppercase;
+   color: color-mix(in srgb, var(--on-surface) 50%, transparent);
 }
 
 body.couple-app #dialog-nav-drawer .nav-drawer-group {

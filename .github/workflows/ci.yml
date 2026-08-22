@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Python syntax
+        run: python -m compileall -q app run.py config.py alembic
+
+      - name: JavaScript syntax
+        run: |
+          for file in app/static/js/*.js app/static/pwa/*.js; do
+            node --check "$file" || exit 1
+          done
+
+      - name: Templates and imports
+        run: python tools/check_templates.py
+
+      # Genau dieser Schritt haette den Ausfall vom 22.08.2026 verhindert:
+      # run.py importierte eine Funktion, die es nicht mehr gab.
+      - name: Import smoke test
+        env:
+          SECRET_KEY: ci-only-not-a-real-secret
+          DATABASE_URL: sqlite:///ci.db
+        run: python tools/smoke_import.py
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t sharedmoments:ci .

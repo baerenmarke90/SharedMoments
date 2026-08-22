@@ -481,6 +481,14 @@
                   </div>
 
                   <div class="field label border prefix">
+                     <i>event_available</i>
+                     <input type="date"
+                            name="experienced_date"
+                            value="{{ plan.experienced_input }}">
+                     <label>Erlebt am (bei Status „Erlebt“)</label>
+                  </div>
+
+                  <div class="field label border prefix">
                      <i>location_on</i>
                      <input type="text"
                             name="location_name"
@@ -576,6 +584,14 @@
                      <label>Ende (optional)</label>
                   </div>
                </div>
+            </div>
+
+            {# Nur bei "Erlebt" relevant, aber immer im Formular: daraus wird
+               spaeter der Zeitraum des Kapitels. #}
+            <div class="field label border prefix">
+               <i>event_available</i>
+               <input type="date" name="experienced_date">
+               <label>Erlebt am (bei Status „Erlebt“)</label>
             </div>
 
             <div class="field label border prefix">
