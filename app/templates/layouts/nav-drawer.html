@@ -132,6 +132,13 @@
           <i>calendar_view_month</i>
           <span>Unser Jahr</span>
        </a>
+        {# daily-questions-nav-conditional-v3 #}
+        {% if daily_questions_nav_enabled %}
+        <a href="/questions"{{ nav_state('/questions') }}>
+           <i>local_florist</i>
+           <span>Unsere Fragen</span>
+        </a>
+        {% endif %}
 
        <div class="nav-drawer-group">Planen &amp; Erleben</div>
        {% if nav_ns.bucket %}
@@ -320,13 +327,6 @@
 <div id="navbar-error-more-details-text"></div>
 <nav class="right-align no-space">
    <button class="transparent link" onclick="showMoreInfo('navbar', null,'close')">{{ _('OK') }}</button>
-
-         <!-- daily-questions-nav-link-v1 -->
-         <a href="{{ url_for('daily_questions.questions') }}"
-            class="row wave round drawer-daily-questions-link{% if request.endpoint == 'daily_questions.questions' %} active{% endif %}">
-            <i>local_florist</i>
-            <span>Unsere Fragen</span>
-         </a>
 </nav>
 </dialog>
 

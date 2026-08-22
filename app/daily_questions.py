@@ -355,6 +355,83 @@ def save_daily_question_answer(user_id, answer_text, assignment_id=None):
         session.close()
 
 
+
+# ===== Daily Questions recap statistics v3 =====
+def get_daily_question_recap_stats(selected_year):
+    # Counts jointly revealed Daily Questions for yearly/monthly recaps.
+    try:
+        selected_year = int(selected_year)
+    except (TypeError, ValueError):
+        raise ValueError('Ungültiges Jahr für den Fragen-Rückblick.')
+
+    if selected_year < 1900 or selected_year > 9998:
+        raise ValueError('Ungültiges Jahr für den Fragen-Rückblick.')
+
+    empty = {
+        'enabled': False,
+        'answered': 0,
+        'answers': 0,
+        'by_month': {},
+        'available_years': [],
+    }
+
+    if not daily_questions_enabled():
+        return empty
+
+    start = date(selected_year, 1, 1)
+    end = date(selected_year + 1, 1, 1)
+
+    session = SessionLocal()
+    try:
+        revealed = (
+            session.query(CoupleDailyQuestion)
+            .filter(
+                CoupleDailyQuestion.questionDate >= start,
+                CoupleDailyQuestion.questionDate < end,
+                CoupleDailyQuestion.revealedAt.isnot(None),
+            )
+            .order_by(CoupleDailyQuestion.questionDate.asc())
+            .all()
+        )
+
+        by_month = {}
+        for assignment in revealed:
+            month_number = int(assignment.questionDate.month)
+            by_month[month_number] = by_month.get(month_number, 0) + 1
+
+        assignment_ids = [assignment.id for assignment in revealed]
+        answer_count = (
+            session.query(DailyQuestionAnswer)
+            .filter(DailyQuestionAnswer.coupleQuestionID.in_(assignment_ids))
+            .count()
+            if assignment_ids else 0
+        )
+
+        year_rows = (
+            session.query(CoupleDailyQuestion.questionDate)
+            .filter(CoupleDailyQuestion.revealedAt.isnot(None))
+            .all()
+        )
+        available_years = sorted(
+            {
+                row[0].year
+                for row in year_rows
+                if row and row[0] is not None
+            },
+            reverse=True,
+        )
+
+        return {
+            'enabled': True,
+            'answered': len(revealed),
+            'answers': answer_count,
+            'by_month': by_month,
+            'available_years': available_years,
+        }
+    finally:
+        session.close()
+
+
 def get_daily_question_history(user_id, status_filter='all'):
     if status_filter not in {'all', 'answered', 'open'}:
         status_filter = 'all'

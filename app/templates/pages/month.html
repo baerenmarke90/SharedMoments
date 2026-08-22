@@ -333,7 +333,14 @@
                break-inside: avoid;
             }
          }
-      </style>
+      
+         /* Daily Questions monthly recap v3 */
+         .month-stat-questions > i {
+            color: #7b5cff;
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+         }
+
+       </style>
    </head>
    <body class="couple-app couple-page-month {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
       {% include 'layouts/header.html' %}
@@ -408,7 +415,22 @@
             {% if month_snapshot['stats']['plans'] %}
             <div class="surface-container month-stat"><i>done_all</i><span class="month-stat-number">{{ month_snapshot['stats']['plans'] }}</span><span class="month-stat-label">Pläne erlebt</span></div>
             {% endif %}
-         </section>
+         
+            {# daily-questions-month-recap-v3 #}
+            {% if month_snapshot['stats'].get('questions', 0) %}
+            <div class="surface-container month-stat month-stat-questions">
+               <i>local_florist</i>
+               <span class="month-stat-number">{{ month_snapshot['stats'].get('questions', 0) }}</span>
+               <span class="month-stat-label">
+                  {% if month_snapshot['stats'].get('questions', 0) == 1 %}
+                  Frage beantwortet
+                  {% else %}
+                  Fragen beantwortet
+                  {% endif %}
+               </span>
+            </div>
+            {% endif %}
+</section>
 
          {% if month_snapshot['all_entries'] %}
          <section class="month-section">

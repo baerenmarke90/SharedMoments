@@ -112,6 +112,25 @@ def inject_static_text():
     return dict(_=_, translations_json=translations_json)
 
 
+
+# Daily Questions navigation visibility v3
+@pages_bp.app_context_processor
+def inject_daily_questions_navigation():
+    try:
+        from app.daily_questions import daily_questions_enabled
+        sm_edition = get_setting_by_name('sm_edition').value
+        enabled = (
+            sm_edition == 'couples'
+            and daily_questions_enabled()
+        )
+    except Exception:
+        enabled = False
+
+    return {
+        'daily_questions_nav_enabled': enabled,
+    }
+
+
 @pages_bp.route('/')
 def index():
     if get_setting_by_name('setup_complete').value == 'False':
@@ -909,7 +928,26 @@ def _build_couple_year_snapshot(
             'year_date': completion_date,
         })
 
+    # ===== Daily Questions recap integration v3 =====
+    daily_question_recap = {
+        'enabled': False,
+        'answered': 0,
+        'answers': 0,
+        'by_month': {},
+        'available_years': [],
+    }
+    try:
+        from app.daily_questions import get_daily_question_recap_stats
+        daily_question_recap = get_daily_question_recap_stats(selected_year)
+    except Exception as exc:
+        log(
+            'warning',
+            f'Daily Questions recap statistics unavailable for '
+            f'{selected_year}: {exc}',
+        )
+
     years = {date.today().year, selected_year}
+    years.update(daily_question_recap.get('available_years', []))
     years.update(entry['year'] for entry in story_entries)
     years.update(
         chapter['year_date'].year
@@ -1105,6 +1143,48 @@ def _build_couple_year_snapshot(
             'stats': month_stats,
         })
 
+
+    # Add jointly answered Daily Questions to the monthly recap metadata.
+    question_counts_by_month = {
+        int(month_number): int(count)
+        for month_number, count in (
+            daily_question_recap.get('by_month') or {}
+        ).items()
+        if int(count) > 0
+    }
+
+    month_group_by_month = {
+        int(group.get('month', 0)): group
+        for group in month_groups
+    }
+
+    for month_number, question_count in sorted(
+        question_counts_by_month.items()
+    ):
+        group = month_group_by_month.get(month_number)
+        if group is None:
+            group = {
+                'month': month_number,
+                'label': _STORY_MONTH_NAMES[month_number],
+                'entries': [],
+                'all_entries': [],
+                'total': 0,
+                'cover_images': [],
+                'places': [],
+                'stats': {},
+            }
+            month_groups.append(group)
+            month_group_by_month[month_number] = group
+
+        group.setdefault('stats', {})
+        group['stats']['questions'] = question_count
+
+    for group in month_groups:
+        group.setdefault('stats', {})
+        group['stats'].setdefault('questions', 0)
+
+    month_groups.sort(key=lambda group: int(group.get('month', 0)))
+
     # Collect unique places touched by any relationship content in the year.
     place_usage = {}
     seen_place_sources = set()
@@ -1179,6 +1259,7 @@ def _build_couple_year_snapshot(
         'places': len(year_places),
         'bucket': len(year_bucket),
         'plans': len(year_plans),
+        'questions': int(daily_question_recap.get('answered', 0)),
     }
 
     return {
@@ -1196,8 +1277,10 @@ def _build_couple_year_snapshot(
         'places': year_places,
         'cover_images': cover_images,
         'stats': stats,
+        'daily_questions': daily_question_recap,
         'has_content': bool(
             year_story or year_chapters or year_plans or year_bucket
+            or daily_question_recap.get('answered', 0)
         ),
     }
 
