@@ -100,9 +100,9 @@
                   </span>
                </div>
 
-               {% if list.items %}
+               {% if list['items'] %}
                <div class="private-list-items">
-                  {% for item in list.items %}
+                  {% for item in list['items'] %}
                   <div class="private-list-item{% if item.completed %} done{% endif %}">
                      <form method="post" action="{{ url_for('pages.toggle_private_list_item_page', item_id=item.id) }}">
                         <button class="circle transparent" type="submit"

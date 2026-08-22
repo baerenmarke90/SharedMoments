@@ -6,20 +6,22 @@
       <stop offset="1" stop-color="#e56aa6"/>
     </linearGradient>
     <linearGradient id="sbsGlow" x1="0.2" y1="0" x2="0.8" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
       <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <!-- Die Luecke zwischen den Haelften: sie laesst den Verlauf durch und
-         macht aus einem Herz zwei, die nebeneinander stehen. -->
-    <clipPath id="sbsLeft"><rect x="0" y="0" width="240" height="512"/></clipPath>
-    <clipPath id="sbsRight"><rect x="272" y="0" width="240" height="512"/></clipPath>
+    <!-- Die Schnittmenge gehoert beiden Ringen: dort liegt Weiss voll auf. -->
+    <clipPath id="sbsRight"><circle cx="315" cy="256" r="89.6"/></clipPath>
   </defs>
 
   <rect width="512" height="512" rx="114" fill="url(#sbsGround)"/>
   <rect width="512" height="512" rx="114" fill="url(#sbsGlow)"/>
 
-  <g fill="#ffffff">
-    <path clip-path="url(#sbsLeft)" d="M256 407 C 150 336 88 279 88 210 C 88 160 128 122 176 122 C 208 122 236 138 256 165 C 276 138 304 122 336 122 C 384 122 424 160 424 210 C 424 279 362 336 256 407 Z"/>
-    <path clip-path="url(#sbsRight)" d="M256 407 C 150 336 88 279 88 210 C 88 160 128 122 176 122 C 208 122 236 138 256 165 C 276 138 304 122 336 122 C 384 122 424 160 424 210 C 424 279 362 336 256 407 Z"/>
+  <g fill="none" stroke="#ffffff" stroke-width="41" opacity="0.78">
+    <circle cx="197" cy="256" r="89.6"/>
+    <circle cx="315" cy="256" r="89.6"/>
+  </g>
+
+  <g clip-path="url(#sbsRight)">
+    <circle cx="197" cy="256" r="89.6" fill="none" stroke="#ffffff" stroke-width="41"/>
   </g>
 </svg>
