@@ -37,17 +37,26 @@
             display: block;
          }
 
+         /* Ohne Titelbild stand hier ein duenner Umriss auf hellem Grund -
+            aus zwei Metern Abstand war nicht zu erkennen, was das sein soll.
+            Jetzt: kraeftiger Verlauf, gefuelltes Symbol, klarer Kontrast. */
          .chapter-cover-placeholder {
+            position: relative;
             min-height: 145px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--primary-container);
-            color: var(--on-primary-container);
+            background:
+               linear-gradient(145deg,
+                  var(--primary),
+                  color-mix(in srgb, var(--primary) 55%, var(--couple-heart)));
+            color: var(--on-primary);
          }
 
          .chapter-cover-placeholder > i {
-            font-size: 2.8rem;
+            font-size: 3rem;
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 48;
+            opacity: 0.95;
          }
 
          .chapter-card-body {
@@ -161,7 +170,7 @@
                        loading="lazy">
                   {% else %}
                   <div class="chapter-cover-placeholder">
-                     <i>auto_stories</i>
+                     <i>menu_book</i>
                   </div>
                   {% endif %}
 
@@ -233,7 +242,7 @@
       </main>
 
       <div class="fixed bottom right"
-           style="margin-right:8px;margin-bottom:16px;z-index:90;">
+           style="margin-right:8px;margin-bottom:16px;z-index: 40;">
          <button class="square round extra"
                  aria-label="Kapitel erstellen"
                  onclick="callUi('#dialog-create-chapter')"

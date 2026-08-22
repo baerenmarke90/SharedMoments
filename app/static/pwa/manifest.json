@@ -1,6 +1,6 @@
 {
-  "name": "Faden",
-  "short_name": "Faden",
+  "name": "SideBySide",
+  "short_name": "SideBySide",
   "start_url": "/home",
   "display": "standalone",
   "background_color": "#faf6fb",
@@ -55,5 +55,5 @@
       "label": "Gallery"
     }
   ],
-  "description": "Euer gemeinsamer roter Faden: Wünsche, Pläne, Erlebnisse, Orte und eure Story."
+  "description": "Nebeneinander: Wünsche, Pläne, Erlebnisse, Orte und eure Story — für Paare, die gemeinsam wachsen."
 }
