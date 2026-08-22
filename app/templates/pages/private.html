@@ -133,9 +133,8 @@
          <div class="private-hint">
             <i>lock</i>
             <div>
-               Dieser Bereich gehört nur dir. Notizen, Geschenkideen, Geburtstage
-               und private Listen tauchen weder in eurer Story noch auf dem Gerät
-               deines Partners auf.
+               Dieser Bereich gehört nur dir. Notizen, Geschenkideen und private Listen
+               tauchen weder in eurer Story noch auf dem Gerät deines Partners auf.
             </div>
          </div>
 
@@ -152,11 +151,6 @@
                href="{{ url_for('pages.private_area', kind='gift') }}">
                <i>card_giftcard</i>
                <span>Geschenke ({{ private_counts.gift }})</span>
-            </a>
-            <a class="chip round {% if private_kind == 'birthday' %}fill{% endif %}"
-               href="{{ url_for('pages.private_area', kind='birthday') }}">
-               <i>cake</i>
-               <span>Geburtstage ({{ private_counts.birthday }})</span>
             </a>
             {% endif %}
             <a class="chip round" href="{{ url_for('pages.private_lists_page') }}">

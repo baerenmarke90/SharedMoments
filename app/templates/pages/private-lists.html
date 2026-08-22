@@ -80,9 +80,6 @@
             <a class="chip round" href="{{ url_for('pages.private_area', kind='gift') }}">
                <i>card_giftcard</i><span>Geschenke ({{ private_counts.gift }})</span>
             </a>
-            <a class="chip round" href="{{ url_for('pages.private_area', kind='birthday') }}">
-               <i>cake</i><span>Geburtstage ({{ private_counts.birthday }})</span>
-            </a>
             {% endif %}
             <a class="chip round fill" href="{{ url_for('pages.private_lists_page') }}">
                <i>checklist</i><span>Listen ({{ private_list_count }})</span>
