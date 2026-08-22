@@ -886,7 +886,10 @@ body.couple-page-plans .plan-author {
    white-space: nowrap;
    font-size: var(--sm-text-xs);
    opacity: 0.7;
-}
+
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;}
 
 body.couple-page-plans .plan-author img {
    width: 24px;
@@ -3226,7 +3229,10 @@ body.couple-page-year .year-month-scrapbook-meta > span {
    gap: 0.18rem;
    min-width: 0;
    white-space: nowrap;
-}
+
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;}
 body.couple-page-year .year-month-scrapbook-meta i {
    position: static !important;
    font-size: var(--sm-text-base);
@@ -5566,7 +5572,10 @@ body.couple-page-home .couple-song-pill > i {
 body.couple-page-home .couple-song-pill > span {
    line-height: 1;
    white-space: nowrap;
-}
+
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;}
 
 @media (hover: hover) and (pointer: fine) {
    body.couple-page-home .couple-song-pill:hover {

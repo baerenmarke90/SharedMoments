@@ -67,7 +67,10 @@
    font-size: var(--sm-text-xxs);
    font-weight: 700;
    line-height: 1.2;
-}
+
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;}
 .couple-thinking-arrival.is-active {
    animation: couple-thinking-arrival 3.2s cubic-bezier(.2,.75,.25,1) forwards;
 }
@@ -173,7 +176,10 @@
    margin-left: auto;
    white-space: nowrap;
    flex: 0 0 auto;
-}
+
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;}
 .couple-recent-leading {
    width: 58px;
    height: 58px;

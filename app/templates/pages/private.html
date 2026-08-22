@@ -355,7 +355,7 @@
               onclick="callUi('#dialog-delete-private-{{ entry.id }}')"></div>
          <dialog id="dialog-delete-private-{{ entry.id }}">
             <h5>Eintrag löschen?</h5>
-            <p>„{{ entry.title }}" wird endgültig entfernt.</p>
+            <p>„{{ entry.title }}“ wird endgültig entfernt.</p>
             <form method="post"
                   action="{{ url_for('pages.delete_private_entry_page', entry_id=entry.id) }}">
                <nav class="right-align no-space">

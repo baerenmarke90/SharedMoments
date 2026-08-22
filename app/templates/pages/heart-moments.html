@@ -88,8 +88,14 @@
                 <h5>{{ _('No Heart Moments yet') }}</h5>
 
                 <p>
-                    {{ _('Create your first Heart Moment') }}
+                    Kleine Augenblicke, in denen du dich geliebt, gesehen oder
+                    dankbar gefühlt hast – hier gesammelt.
                 </p>
+
+                <button class="round" type="button" onclick="openCreateHeartMoment()">
+                    <i>add</i>
+                    <span>{{ _('Create your first Heart Moment') }}</span>
+                </button>
             </div>
 
             <div id="heart-moments-list"></div>
