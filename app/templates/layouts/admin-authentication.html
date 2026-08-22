@@ -1,0 +1,87 @@
+<section class="admin-auth-page">
+    <article class="surface-container admin-auth-card">
+        <div class="admin-auth-heading">
+            <div>
+                <h5>{{ _('Authentication') }}</h5>
+            </div>
+            <i>security</i>
+        </div>
+
+        <div class="admin-auth-row">
+            <i>password</i>
+            <div class="max">
+                <h6 class="small">{{ _('Password login') }}</h6>
+                <div>{{ _('Allow login with e-mail and password') }}</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="auth-local-login-enabled"
+                       {% if auth_settings.local_login_enabled %}checked{% endif %}>
+                <span></span>
+            </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="admin-auth-row">
+            <i>passkey</i>
+            <div class="max">
+                <h6 class="small">{{ _('Passkey login') }}</h6>
+                <div>{{ _('Allow login with Passkeys') }}</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="auth-passkey-login-enabled"
+                       {% if auth_settings.passkey_login_enabled %}checked{% endif %}>
+                <span></span>
+            </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="admin-auth-row">
+            <i>shield_person</i>
+            <div class="max">
+                <h6 class="small">{{ _('Pocket ID') }}</h6>
+                <div>
+                    {% if auth_oidc_enabled %}
+                        {{ _('Configured') }}
+                        {% if auth_current_user_oidc_linked %}
+                            · {{ _('Your account is linked') }}
+                        {% else %}
+                            · {{ _('Your account is not linked') }}
+                        {% endif %}
+                    {% else %}
+                        {{ _('Not configured') }}
+                    {% endif %}
+                </div>
+            </div>
+            {% if auth_oidc_enabled %}
+                {% if auth_current_user_oidc_linked %}
+                <button type="button" class="transparent circle"
+                        title="{{ _('Unlink Pocket ID') }}"
+                        onclick="unlinkPocketIdAdmin(this)">
+                    <i>link_off</i>
+                </button>
+                {% else %}
+                <a class="button border" href="/oidc/link">
+                    <i>link</i>
+                    <span>{{ _('Link Pocket ID') }}</span>
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if auth_force_local_login %}
+        <div class="padding secondary-container admin-auth-warning">
+            <i>emergency</i>
+            <span>{{ _('Emergency local login override is active.') }}</span>
+        </div>
+        {% endif %}
+
+        <nav class="right-align admin-auth-actions">
+            <button type="button" id="save-auth-settings" onclick="saveAuthenticationSettingsAdmin(this)">
+                <i>save</i>
+                <span>{{ _('Save') }}</span>
+            </button>
+        </nav>
+    </article>
+</section>

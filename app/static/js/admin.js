@@ -1,13 +1,17 @@
 // --- Tab Switching ---
 function showAdminTab(tab) {
-    document.getElementById('tab-users').style.display = tab === 'users' ? '' : 'none';
-    document.getElementById('tab-roles').style.display = tab === 'roles' ? '' : 'none';
-    document.getElementById('tab-shares').style.display = tab === 'shares' ? '' : 'none';
-    document.getElementById('tab-users-btn').classList.toggle('active', tab === 'users');
-    document.getElementById('tab-roles-btn').classList.toggle('active', tab === 'roles');
-    document.getElementById('tab-shares-btn').classList.toggle('active', tab === 'shares');
-    document.getElementById('fab-create-user').style.display = tab === 'users' ? '' : 'none';
-    document.getElementById('fab-create-role').style.display = tab === 'roles' ? '' : 'none';
+    const tabs = ['users', 'roles', 'shares', 'auth'];
+    tabs.forEach(name => {
+        const panel = document.getElementById('tab-' + name);
+        const button = document.getElementById('tab-' + name + '-btn');
+        if (panel) panel.style.display = name === tab ? '' : 'none';
+        if (button) button.classList.toggle('active', name === tab);
+    });
+
+    const userFab = document.getElementById('fab-create-user');
+    const roleFab = document.getElementById('fab-create-role');
+    if (userFab) userFab.style.display = tab === 'users' ? '' : 'none';
+    if (roleFab) roleFab.style.display = tab === 'roles' ? '' : 'none';
 }
 
 // --- User Create / Edit ---
@@ -556,4 +560,56 @@ function showAdminSnackbar(message, isError) {
         snackbar.className = 'snackbar active';
     }
     setTimeout(() => snackbar.classList.remove('active'), 4000);
+}
+
+// --- Authentication settings (admin) ---
+async function saveAuthenticationSettingsAdmin(button) {
+    const localInput = document.getElementById('auth-local-login-enabled');
+    const passkeyInput = document.getElementById('auth-passkey-login-enabled');
+    if (!localInput || !passkeyInput) return;
+
+    if (button) button.disabled = true;
+    try {
+        const response = await fetch('/api/v2/auth/settings', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                local_login_enabled: localInput.checked,
+                passkey_login_enabled: passkeyInput.checked
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') {
+            showAdminSnackbar(result.message || _('Authentication settings could not be saved.'), true);
+            return;
+        }
+        showAdminSnackbar(result.message, false);
+    } catch (error) {
+        showAdminSnackbar(String(error), true);
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+async function unlinkPocketIdAdmin(button) {
+    if (!confirm(_('Unlink Pocket ID from this account?'))) return;
+    if (!navigator.onLine) {
+        showAdminSnackbar(_('You are offline'), true);
+        return;
+    }
+    if (button) button.disabled = true;
+    try {
+        const response = await fetch('/api/v2/user/oidc', {method: 'DELETE'});
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') {
+            showAdminSnackbar(result.message || _('Pocket ID could not be unlinked.'), true);
+            return;
+        }
+        showAdminSnackbar(result.message, false);
+        window.setTimeout(() => window.location.reload(), 500);
+    } catch (error) {
+        showAdminSnackbar(String(error), true);
+    } finally {
+        if (button) button.disabled = false;
+    }
 }

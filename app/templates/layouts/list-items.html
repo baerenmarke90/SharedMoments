@@ -86,7 +86,7 @@
                 <!-- Auswahlcheckbox:
                      nur im Mehrfach-Auswahlmodus sichtbar -->
                 <label
-                    class="checkbox list-select-control"
+                    class="list-select-control list-circle-control"
                     onclick="event.stopPropagation();">
 
                     <input
@@ -100,7 +100,10 @@
                             );
                         ">
 
-                    <span></span>
+                    <span class="list-circle-indicator" aria-hidden="true">
+                        <i class="list-circle-open">radio_button_unchecked</i>
+                        <i class="list-circle-checked">check_circle</i>
+                    </span>
                 </label>
 
 
@@ -117,7 +120,7 @@
 
 <!-- Erledigt / offen -->
                 <label
-                    class="checkbox list-status-control"
+                    class="list-status-control list-circle-control"
                     onclick="event.stopPropagation();">
 
                     <input
@@ -131,9 +134,12 @@
                                 '{{ item.id }}',
                                 this.checked
                             );
-                        ">
+                        " class="list-status-checkbox">
 
-                    <span></span>
+                    <span class="list-circle-indicator" aria-hidden="true">
+                        <i class="list-circle-open">radio_button_unchecked</i>
+                        <i class="list-circle-checked">check_circle</i>
+                    </span>
                 </label>
 
             </div>

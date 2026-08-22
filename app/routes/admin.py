@@ -37,6 +37,17 @@ def admin_panel():
         settings = get_all_settings()
         active_shares = get_all_active_shares()
 
+        from app.auth_settings import get_auth_settings, get_effective_auth_settings
+        from app.oidc import oidc_configured
+        from app.oidc_identity import get_oidc_identity_for_user
+        from config import Config
+
+        auth_settings = get_auth_settings()
+        auth_effective_settings = get_effective_auth_settings()
+        auth_current_user_oidc_linked = bool(
+            get_oidc_identity_for_user(g.user_id)
+        )
+
         return render_template('pages/admin.html',
                                users=users,
                                roles=roles,
@@ -48,7 +59,12 @@ def admin_panel():
                                darkmode=darkmode,
                                user_data=user_data,
                                settings=settings,
-                               active_shares=active_shares)
+                               active_shares=active_shares,
+                               auth_settings=auth_settings,
+                               auth_effective_settings=auth_effective_settings,
+                               auth_oidc_enabled=oidc_configured(),
+                               auth_current_user_oidc_linked=auth_current_user_oidc_linked,
+                               auth_force_local_login=Config.AUTH_FORCE_LOCAL_LOGIN)
     except Exception as e:
         log('error', f'Error while rendering the admin panel: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500

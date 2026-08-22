@@ -3561,25 +3561,6 @@ def settings():
 
         sm_edition = get_setting_by_name('sm_edition').value
 
-        from app.auth_settings import (
-            get_auth_settings,
-            get_effective_auth_settings,
-        )
-        from app.oidc import oidc_configured
-        from app.oidc_identity import (
-            get_oidc_identity_for_user,
-        )
-        from config import Config
-
-        auth_settings = get_auth_settings()
-        auth_effective_settings = (
-            get_effective_auth_settings()
-        )
-
-        auth_current_user_oidc_linked = bool(
-            get_oidc_identity_for_user(g.user_id)
-        )
-
         return render_template(
             'pages/settings.html',
             settings=settings,
@@ -3590,18 +3571,7 @@ def settings():
             settings_type=settings_type,
             relationship_statuses=relationship_statuses,
             supported_languages=supported_languages,
-            sm_edition=sm_edition,
-            auth_settings=auth_settings,
-            auth_effective_settings=(
-                auth_effective_settings
-            ),
-            auth_oidc_enabled=oidc_configured(),
-            auth_current_user_oidc_linked=(
-                auth_current_user_oidc_linked
-            ),
-            auth_force_local_login=(
-                Config.AUTH_FORCE_LOCAL_LOGIN
-            )
+            sm_edition=sm_edition
         )
     except Exception as e:
         log('error', f'Error while rendering the settings.html-Template: {e}')

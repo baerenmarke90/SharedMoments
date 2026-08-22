@@ -9,6 +9,34 @@
         .permission-matrix th { font-size: 0.85em; opacity: 0.7; }
         .permission-matrix td label.checkbox { margin: 0; }
         .permission-matrix td label.checkbox span { padding-left: 0; }
+
+        /* Admin authentication tab */
+        .tabs { overflow-x: auto; }
+        .admin-auth-page { max-width: 780px; margin: 1rem auto 0; }
+        .admin-auth-card { padding: 1rem 1.1rem; border-radius: 1.25rem; }
+        .admin-auth-heading,
+        .admin-auth-row { display: flex; align-items: center; gap: 0.85rem; }
+        .admin-auth-heading { justify-content: space-between; margin-bottom: 0.5rem; }
+        .admin-auth-heading h5,
+        .admin-auth-row h6 { margin: 0; }
+        .admin-auth-heading p { margin: 0.2rem 0 0; opacity: 0.68; }
+        .admin-auth-heading > i,
+        .admin-auth-row > i {
+            position: static !important;
+            flex: 0 0 2rem;
+            width: 2rem;
+            text-align: center;
+        }
+        .admin-auth-row { min-height: 64px; padding: 0.55rem 0.25rem; }
+        .admin-auth-warning {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.8rem;
+            border-radius: 0.85rem;
+        }
+        .admin-auth-warning > i { position: static !important; }
+        .admin-auth-actions { margin-top: 0.9rem; }
     </style>
 </head>
 <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
@@ -38,6 +66,10 @@
                 <i>share</i>
                 <span>{{ _('Shares') }}</span>
             </a>
+            <a id="tab-auth-btn" onclick="showAdminTab('auth')">
+                <i>lock</i>
+                <span>{{ _('Authentication') }}</span>
+            </a>
         </div>
 
         <!-- Tab: Users -->
@@ -55,6 +87,10 @@
             {% include 'layouts/admin-shares.html' %}
         </div>
 
+        <!-- Tab: Authentication -->
+        <div id="tab-auth" style="display: none;">
+            {% include 'layouts/admin-authentication.html' %}
+        </div>
 
         {% include 'layouts/footer.html' %}
     </main>
