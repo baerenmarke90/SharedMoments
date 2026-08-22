@@ -294,6 +294,66 @@
       margin-right: 0;
    }
 }
+
+
+/* ===== Couples: Ich denk an dich ===== */
+.couple-thinking-card {
+   display: flex;
+   align-items: center;
+   gap: var(--sm-space-5);
+}
+.couple-thinking-icon {
+   width: 48px;
+   height: 48px;
+   flex: 0 0 48px;
+   border-radius: 50%;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   background: rgba(229, 106, 166, 0.12);
+   color: #e56aa6;
+   font-size: var(--sm-text-xl);
+   font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+}
+.couple-thinking-main {
+   flex: 1;
+   min-width: 0;
+}
+.couple-thinking-title {
+   font-weight: 650;
+   font-size: var(--sm-text-lg);
+}
+.couple-thinking-copy {
+   margin-top: var(--sm-space-1);
+   opacity: 0.75;
+}
+.couple-thinking-status {
+   min-height: 1.1rem;
+   margin-top: var(--sm-space-1);
+   font-size: var(--sm-text-xs);
+   opacity: 0.72;
+}
+.couple-thinking-button {
+   flex: 0 0 auto;
+}
+.couple-thinking-button > i {
+   font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+}
+@media (max-width: 600px) {
+   .couple-thinking-card {
+      align-items: flex-start;
+      flex-wrap: wrap;
+   }
+   .couple-thinking-main {
+      flex: 1 1 calc(100% - 64px);
+   }
+   .couple-thinking-button {
+      width: 100%;
+      margin-top: var(--sm-space-1);
+      justify-content: center;
+   }
+}
+
 </style>
 
 <section class="couple-home">
@@ -346,6 +406,39 @@
          {% endif %}
       </div>
    </article>
+
+
+   {% if couple_partner|default(None) %}
+   <section class="couple-section" aria-labelledby="couple-thinking-title">
+      <article class="surface-container">
+         <div class="padding couple-thinking-card">
+            <i class="couple-thinking-icon" aria-hidden="true">favorite</i>
+            <div class="couple-thinking-main">
+               <div class="couple-thinking-title" id="couple-thinking-title">
+                  Ich denk an dich
+               </div>
+               <div class="couple-thinking-copy">
+                  Schick {{ couple_partner.firstName or 'deinem Partner' }} ein kleines Zeichen – ganz ohne Nachricht.
+               </div>
+               <div class="couple-thinking-status"
+                    id="couple-thinking-status"
+                    role="status"
+                    aria-live="polite"></div>
+            </div>
+            <button class="round couple-thinking-button"
+                    id="couple-thinking-button"
+                    type="button"
+                    data-retry-after="{{ couple_thinking_retry_after|default(0) }}"
+                    aria-describedby="couple-thinking-status"
+                    onclick="sendCoupleThinkingOfYou(this)"
+                    {% if couple_thinking_retry_after|default(0) > 0 %}disabled{% endif %}>
+               <i>favorite</i>
+               <span>Zeichen schicken</span>
+            </button>
+         </div>
+      </article>
+   </section>
+   {% endif %}
 
    {% if heart_moment_memory %}
    <div class="couple-section" id="div-render-heart-moment-memory">

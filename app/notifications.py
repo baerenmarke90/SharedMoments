@@ -154,10 +154,11 @@ def send_telegram_notification(chat_id, message):
         return False
 
 
-def send_notification(user_id, title, body, channels='all'):
+def send_notification(user_id, title, body, channels='all', url='/reminders'):
     """Send notification via configured channels.
 
     channels: 'all' | 'push' | 'email' | 'telegram' | list of channels
+    url: target URL used when the notification is delivered as web push.
     """
     if isinstance(channels, str) and channels != 'all':
         channels = [channels]
@@ -168,7 +169,7 @@ def send_notification(user_id, title, body, channels='all'):
     if channels == 'all' or 'push' in channels:
         push_enabled = get_user_setting(user_id, 'notification_push_enabled')
         if not push_enabled or push_enabled.value != 'False':
-            results['push'] = send_push_notification(user_id, title, body)
+            results['push'] = send_push_notification(user_id, title, body, url=url)
 
     # Email — use email from user profile
     if channels == 'all' or 'email' in channels:

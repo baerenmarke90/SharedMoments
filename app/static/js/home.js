@@ -2391,4 +2391,132 @@ function showCoupleMemoryDetails(element) {
 
    callUi('#dialog-couple-memory-detail');
 }
+// ===== Couples: "Ich denk an dich" =====
+let coupleThinkingCooldownTimer = null;
+
+function coupleThinkingRemainingLabel(seconds) {
+   const minutes = Math.max(1, Math.ceil(seconds / 60));
+   return minutes === 1 ? '1 Minute' : `${minutes} Minuten`;
+}
+
+function startCoupleThinkingCooldown(seconds) {
+   const button = document.getElementById('couple-thinking-button');
+   const status = document.getElementById('couple-thinking-status');
+   if (!button || !status) return;
+
+   let remaining = Math.max(0, Number(seconds) || 0);
+   if (coupleThinkingCooldownTimer) {
+      clearInterval(coupleThinkingCooldownTimer);
+      coupleThinkingCooldownTimer = null;
+   }
+
+   const render = () => {
+      const icon = button.querySelector('i');
+      const label = button.querySelector('span');
+
+      if (remaining <= 0) {
+         button.disabled = false;
+         button.dataset.retryAfter = '0';
+         if (icon) icon.textContent = 'favorite';
+         if (label) label.textContent = 'Zeichen schicken';
+         status.textContent = '';
+         if (coupleThinkingCooldownTimer) {
+            clearInterval(coupleThinkingCooldownTimer);
+            coupleThinkingCooldownTimer = null;
+         }
+         return;
+      }
+
+      button.disabled = true;
+      button.dataset.retryAfter = String(remaining);
+      if (icon) icon.textContent = 'schedule';
+      if (label) label.textContent = `${Math.ceil(remaining / 60)} Min.`;
+      status.textContent = `Du kannst in ${coupleThinkingRemainingLabel(remaining)} wieder ein Zeichen schicken.`;
+      remaining -= 1;
+   };
+
+   render();
+   if (remaining > 0) {
+      coupleThinkingCooldownTimer = setInterval(render, 1000);
+   }
+}
+
+async function sendCoupleThinkingOfYou(button) {
+   if (!button || button.disabled) return;
+
+   const status = document.getElementById('couple-thinking-status');
+   const icon = button.querySelector('i');
+   const label = button.querySelector('span');
+   const originalIcon = icon ? icon.textContent : 'favorite';
+   const originalLabel = label ? label.textContent : 'Zeichen schicken';
+
+   if (!navigator.onLine) {
+      if (status) status.textContent = 'Du bist gerade offline.';
+      return;
+   }
+
+   button.disabled = true;
+   if (icon) icon.textContent = 'hourglass_top';
+   if (label) label.textContent = 'Wird gesendet …';
+   if (status) status.textContent = '';
+
+   try {
+      const response = await fetch('/couple/thinking-of-you', {
+         method: 'POST',
+         headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+         },
+         body: '{}',
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (response.status === 429) {
+         const retryAfter = Number(result.data && result.data.retry_after) || 0;
+         if (status) {
+            status.textContent = result.message || 'Du hast gerade schon ein Zeichen geschickt.';
+         }
+         if (retryAfter > 0) {
+            startCoupleThinkingCooldown(retryAfter);
+         } else {
+            button.disabled = false;
+            if (icon) icon.textContent = originalIcon;
+            if (label) label.textContent = originalLabel;
+         }
+         return;
+      }
+
+      if (!response.ok || result.status !== 'success') {
+         throw new Error(result.message || 'Das Zeichen konnte nicht gesendet werden.');
+      }
+
+      if (status) status.textContent = result.message || 'Dein Zeichen wurde gesendet.';
+      if (icon) icon.textContent = 'check';
+      if (label) label.textContent = 'Gesendet';
+
+      const cooldown = Number(result.data && result.data.cooldown_seconds) || 0;
+      window.setTimeout(() => startCoupleThinkingCooldown(cooldown), 1800);
+   } catch (error) {
+      button.disabled = false;
+      if (icon) icon.textContent = originalIcon;
+      if (label) label.textContent = originalLabel;
+      if (status) status.textContent = String(error.message || error);
+   }
+}
+
+function initCoupleThinkingOfYou() {
+   const button = document.getElementById('couple-thinking-button');
+   if (!button) return;
+
+   const retryAfter = Number(button.dataset.retryAfter || 0);
+   if (retryAfter > 0) {
+      startCoupleThinkingCooldown(retryAfter);
+   }
+}
+
+if (document.readyState === 'loading') {
+   document.addEventListener('DOMContentLoaded', initCoupleThinkingOfYou);
+} else {
+   initCoupleThinkingOfYou();
+}
 

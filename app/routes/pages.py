@@ -1,10 +1,10 @@
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from flask import Blueprint, g, jsonify, make_response, render_template, send_file, request, redirect, url_for, session
 from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_relationship_statuses_with_names, get_items_by_type,
     get_supported_languages, get_translation_for_entity, get_translation_progress,
-    get_translations_by_language, get_user_by_id, get_user_setting, get_setting_by_name,
+    get_translations_by_language, get_user_by_id, get_user_setting, update_user_setting, get_setting_by_name,
     get_item_by_id, create_item, update_item, delete_item, get_user_settings,
     get_list_type_by_content_url, get_all_settings,
     get_shared_item_ids, get_list_type_by_title, ensure_countdown_list_type,
@@ -1717,6 +1717,49 @@ def _attach_source_places(entries, source_type, link_map):
     return entries
 
 
+
+
+_COUPLE_THINKING_SETTING = 'couple_thinking_of_you_last_sent_at'
+_COUPLE_THINKING_COOLDOWN_SECONDS = 30 * 60
+
+
+def _couple_partner_for_user(user_id):
+    """Return the other account from the two-user Couples setup."""
+    couple_users = sorted(
+        get_all_users(),
+        key=lambda user: user.id,
+    )[:2]
+
+    # Never silently assign one of the first two users as partner to a third
+    # account if an installation contains additional normal users.
+    if not any(user.id == user_id for user in couple_users):
+        return None
+
+    return next(
+        (user for user in couple_users if user.id != user_id),
+        None,
+    )
+
+
+def _couple_thinking_retry_after(user_id, now=None):
+    """Return the remaining cooldown in seconds for a Thinking-of-you ping."""
+    last_sent = get_user_setting(user_id, _COUPLE_THINKING_SETTING)
+    if not last_sent or not last_sent.value:
+        return 0
+
+    try:
+        sent_at = datetime.fromisoformat(last_sent.value)
+        if sent_at.tzinfo is None:
+            sent_at = sent_at.replace(tzinfo=timezone.utc)
+        else:
+            sent_at = sent_at.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return 0
+
+    now = now or datetime.now(timezone.utc)
+    elapsed = int((now - sent_at).total_seconds())
+    return max(0, _COUPLE_THINKING_COOLDOWN_SECONDS - elapsed)
+
 @pages_bp.route('/home')
 @jwt_required
 def home():
@@ -1746,6 +1789,8 @@ def home():
 
         heart_moment_memory = None
         couple_users = []
+        couple_partner = None
+        couple_thinking_retry_after = 0
         couple_home_upcoming = []
         couple_home_recent = []
         couple_home_plans = []
@@ -1765,6 +1810,13 @@ def home():
                 get_all_users(),
                 key=lambda user: user.id,
             )[:2]
+            if any(user.id == g.user_id for user in couple_users):
+                couple_partner = next(
+                    (user for user in couple_users if user.id != g.user_id),
+                    None,
+                )
+            if couple_partner:
+                couple_thinking_retry_after = _couple_thinking_retry_after(g.user_id)
 
             can_view_countdowns = has_list_permission('View', 'Countdown')
             can_view_reminders = has_permission('View Reminders')
@@ -1842,6 +1894,8 @@ def home():
             countdown_list_type_id=countdown_list_type_id,
             heart_moment_memory=heart_moment_memory,
             couple_users=couple_users,
+            couple_partner=couple_partner,
+            couple_thinking_retry_after=couple_thinking_retry_after,
             couple_home_upcoming=couple_home_upcoming,
             couple_home_recent=couple_home_recent,
             couple_home_plans=couple_home_plans,
@@ -1857,6 +1911,81 @@ def home():
         log('error', f'Error while rendering the pages/home.html-Template: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
 
+
+
+
+@pages_bp.route('/couple/thinking-of-you', methods=['POST'])
+@jwt_required
+def couple_thinking_of_you():
+    """Send a lightweight one-tap signal to the other Couples user."""
+    edition = get_setting_by_name('sm_edition')
+    if not edition or edition.value != 'couples':
+        return jsonify(
+            status='error',
+            message='Diese Funktion ist nur in der Couples-Edition verfügbar.',
+        ), 404
+
+    # Only accept JSON. A plain cross-site HTML form cannot submit this request.
+    if not request.is_json:
+        return jsonify(
+            status='error',
+            message='Ungültige Anfrage.',
+        ), 415
+
+    sender = get_user_by_id(g.user_id)
+    partner = _couple_partner_for_user(g.user_id)
+    if not sender or not partner:
+        return jsonify(
+            status='error',
+            message='Es konnte kein Partnerkonto ermittelt werden.',
+        ), 409
+
+    retry_after = _couple_thinking_retry_after(g.user_id)
+    if retry_after > 0:
+        return jsonify(
+            status='error',
+            message='Du hast gerade schon ein Zeichen geschickt.',
+            data={'retry_after': retry_after},
+        ), 429
+
+    sender_name = (sender.firstName or '').strip() or 'Dein Partner'
+    partner_name = (partner.firstName or '').strip() or 'deinen Partner'
+
+    try:
+        from app.notifications import send_notification
+
+        delivery_results = send_notification(
+            partner.id,
+            f'❤️ {sender_name} denkt an dich',
+            'Ein kleines Zeichen nur für dich.',
+            url='/home',
+        )
+    except Exception as exc:
+        log('error', f'Could not send thinking-of-you notification: {exc}')
+        return jsonify(
+            status='error',
+            message='Das Zeichen konnte gerade nicht gesendet werden.',
+        ), 500
+
+    if not any(delivery_results.values()):
+        return jsonify(
+            status='error',
+            message='Für deinen Partner ist aktuell kein erreichbarer Benachrichtigungskanal aktiv.',
+        ), 409
+
+    sent_at = datetime.now(timezone.utc)
+    update_user_setting(
+        g.user_id,
+        _COUPLE_THINKING_SETTING,
+        sent_at.isoformat(timespec='seconds'),
+    )
+    log('info', f'Thinking-of-you signal sent from user {g.user_id} to user {partner.id}')
+
+    return jsonify(
+        status='success',
+        message=f'Dein Zeichen an {partner_name} wurde gesendet.',
+        data={'cooldown_seconds': _COUPLE_THINKING_COOLDOWN_SECONDS},
+    )
 
 @pages_bp.route('/memories')
 @jwt_required
