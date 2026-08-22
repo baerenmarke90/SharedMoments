@@ -438,14 +438,13 @@ _task_init_db() {
     sudo -u sharedmoments "$INSTALL_DIR/.venv/bin/python" -c "
 from app import app
 from app.models import Base, engine
-from app.db_queries import init_db, ensure_reminder_permissions, ensure_edition_settings, ensure_list_type_edition_column
+from app.db_queries import init_db, ensure_reminder_permissions, ensure_list_type_edition_column
 from app.translation import load_translation_in_cache, migrateTranslations
 from app.notifications import _ensure_vapid_keys
 
 Base.metadata.create_all(engine)
 init_db()
 ensure_reminder_permissions()
-ensure_edition_settings()
 ensure_list_type_edition_column()
 migrateTranslations()
 load_translation_in_cache()
