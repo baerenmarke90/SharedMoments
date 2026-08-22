@@ -2331,7 +2331,6 @@ def moments_hub():
                 get_items_by_type(
                     home_list_type.id,
                     'desc',
-                    edition=sm_edition,
                 )
             )
 
@@ -2341,7 +2340,6 @@ def moments_hub():
                 get_items_by_type(
                     moments_list_type.id,
                     'asc',
-                    edition=sm_edition,
                 )
             )
 
