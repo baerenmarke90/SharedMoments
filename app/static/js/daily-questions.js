@@ -8,9 +8,11 @@
    let pollTimer = null;
 
    function isCoupleHome() {
-      return document.querySelector('.couple-home')
-         && window.currentEdition === 'couples'
-         && !window.ownItemsOnly;
+      return (
+         document.body.classList.contains('couple-page-home')
+         && document.getElementById('div-render-couple-home-dashboard')
+         && !window.ownItemsOnly
+      );
    }
 
    function createCard() {
@@ -46,7 +48,13 @@
          </article>
       `;
 
-      const home = document.querySelector('.couple-home');
+      const home = document.querySelector('.couple-home')
+         || document.getElementById('div-render-couple-home-dashboard');
+
+      if (!home) {
+         throw new Error('Couple dashboard container not found.');
+      }
+
       const thinkingCard = home.querySelector('.couple-thinking-card');
 
       if (thinkingCard) {
