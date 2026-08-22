@@ -510,6 +510,104 @@
              }
           }
 
+       
+          /* questions-design-v4-tuning */
+
+          .questions-stats {
+             align-items: stretch;
+          }
+
+          .questions-stat {
+             height: 100%;
+             min-height: 88px;
+             display: flex;
+             flex-direction: column;
+             justify-content: center;
+          }
+
+          .questions-filters {
+             display: flex;
+             align-items: center;
+             gap: .55rem;
+             width: auto;
+             max-width: 100%;
+             padding: 0;
+             border: 0;
+             border-radius: 0;
+             background: transparent;
+             overflow-x: auto;
+             scrollbar-width: none;
+          }
+
+          .questions-filters::-webkit-scrollbar {
+             display: none;
+          }
+
+          .questions-filters .chip {
+             min-height: 38px;
+             padding: 0 .95rem;
+             border: 1px solid color-mix(in srgb, var(--outline-variant) 52%, transparent);
+             border-radius: 999px;
+             background: color-mix(in srgb, var(--surface-container) 90%, transparent);
+             box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow) 6%, transparent);
+          }
+
+          .questions-filters .chip.fill {
+             border-color: color-mix(in srgb, var(--primary) 34%, transparent);
+             box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 18%, transparent);
+          }
+
+          .question-archive-form .field {
+             margin-bottom: .75rem;
+          }
+
+          .question-archive-actions {
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+             gap: .8rem;
+             width: 100%;
+             margin-top: .25rem;
+          }
+
+          .question-count {
+             flex: 1 1 auto;
+             min-width: 0;
+          }
+
+          .question-archive-actions button {
+             position: static;
+             flex: 0 0 auto;
+             margin-left: auto;
+             align-self: center;
+             z-index: auto;
+          }
+
+          @media (max-width: 700px) {
+             .questions-filters {
+                gap: .45rem;
+             }
+
+             .questions-filters .chip {
+                flex: 0 0 auto;
+             }
+
+             .question-archive-actions {
+                flex-direction: column;
+                align-items: stretch;
+             }
+
+             .question-count {
+                order: 2;
+             }
+
+             .question-archive-actions button {
+                width: 100%;
+                margin-left: 0;
+                justify-content: center;
+             }
+          }
+
        </style>
    </head>
    <body class="couple-app couple-page-questions {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">

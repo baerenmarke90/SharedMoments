@@ -320,6 +320,13 @@
 <div id="navbar-error-more-details-text"></div>
 <nav class="right-align no-space">
    <button class="transparent link" onclick="showMoreInfo('navbar', null,'close')">{{ _('OK') }}</button>
+
+         <!-- daily-questions-nav-link-v1 -->
+         <a href="{{ url_for('daily_questions.questions') }}"
+            class="row wave round drawer-daily-questions-link{% if request.endpoint == 'daily_questions.questions' %} active{% endif %}">
+            <i>local_florist</i>
+            <span>Unsere Fragen</span>
+         </a>
 </nav>
 </dialog>
 
