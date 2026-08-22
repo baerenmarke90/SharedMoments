@@ -2393,16 +2393,70 @@ function showCoupleMemoryDetails(element) {
 }
 // ===== Couples: "Ich denk an dich" =====
 let coupleThinkingCooldownTimer = null;
+let coupleThinkingStatusPollTimer = null;
+let coupleThinkingStatusPollAttempts = 0;
+const COUPLE_THINKING_STATUS_POLL_MS = 5000;
+const COUPLE_THINKING_STATUS_POLL_MAX_ATTEMPTS = 36;
 
-function coupleThinkingRemainingLabel(seconds) {
-   const minutes = Math.max(1, Math.ceil(seconds / 60));
-   return minutes === 1 ? '1 Minute' : `${minutes} Minuten`;
+function setCoupleThinkingStatus(text) {
+   const status = document.getElementById('couple-thinking-status');
+   if (status) status.textContent = text || '';
+}
+
+function stopCoupleThinkingStatusPolling() {
+   if (coupleThinkingStatusPollTimer) {
+      clearInterval(coupleThinkingStatusPollTimer);
+      coupleThinkingStatusPollTimer = null;
+   }
+   coupleThinkingStatusPollAttempts = 0;
+}
+
+async function refreshCoupleThinkingDeliveryStatus() {
+   const button = document.getElementById('couple-thinking-button');
+   if (!button || document.hidden) return null;
+
+   try {
+      const response = await fetch('/couple/thinking-of-you/status', {
+         headers: { 'Accept': 'application/json' },
+         cache: 'no-store',
+      });
+      if (!response.ok) return null;
+
+      const result = await response.json().catch(() => ({}));
+      const data = result && result.data ? result.data : {};
+      const state = String(data.state || 'none');
+
+      if (state === 'delivered') {
+         setCoupleThinkingStatus('✓ Zugestellt');
+         stopCoupleThinkingStatusPolling();
+      } else if (state === 'sent') {
+         setCoupleThinkingStatus('Gesendet');
+      }
+
+      return state;
+   } catch (error) {
+      console.warn('Could not refresh thinking-of-you delivery state:', error);
+      return null;
+   }
+}
+
+function startCoupleThinkingStatusPolling() {
+   stopCoupleThinkingStatusPolling();
+   coupleThinkingStatusPollTimer = setInterval(async () => {
+      coupleThinkingStatusPollAttempts += 1;
+      const state = await refreshCoupleThinkingDeliveryStatus();
+      if (
+         state === 'delivered'
+         || coupleThinkingStatusPollAttempts >= COUPLE_THINKING_STATUS_POLL_MAX_ATTEMPTS
+      ) {
+         stopCoupleThinkingStatusPolling();
+      }
+   }, COUPLE_THINKING_STATUS_POLL_MS);
 }
 
 function startCoupleThinkingCooldown(seconds) {
    const button = document.getElementById('couple-thinking-button');
-   const status = document.getElementById('couple-thinking-status');
-   if (!button || !status) return;
+   if (!button) return;
 
    let remaining = Math.max(0, Number(seconds) || 0);
    if (coupleThinkingCooldownTimer) {
@@ -2417,9 +2471,9 @@ function startCoupleThinkingCooldown(seconds) {
       if (remaining <= 0) {
          button.disabled = false;
          button.dataset.retryAfter = '0';
+         button.removeAttribute('title');
          if (icon) icon.textContent = 'favorite';
          if (label) label.textContent = 'Zeichen schicken';
-         status.textContent = '';
          if (coupleThinkingCooldownTimer) {
             clearInterval(coupleThinkingCooldownTimer);
             coupleThinkingCooldownTimer = null;
@@ -2427,11 +2481,12 @@ function startCoupleThinkingCooldown(seconds) {
          return;
       }
 
+      const minutes = Math.max(1, Math.ceil(remaining / 60));
       button.disabled = true;
       button.dataset.retryAfter = String(remaining);
+      button.title = `Wieder in ${minutes} ${minutes === 1 ? 'Minute' : 'Minuten'}`;
       if (icon) icon.textContent = 'schedule';
-      if (label) label.textContent = `${Math.ceil(remaining / 60)} Min.`;
-      status.textContent = `Du kannst in ${coupleThinkingRemainingLabel(remaining)} wieder ein Zeichen schicken.`;
+      if (label) label.textContent = `${minutes} Min.`;
       remaining -= 1;
    };
 
@@ -2444,21 +2499,21 @@ function startCoupleThinkingCooldown(seconds) {
 async function sendCoupleThinkingOfYou(button) {
    if (!button || button.disabled) return;
 
-   const status = document.getElementById('couple-thinking-status');
    const icon = button.querySelector('i');
    const label = button.querySelector('span');
    const originalIcon = icon ? icon.textContent : 'favorite';
    const originalLabel = label ? label.textContent : 'Zeichen schicken';
 
    if (!navigator.onLine) {
-      if (status) status.textContent = 'Du bist gerade offline.';
+      setCoupleThinkingStatus('Du bist gerade offline.');
       return;
    }
 
+   stopCoupleThinkingStatusPolling();
    button.disabled = true;
    if (icon) icon.textContent = 'hourglass_top';
    if (label) label.textContent = 'Wird gesendet …';
-   if (status) status.textContent = '';
+   setCoupleThinkingStatus('');
 
    try {
       const response = await fetch('/couple/thinking-of-you', {
@@ -2473,11 +2528,13 @@ async function sendCoupleThinkingOfYou(button) {
 
       if (response.status === 429) {
          const retryAfter = Number(result.data && result.data.retry_after) || 0;
-         if (status) {
-            status.textContent = result.message || 'Du hast gerade schon ein Zeichen geschickt.';
-         }
+         setCoupleThinkingStatus(result.message || 'Du hast gerade schon ein Zeichen geschickt.');
          if (retryAfter > 0) {
             startCoupleThinkingCooldown(retryAfter);
+            window.setTimeout(async () => {
+               const state = await refreshCoupleThinkingDeliveryStatus();
+               if (state === 'sent') startCoupleThinkingStatusPolling();
+            }, 250);
          } else {
             button.disabled = false;
             if (icon) icon.textContent = originalIcon;
@@ -2490,17 +2547,17 @@ async function sendCoupleThinkingOfYou(button) {
          throw new Error(result.message || 'Das Zeichen konnte nicht gesendet werden.');
       }
 
-      if (status) status.textContent = result.message || 'Dein Zeichen wurde gesendet.';
+      setCoupleThinkingStatus('Gesendet');
       if (icon) icon.textContent = 'check';
       if (label) label.textContent = 'Gesendet';
-
       const cooldown = Number(result.data && result.data.cooldown_seconds) || 0;
+      startCoupleThinkingStatusPolling();
       window.setTimeout(() => startCoupleThinkingCooldown(cooldown), 1800);
    } catch (error) {
       button.disabled = false;
       if (icon) icon.textContent = originalIcon;
       if (label) label.textContent = originalLabel;
-      if (status) status.textContent = String(error.message || error);
+      setCoupleThinkingStatus(String(error.message || error));
    }
 }
 
@@ -2511,7 +2568,23 @@ function initCoupleThinkingOfYou() {
    const retryAfter = Number(button.dataset.retryAfter || 0);
    if (retryAfter > 0) {
       startCoupleThinkingCooldown(retryAfter);
+      window.setTimeout(async () => {
+         const state = await refreshCoupleThinkingDeliveryStatus();
+         if (state === 'sent') startCoupleThinkingStatusPolling();
+      }, 100);
    }
+
+   window.addEventListener('pageshow', () => {
+      if (Number(button.dataset.retryAfter || 0) > 0) {
+         refreshCoupleThinkingDeliveryStatus();
+      }
+   });
+
+   document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && Number(button.dataset.retryAfter || 0) > 0) {
+         refreshCoupleThinkingDeliveryStatus();
+      }
+   });
 }
 
 if (document.readyState === 'loading') {
@@ -2522,6 +2595,17 @@ if (document.readyState === 'loading') {
 // ===== Couples: in-app delivery animation =====
 let coupleThinkingArrivalCheckInFlight = false;
 let coupleThinkingArrivalSignalId = null;
+
+function triggerCoupleThinkingHaptic() {
+   if (typeof navigator.vibrate !== 'function') return;
+   try {
+      // One short pulse: noticeable on Android, but deliberately subtle.
+      navigator.vibrate(45);
+   } catch (error) {
+      console.debug('Thinking-of-you haptic unavailable:', error);
+   }
+}
+
 
 function findCoupleAvatarWrap(userId) {
    const wanted = String(userId || '');
@@ -2576,6 +2660,7 @@ function showCoupleThinkingArrival(signal) {
    arrival.appendChild(label);
    avatarWrap.appendChild(arrival);
    coupleThinkingArrivalSignalId = signal.id;
+   triggerCoupleThinkingHaptic();
 
    requestAnimationFrame(() => {
       requestAnimationFrame(() => arrival.classList.add('is-active'));

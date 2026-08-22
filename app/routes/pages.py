@@ -2113,6 +2113,53 @@ def couple_thinking_of_you_delivered():
     )
 
 
+@pages_bp.route('/couple/thinking-of-you/status', methods=['GET'])
+@jwt_required
+def couple_thinking_of_you_status():
+    """Return the delivery state of the current user's latest couple signal."""
+    edition = get_setting_by_name('sm_edition')
+    if not edition or edition.value != 'couples':
+        return jsonify(status='success', data={'state': 'none', 'retry_after': 0})
+
+    partner = _couple_partner_for_user(g.user_id)
+    if not partner:
+        return jsonify(status='success', data={'state': 'none', 'retry_after': 0})
+
+    last_sent = get_user_setting(g.user_id, _COUPLE_THINKING_SETTING)
+    retry_after = _couple_thinking_retry_after(g.user_id)
+    if not last_sent or not last_sent.value:
+        return jsonify(
+            status='success',
+            data={'state': 'none', 'retry_after': retry_after},
+        )
+
+    sent_at = str(last_sent.value).strip()
+    state = 'sent'
+    delivered_at = None
+    delivered = get_user_setting(g.user_id, _COUPLE_THINKING_DELIVERED_SETTING)
+
+    if delivered and delivered.value:
+        try:
+            payload = json.loads(delivered.value)
+            delivered_sent_at = str(payload.get('sent_at') or '').strip()
+            recipient_user_id = int(payload.get('recipient_user_id'))
+            if delivered_sent_at == sent_at and recipient_user_id == partner.id:
+                state = 'delivered'
+                delivered_at = str(payload.get('delivered_at') or '').strip() or None
+        except (TypeError, ValueError, json.JSONDecodeError):
+            pass
+
+    return jsonify(
+        status='success',
+        data={
+            'state': state,
+            'sent_at': sent_at,
+            'delivered_at': delivered_at,
+            'retry_after': retry_after,
+        },
+    )
+
+
 @pages_bp.route('/memories')
 @jwt_required
 def memories():
