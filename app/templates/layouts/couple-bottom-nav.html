@@ -1,4 +1,27 @@
-{% set _couple_nav = couple_nav_active|default('more') %}
+{# MOBILE NAVIGATION HUB V1 #}
+{% set _couple_path = request.path %}
+{% if _couple_path == '/home' or _couple_path.startswith('/home/') %}
+   {% set _couple_nav = 'home' %}
+{% elif _couple_path == '/moments'
+      or _couple_path.startswith('/moments/')
+      or _couple_path == '/memories'
+      or _couple_path.startswith('/memories/')
+      or _couple_path == '/heart-moments'
+      or _couple_path.startswith('/heart-moments/')
+      or _couple_path == '/milestones'
+      or _couple_path.startswith('/milestones/')
+      or _couple_path == '/year'
+      or _couple_path.startswith('/year/')
+      or _couple_path == '/places'
+      or _couple_path.startswith('/places/')
+      or _couple_path.startswith('/gallery/') %}
+   {% set _couple_nav = 'moments' %}
+{% elif _couple_path == '/story' or _couple_path.startswith('/story/') %}
+   {% set _couple_nav = 'story' %}
+{% else %}
+   {% set _couple_nav = 'more' %}
+{% endif %}
+
 <nav class="couple-bottom-nav" aria-label="Paar-Navigation">
    <a href="/home"
       class="{% if _couple_nav == 'home' %}active{% endif %}"
@@ -7,11 +30,11 @@
       <span class="couple-bottom-nav-label">Wir</span>
    </a>
 
-   <a href="/story"
-      class="{% if _couple_nav == 'story' %}active{% endif %}"
-      {% if _couple_nav == 'story' %}aria-current="page"{% endif %}>
-      <i>auto_stories</i>
-      <span class="couple-bottom-nav-label">Story</span>
+   <a href="/moments"
+      class="{% if _couple_nav == 'moments' %}active{% endif %}"
+      {% if _couple_nav == 'moments' %}aria-current="page"{% endif %}>
+      <i>photo_library</i>
+      <span class="couple-bottom-nav-label">Momente</span>
    </a>
 
    <button type="button"
@@ -23,18 +46,17 @@
       <span class="couple-bottom-nav-label">Hinzufügen</span>
    </button>
 
-   <a href="/plans"
-      class="{% if _couple_nav == 'plans' %}active{% endif %}"
-      {% if _couple_nav == 'plans' %}aria-current="page"{% endif %}>
-      <i>explore</i>
-      <span class="couple-bottom-nav-label">Pläne</span>
+   <a href="/story"
+      class="{% if _couple_nav == 'story' %}active{% endif %}"
+      {% if _couple_nav == 'story' %}aria-current="page"{% endif %}>
+      <i>auto_stories</i>
+      <span class="couple-bottom-nav-label">Story</span>
    </a>
 
-   <button type="button"
-           class="{% if _couple_nav == 'more' %}active{% endif %}"
-           aria-label="Mehr öffnen"
-           onclick="callUi('#dialog-nav-drawer')">
+   <a href="/more"
+      class="{% if _couple_nav == 'more' %}active{% endif %}"
+      {% if _couple_nav == 'more' %}aria-current="page"{% endif %}>
       <i>menu</i>
       <span class="couple-bottom-nav-label">Mehr</span>
-   </button>
+   </a>
 </nav>

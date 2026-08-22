@@ -1,0 +1,146 @@
+/* MOBILE NAVIGATION HUB V1 */
+body.couple-page-nav-hub .nav-hub-page {
+   width: min(100%, 920px);
+   margin: 0 auto;
+   padding-top: 1rem;
+   padding-bottom: 7rem;
+}
+body.couple-page-nav-hub .nav-hub-hero {
+   display: grid;
+   grid-template-columns: 54px minmax(0, 1fr);
+   align-items: center;
+   gap: .9rem;
+   margin-bottom: 1rem;
+   padding: 1rem;
+   border-radius: var(--sm-radius-lg);
+}
+body.couple-page-nav-hub .nav-hub-hero h4,
+body.couple-page-nav-hub .nav-hub-hero p { margin: 0; }
+body.couple-page-nav-hub .nav-hub-hero p {
+   margin-top: .18rem;
+   color: var(--on-surface-variant);
+   font-size: var(--sm-text-sm);
+   line-height: 1.4;
+}
+body.couple-page-nav-hub .nav-hub-hero-icon,
+body.couple-page-nav-hub .nav-hub-card-icon {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 50%;
+   color: var(--primary);
+   background: color-mix(in srgb, var(--primary-container) 70%, transparent);
+}
+body.couple-page-nav-hub .nav-hub-hero-icon {
+   width: 54px;
+   height: 54px;
+}
+body.couple-page-nav-hub .nav-hub-card-icon {
+   width: 42px;
+   height: 42px;
+}
+body.couple-page-nav-hub .nav-hub-hero-icon > i,
+body.couple-page-nav-hub .nav-hub-card-icon > i,
+body.couple-page-nav-hub .nav-hub-card-arrow {
+   position: static !important;
+}
+body.couple-page-nav-hub .nav-hub-card-icon-heart {
+   color: var(--couple-heart);
+   background: var(--couple-heart-soft);
+}
+body.couple-page-nav-hub .nav-hub-card-icon-milestone {
+   color: var(--couple-star);
+   background: var(--couple-star-soft);
+}
+body.couple-page-nav-hub .nav-hub-card-icon-place {
+   color: var(--couple-place);
+   background: var(--couple-place-soft);
+}
+body.couple-page-nav-hub .nav-hub-section { margin-top: 1.2rem; }
+body.couple-page-nav-hub .nav-hub-section-title {
+   display: flex;
+   align-items: center;
+   gap: .7rem;
+   margin: 0 0 .55rem .2rem;
+   color: var(--on-surface-variant);
+   font-size: var(--sm-text-xs);
+   font-weight: 700;
+   letter-spacing: .04em;
+   text-transform: uppercase;
+}
+body.couple-page-nav-hub .nav-hub-section-title::after {
+   content: "";
+   flex: 1;
+   height: 1px;
+   background: var(--outline-variant);
+   opacity: .7;
+}
+body.couple-page-nav-hub .nav-hub-grid {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: .65rem;
+}
+body.couple-page-nav-hub .nav-hub-card {
+   min-width: 0;
+   display: grid;
+   grid-template-columns: 42px minmax(0, 1fr) auto;
+   align-items: center;
+   gap: .7rem;
+   min-height: 78px;
+   padding: .75rem .8rem;
+   border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
+   border-radius: var(--sm-radius-md);
+   color: inherit;
+   text-align: left;
+   text-decoration: none;
+   box-sizing: border-box;
+}
+body.couple-page-nav-hub button.nav-hub-card {
+   width: 100%;
+   margin: 0;
+   appearance: none;
+   font: inherit;
+   cursor: pointer;
+}
+body.couple-page-nav-hub .nav-hub-card-copy {
+   min-width: 0;
+   display: block;
+}
+body.couple-page-nav-hub .nav-hub-card-copy > strong,
+body.couple-page-nav-hub .nav-hub-card-copy > span { display: block; }
+body.couple-page-nav-hub .nav-hub-card-copy > strong {
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   font-size: var(--sm-text-sm);
+}
+body.couple-page-nav-hub .nav-hub-card-copy > span {
+   margin-top: .18rem;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   color: var(--on-surface-variant);
+   font-size: var(--sm-text-xxs);
+}
+body.couple-page-nav-hub .nav-hub-card-arrow {
+   color: color-mix(in srgb, var(--on-surface) 38%, transparent);
+}
+@media (max-width: 700px) {
+   body.couple-page-nav-hub .nav-hub-page {
+      padding-left: .85rem;
+      padding-right: .85rem;
+   }
+   body.couple-page-nav-hub .nav-hub-hero {
+      grid-template-columns: 46px minmax(0, 1fr);
+      gap: .7rem;
+      padding: .8rem;
+   }
+   body.couple-page-nav-hub .nav-hub-hero-icon {
+      width: 46px;
+      height: 46px;
+   }
+   body.couple-page-nav-hub .nav-hub-grid {
+      grid-template-columns: 1fr;
+      gap: .5rem;
+   }
+}

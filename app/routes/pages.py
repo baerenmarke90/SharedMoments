@@ -2288,6 +2288,97 @@ def couple_thinking_of_you_status():
     )
 
 
+
+# MOBILE NAVIGATION HUB V1
+@pages_bp.route('/moments')
+@jwt_required
+def moments_hub():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        can_view_memories = has_list_permission('View', 'Home')
+        can_view_milestones = has_list_permission('View', 'Moments')
+        home_list_type = get_list_type_by_title('Home')
+        moments_list_type = get_list_type_by_title('Moments')
+
+        memories_count = 0
+        if can_view_memories and home_list_type:
+            memories_count = len(
+                get_items_by_type(
+                    home_list_type.id,
+                    'desc',
+                    edition=sm_edition,
+                )
+            )
+
+        milestones_count = 0
+        if can_view_milestones and moments_list_type:
+            milestones_count = len(
+                get_items_by_type(
+                    moments_list_type.id,
+                    'asc',
+                    edition=sm_edition,
+                )
+            )
+
+        from app.heart_moments import list_heart_moments
+        hearts_count = len(
+            list_heart_moments(
+                g.user_id,
+                filter_name='shared',
+            )
+        )
+        places_count = len(get_couple_places())
+
+        return render_template(
+            'pages/moments-hub.html',
+            title=get_display_title(),
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            sm_edition=sm_edition,
+            page_title='Momente',
+            current_year=date.today().year,
+            moments_counts={
+                'memories': memories_count,
+                'hearts': hearts_count,
+                'milestones': milestones_count,
+                'places': places_count,
+            },
+            moments_access={
+                'memories': can_view_memories,
+                'milestones': can_view_milestones,
+            },
+        )
+    except Exception as exc:
+        log('error', f'Error while rendering moments hub: {exc}')
+        return "An error occurred while rendering the moments hub.", 500
+
+
+@pages_bp.route('/more')
+@jwt_required
+def more_hub():
+    try:
+        sm_edition = get_setting_by_name('sm_edition').value
+        if sm_edition != 'couples':
+            return redirect(url_for('pages.home'))
+
+        return render_template(
+            'pages/more.html',
+            title=get_display_title(),
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            sm_edition=sm_edition,
+            page_title='Mehr',
+        )
+    except Exception as exc:
+        log('error', f'Error while rendering more hub: {exc}')
+        return "An error occurred while rendering the more hub.", 500
+
+
 @pages_bp.route('/memories')
 @jwt_required
 def memories():

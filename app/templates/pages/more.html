@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>SideBySide</title>
+      {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
+      <link rel="stylesheet" href="{{ static_versioned('css/mobile-navigation.css') }}">
+   </head>
+   <body class="couple-app couple-page-nav-hub couple-page-more {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay" id="div-overlay-nav-drawer" onclick="callUi('#dialog-nav-drawer')"></div>
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive nav-hub-page">
+         <section class="nav-hub-hero surface-container">
+            <span class="nav-hub-hero-icon"><i>apps</i></span>
+            <div>
+               <h4>Mehr</h4>
+               <p>Planen, organisieren und zusätzliche Funktionen öffnen.</p>
+            </div>
+         </section>
+
+         <section class="nav-hub-section">
+            <div class="nav-hub-section-title"><span>Gemeinsam planen</span></div>
+            <div class="nav-hub-grid">
+               <a class="surface-container nav-hub-card" href="{{ url_for('pages.plans') }}">
+                  <span class="nav-hub-card-icon"><i>explore</i></span>
+                  <span class="nav-hub-card-copy"><strong>Unsere Pläne</strong><span>Was ihr gemeinsam vorhabt</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+
+               {% set more_ns = namespace(bucket=false, extras=[]) %}
+               {% for list_type in list_types %}
+                  {% if list_type.contentURL == 'bucket-list' and has_list_permission('View', list_type.title) %}
+                     {% set more_ns.bucket = true %}
+                  {% endif %}
+                  {% if list_type.navbar == 1
+                        and list_type.title not in ['Home', 'Moments']
+                        and list_type.contentURL != 'bucket-list'
+                        and has_list_permission('View', list_type.title) %}
+                     {% set more_ns.extras = more_ns.extras + [list_type] %}
+                  {% endif %}
+               {% endfor %}
+
+               {% if more_ns.bucket %}
+               <a class="surface-container nav-hub-card" href="{{ url_for('pages.bucketlist') }}">
+                  <span class="nav-hub-card-icon"><i>checklist</i></span>
+                  <span class="nav-hub-card-copy"><strong>Bucketlist</strong><span>Ideen für später festhalten</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endif %}
+
+               <a class="surface-container nav-hub-card" href="{{ url_for('pages.chapters') }}">
+                  <span class="nav-hub-card-icon"><i>bookmarks</i></span>
+                  <span class="nav-hub-card-copy"><strong>Kapitel</strong><span>Erlebnisse miteinander verbinden</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+
+               {% if has_permission('View Reminders') %}
+               <a class="surface-container nav-hub-card" href="{{ url_for('pages.reminders') }}">
+                  <span class="nav-hub-card-icon"><i>notifications_active</i></span>
+                  <span class="nav-hub-card-copy"><strong>Termine &amp; Erinnerungen</strong><span>Nichts Wichtiges vergessen</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endif %}
+
+               {% if daily_questions_nav_enabled|default(false) %}
+               <a class="surface-container nav-hub-card" href="/questions">
+                  <span class="nav-hub-card-icon"><i>local_florist</i></span>
+                  <span class="nav-hub-card-copy"><strong>Unsere Fragen</strong><span>Frage des Tages und Archiv</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endif %}
+            </div>
+         </section>
+
+         {% if more_ns.extras %}
+         <section class="nav-hub-section">
+            <div class="nav-hub-section-title"><span>Unsere Listen</span></div>
+            <div class="nav-hub-grid">
+               {% for list_type in more_ns.extras %}
+               <a class="surface-container nav-hub-card" href="/{{ list_type.contentURL }}">
+                  <span class="nav-hub-card-icon"><i>{{ list_type.icon }}</i></span>
+                  <span class="nav-hub-card-copy"><strong>{{ _(list_type.title) }}</strong><span>{{ list_type.mainTitle or _('Open list') }}</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endfor %}
+            </div>
+         </section>
+         {% endif %}
+
+         <section class="nav-hub-section">
+            <div class="nav-hub-section-title"><span>App &amp; Verwaltung</span></div>
+            <div class="nav-hub-grid">
+               <a class="surface-container nav-hub-card" href="/user-settings">
+                  <span class="nav-hub-card-icon"><i>person</i></span>
+                  <span class="nav-hub-card-copy"><strong>Mein Profil</strong><span>Persönliche Einstellungen</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+
+               {% if has_permission('Read Setting') %}
+               <a class="surface-container nav-hub-card" href="/settings">
+                  <span class="nav-hub-card-icon"><i>settings</i></span>
+                  <span class="nav-hub-card-copy"><strong>Einstellungen</strong><span>SharedMoments konfigurieren</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endif %}
+
+               {% if has_permission('Access Admin Panel') %}
+               <a class="surface-container nav-hub-card" href="/admin">
+                  <span class="nav-hub-card-icon"><i>shield</i></span>
+                  <span class="nav-hub-card-copy"><strong>Administration</strong><span>Funktionen und Benutzer verwalten</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </a>
+               {% endif %}
+
+               {% if has_permission('Manage Lists') %}
+               <button type="button" class="surface-container nav-hub-card nav-hub-card-button"
+                       onclick="callUi('#dialog-manage-list-types')">
+                  <span class="nav-hub-card-icon"><i>tune</i></span>
+                  <span class="nav-hub-card-copy"><strong>Listen verwalten</strong><span>Eigene Listen anpassen</span></span>
+                  <i class="nav-hub-card-arrow">chevron_right</i>
+               </button>
+               {% endif %}
+            </div>
+         </section>
+
+         {% include 'layouts/footer.html' %}
+      </main>
+
+      {% set couple_create_query = 'sheet' %}
+      {% include 'layouts/couple-create-sheet.html' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+   </body>
+</html>

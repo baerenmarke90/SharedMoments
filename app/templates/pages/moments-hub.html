@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>SideBySide</title>
+      {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
+      <link rel="stylesheet" href="{{ static_versioned('css/mobile-navigation.css') }}">
+   </head>
+   <body class="couple-app couple-page-nav-hub {% if darkmode and darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+
+      <div class="overlay" id="div-overlay-nav-drawer" onclick="callUi('#dialog-nav-drawer')"></div>
+      <div id="div-render-nav-drawer">
+         {% include 'layouts/nav-drawer.html' %}
+      </div>
+
+      <main class="responsive nav-hub-page">
+         <section class="nav-hub-hero surface-container">
+            <span class="nav-hub-hero-icon"><i>photo_library</i></span>
+            <div>
+               <h4>Unsere Momente</h4>
+               <p>Erinnerungen, Herzmomente, Meilensteine, Orte und Jahresrückblicke an einem Platz.</p>
+            </div>
+         </section>
+
+         <section class="nav-hub-grid">
+            {% if moments_access.memories %}
+            <a class="surface-container nav-hub-card" href="{{ url_for('pages.memories') }}">
+               <span class="nav-hub-card-icon"><i>photo_library</i></span>
+               <span class="nav-hub-card-copy">
+                  <strong>Erinnerungen</strong>
+                  <span>{% if moments_counts.memories %}{{ moments_counts.memories }} {% if moments_counts.memories == 1 %}Moment{% else %}Momente{% endif %}{% else %}Eure gemeinsamen Erinnerungen{% endif %}</span>
+               </span>
+               <i class="nav-hub-card-arrow">chevron_right</i>
+            </a>
+            {% endif %}
+
+            <a class="surface-container nav-hub-card" href="/heart-moments">
+               <span class="nav-hub-card-icon nav-hub-card-icon-heart"><i>favorite</i></span>
+               <span class="nav-hub-card-copy">
+                  <strong>Herzmomente</strong>
+                  <span>{% if moments_counts.hearts %}{{ moments_counts.hearts }} {% if moments_counts.hearts == 1 %}besonderer Moment{% else %}besondere Momente{% endif %}{% else %}Besonders schöne Augenblicke{% endif %}</span>
+               </span>
+               <i class="nav-hub-card-arrow">chevron_right</i>
+            </a>
+
+            {% if moments_access.milestones %}
+            <a class="surface-container nav-hub-card" href="{{ url_for('pages.milestones') }}">
+               <span class="nav-hub-card-icon nav-hub-card-icon-milestone"><i>star</i></span>
+               <span class="nav-hub-card-copy">
+                  <strong>Meilensteine</strong>
+                  <span>{% if moments_counts.milestones %}{{ moments_counts.milestones }} {% if moments_counts.milestones == 1 %}Meilenstein{% else %}Meilensteine{% endif %}{% else %}Wichtige Punkte eurer Geschichte{% endif %}</span>
+               </span>
+               <i class="nav-hub-card-arrow">chevron_right</i>
+            </a>
+            {% endif %}
+
+            <a class="surface-container nav-hub-card" href="{{ url_for('pages.couple_year', selected_year=current_year) }}">
+               <span class="nav-hub-card-icon"><i>calendar_view_month</i></span>
+               <span class="nav-hub-card-copy">
+                  <strong>Unser Jahr</strong>
+                  <span>{{ current_year }} gemeinsam ansehen</span>
+               </span>
+               <i class="nav-hub-card-arrow">chevron_right</i>
+            </a>
+
+            <a class="surface-container nav-hub-card" href="{{ url_for('pages.places') }}">
+               <span class="nav-hub-card-icon nav-hub-card-icon-place"><i>map</i></span>
+               <span class="nav-hub-card-copy">
+                  <strong>Unsere Orte</strong>
+                  <span>{% if moments_counts.places %}{{ moments_counts.places }} {% if moments_counts.places == 1 %}Ort{% else %}Orte{% endif %}{% else %}Gemeinsame Orte und Reisen{% endif %}</span>
+               </span>
+               <i class="nav-hub-card-arrow">chevron_right</i>
+            </a>
+         </section>
+
+         {% include 'layouts/footer.html' %}
+      </main>
+
+      {% set couple_create_query = 'sheet' %}
+      {% include 'layouts/couple-create-sheet.html' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+   </body>
+</html>
