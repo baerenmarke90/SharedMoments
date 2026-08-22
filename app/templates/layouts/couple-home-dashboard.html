@@ -582,7 +582,9 @@
                            {% else %}Erinnerung{% endif %}
                         </span>
                      </div>
-                     <div class="couple-row-title">{{ entry.title }}</div>
+                     {% if entry.title %}
+                      <div class="couple-row-title">{{ entry.title }}</div>
+                      {% endif %}
 
                      {% if entry.text %}
                      <div class="couple-recent-text">{{ entry.text }}</div>

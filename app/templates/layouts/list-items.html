@@ -1,6 +1,6 @@
-<article class="primary-container">
+<article class="primary-container custom-list-card">
 
-    <nav>
+    <nav class="custom-list-header">
         <h5 class="max">
             {{ _(mainTitle) }}
         </h5>
@@ -25,7 +25,7 @@
 
         <br>
 
-        <div class="center-align">
+        <div class="center-align custom-list-empty">
             <i class="extra">
                 format_list_bulleted_add
             </i>
@@ -69,7 +69,7 @@
 
 
             <div
-                class="row wave list-item-row"
+                class="row wave list-item-row custom-list-item"
                 data-item-id="{{ item.id }}"
                 onclick="
                     handleListRowClick(

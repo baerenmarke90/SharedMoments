@@ -1980,8 +1980,6 @@ function selectItemsStarted(event) {
          handleLongPress(id); // Behandle das lange Drücken
          const createFab = document.getElementById("div-fab-create-new-home-item");
          if (createFab) createFab.style.display = "none"; // Verstecke den FAB
-         const bttBtn = document.getElementById("btn-back-to-top");
-         if (bttBtn) bttBtn.style.display = "none";
          document.getElementById("footer-bottom-bar-home-items").style.display = ""; // Zeige die Auswahlleiste
       }, 500); // Warte 500ms, bevor das lange Drücken erkannt wird
    } else {
@@ -1999,8 +1997,6 @@ function selectItemsStopped(event) {
       document.getElementById("footer-bottom-bar-home-items").style.display = "none"; // Verstecke die Auswahlleiste
       const createFab = document.getElementById("div-fab-create-new-home-item");
       if (createFab) createFab.style.display = ""; // Zeige den FAB
-      const bttBtn = document.getElementById("btn-back-to-top");
-      if (bttBtn) bttBtn.style.display = "";
    }
 }
 

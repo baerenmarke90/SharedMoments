@@ -306,19 +306,6 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('DOMContentLoaded', () => {
    observeLazyImages();
    syncDialogOpenState();
-   const btt = document.getElementById('btn-back-to-top');
-   if (btt) {
-      // Nur bei Zustandswechsel ins DOM schreiben - vorher lief bei jedem
-      // Scroll-Event ein Style-Write und damit ein Recalc.
-      let visible = null;
-      window.addEventListener('scroll', () => {
-         const show = window.scrollY > 300;
-         if (show === visible) return;
-         visible = show;
-         btt.style.opacity = show ? '1' : '0';
-         btt.style.pointerEvents = show ? 'auto' : 'none';
-      }, { passive: true });
-   }
 });
 
 function showMoreInfo(element, result, mode) {

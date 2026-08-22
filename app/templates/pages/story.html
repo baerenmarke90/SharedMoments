@@ -376,7 +376,7 @@
                      <i>calendar_month</i>
                   </div>
 
-                  <div class="field border round suffix story-year-field">
+                  <div class="field border round suffix story-year-field story-order-field">
                      <select name="order" onchange="this.form.submit()">
                         <option value="new" {% if story_order != 'old' %}selected{% endif %}>Neueste zuerst</option>
                         <option value="old" {% if story_order == 'old' %}selected{% endif %}>Älteste zuerst</option>

@@ -343,7 +343,7 @@ def _build_couple_home_recent(
             recent.append({
                 'type': 'memory',
                 'icon': 'notes' if item.contentType == 'text' else 'photo',
-                'title': item.title or 'Erinnerung',
+                'title': item.title or '',
                 'text': item.content or '',
                 'sort_date': event_dt,
                 'date_label': (

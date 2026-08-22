@@ -228,8 +228,7 @@ body.couple-app .overlay {
    z-index: var(--sm-z-overlay);
 }
 
-body.couple-app > .fixed.bottom.right,
-body.couple-app > #btn-back-to-top {
+body.couple-app > .fixed.bottom.right {
    z-index: var(--sm-z-fab);
 }
 
@@ -1126,7 +1125,7 @@ body.couple-app #dialog-nav-drawer .nav-drawer-group {
    color: color-mix(in srgb, var(--on-surface) 55%, transparent);
 }
 
-/* Fixierter Footer + Back-to-Top kollidieren mobil mit der Bottom-Nav */
+/* Fixierter Footer darf mobil nicht mit der Bottom-Nav kollidieren. */
 @media (max-width: 900px) {
    body.couple-app footer.fixed {
       position: static;
@@ -1135,9 +1134,6 @@ body.couple-app #dialog-nav-drawer .nav-drawer-group {
       font-size: var(--sm-text-xxs);
    }
 
-   body.couple-app #btn-back-to-top {
-      bottom: calc(6.4rem + env(safe-area-inset-bottom)) !important;
-   }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2183,5 +2179,163 @@ body.couple-page-year .year-highlight-arrow {
    body.couple-page-year .year-highlight-icon {
       width: 64px;
       height: 64px;
+   }
+}
+
+/* ==========================================================================
+   Couple polish round 2
+   Story alignment, stable sort control, custom-list integration and drawer fix.
+   ========================================================================== */
+
+/* Story: timeline marker is centered on the card AND exactly on the line. */
+body.couple-page-story .story-card::before {
+   top: 50%;
+   left: calc(0.28rem - 1.3rem - 0.5rem);
+   box-sizing: content-box;
+   transform: translateY(-50%);
+}
+
+/* Give the sort selector enough real space for both German labels. */
+body.couple-page-story .story-search-row {
+   grid-template-columns: minmax(0, 1fr) 145px 190px;
+}
+
+body.couple-page-story .story-order-field {
+   min-width: 0;
+}
+
+body.couple-page-story .story-order-field select {
+   width: 100%;
+   min-width: 0;
+   padding-right: 2.25rem;
+   font-size: var(--sm-text-sm);
+}
+
+/* Custom lists follow the couple bucket-list language. */
+body.couple-page-list .custom-list-page {
+   max-width: 760px;
+   margin: 0 auto;
+   padding-bottom: 6.5rem;
+}
+
+body.couple-page-list .custom-list-card {
+   overflow: hidden;
+   margin: var(--sm-space-4) 0 0;
+   border-radius: var(--sm-radius-md);
+   background: var(--surface-container);
+   box-shadow: var(--couple-shadow-soft);
+}
+
+body.couple-page-list .custom-list-header {
+   min-height: 58px;
+   padding: var(--sm-space-3) var(--sm-space-5);
+   border-bottom: 1px solid var(--outline-variant);
+}
+
+body.couple-page-list .custom-list-header h5 {
+   margin: 0;
+   font-weight: 700;
+   letter-spacing: -0.018em;
+}
+
+body.couple-page-list .custom-list-item {
+   display: flex;
+   align-items: center;
+   gap: var(--sm-space-4);
+   min-height: 60px;
+   margin: 0;
+   padding: var(--sm-space-4) var(--sm-space-5);
+   border-radius: 0;
+   background: transparent;
+}
+
+body.couple-page-list .custom-list-item + hr {
+   display: none;
+}
+
+body.couple-page-list .custom-list-item + .custom-list-item,
+body.couple-page-list hr + .custom-list-item {
+   border-top: 1px solid var(--outline-variant);
+}
+
+body.couple-page-list .custom-list-item > .max {
+   display: none;
+}
+
+body.couple-page-list .custom-list-item .list-status-control,
+body.couple-page-list .custom-list-item .list-select-control {
+   order: -1;
+   flex: 0 0 auto;
+   margin: 0;
+}
+
+body.couple-page-list .custom-list-item .list-item-title {
+   min-width: 0;
+   flex: 1;
+   font-size: var(--sm-text-base);
+   font-weight: 560;
+   line-height: 1.35;
+   overflow-wrap: anywhere;
+}
+
+body.couple-page-list .custom-list-item[style*="opacity"] .list-item-title {
+   opacity: 0.62;
+}
+
+body.couple-page-list .custom-list-empty {
+   padding: 2.6rem var(--sm-space-6);
+   text-align: center;
+}
+
+body.couple-page-list .custom-list-empty > i {
+   color: var(--primary);
+   opacity: 0.72;
+}
+
+body.couple-page-list .list-item-selected {
+   border-radius: var(--sm-radius-sm);
+   background: color-mix(in srgb, var(--primary-container) 54%, transparent);
+   outline: 2px solid color-mix(in srgb, var(--primary) 56%, transparent);
+   outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+   body.couple-page-list .custom-list-item:hover {
+      background: color-mix(in srgb, var(--primary-container) 24%, transparent);
+   }
+}
+
+@media (max-width: 600px) {
+   body.couple-page-story .story-search-row {
+      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+   }
+
+   body.couple-page-story .story-card::before {
+      left: calc(0.08rem - 0.85rem - 0.5rem);
+   }
+
+   body.couple-page-story .story-order-field select {
+      font-size: 0.82rem;
+      padding-right: 2rem;
+   }
+
+   body.couple-page-list .custom-list-page {
+      padding-left: 0.15rem;
+      padding-right: 0.15rem;
+   }
+
+   body.couple-page-list .custom-list-card {
+      margin-left: 0;
+      margin-right: 0;
+   }
+
+   body.couple-page-list .custom-list-header,
+   body.couple-page-list .custom-list-item {
+      padding-left: var(--sm-space-3);
+      padding-right: var(--sm-space-3);
+   }
+
+   body.couple-page-list #footer-list-selection {
+      bottom: calc(5.8rem + env(safe-area-inset-bottom));
    }
 }
