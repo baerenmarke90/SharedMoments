@@ -1,6 +1,6 @@
 import re
 import unicodedata
-from app.db_queries import get_all_settings, get_all_translations, get_all_user_settings, get_setting_by_name, get_field_name, get_translations_by_language
+from app.db_queries import get_all_settings, get_all_translations, get_all_user_settings, get_setting_by_name, get_translations_by_language
 from app.translation import _
 from app.logger import log
 from datetime import datetime
@@ -51,81 +51,21 @@ def generate_lqip(image_path):
         return None, None, None
 
 
-def generate_banner_text(edition='couples'):
+def generate_banner_text():
+    """Return the relationship duration based only on anniversary_date."""
     try:
-        return _generate_banner_text_couples()
+        anniversary_setting = get_setting_by_name('anniversary_date')
+        if not anniversary_setting or not anniversary_setting.value:
+            return None
+        years_count, months_count, days_count, _months_total, _weeks_total, _days_total = calculate_banner_diff(
+            anniversary_setting.value
+        )
+        if os.environ.get('LANG', 'en-US').startswith('de'):
+            return f"Seit {years_count}, {months_count} und {days_count} zusammen"
+        return f"Together for {years_count}, {months_count} and {days_count}"
     except Exception as e:
         log('error', f'Failed to generate banner text: {e}')
         return None
-
-
-def _generate_banner_text_couples():
-    relationship_status_setting = get_setting_by_name('relationship_status')
-    if not relationship_status_setting or not relationship_status_setting.value:
-        return None
-
-    relationship_status_id = int(relationship_status_setting.value)
-    relationship_status_field = get_field_name('relationship_status', relationship_status_id)
-    relationship_status = _(relationship_status_field)
-
-    # Schreibe den ersten Buchstaben klein, damit das in den Text passt
-    relationship_status = relationship_status[0].lower() + relationship_status[1:]
-
-    if relationship_status_id == 1 and os.environ['LANG'].startswith('de'): # zusammen klingt im Text besser
-        relationship_status = 'zusammen'
-
-    if relationship_status_id == 1 or relationship_status_id == 4 or relationship_status_id == 5: # in einer Beziehung, in einer offenen Beziehung, in einer komplizierten Beziehung
-        anniversary_date = get_setting_by_name('anniversary_date').value
-        if not anniversary_date:
-            return _('Please set your anniversary date in the settings.')
-        years_count, months_count, days_count, diffInMonthsTotal, diffInWeeksTotal, diffInDays = calculate_banner_diff(anniversary_date)
-        translated_text = _('banner_text_anniversary')
-
-    elif relationship_status_id == 2: # Verlobt
-        anniversary_date = get_setting_by_name('anniversary_date').value
-        enganment_date = get_setting_by_name('engaged_date').value
-        if not enganment_date:
-            return _('Please set your engagement date in the settings.')
-        years_count, months_count, days_count, diffInMonthsTotal, diffInWeeksTotal, diffInDays = calculate_banner_diff(enganment_date)
-        translated_text = _('banner_text_engaged')
-
-        if not anniversary_date:
-            return _('Please set your anniversary date in the settings.')
-
-        banner_text = translated_text.format(
-        relationship_status=relationship_status,
-        years_count=years_count,
-        months_count=months_count,
-        days_count=days_count,
-        diffInMonthsTotal=diffInMonthsTotal,
-        diffInWeeksTotal=diffInWeeksTotal,
-        diffInDays=diffInDays,
-        anniversary_date=datetime.strptime(anniversary_date, "%Y-%m-%d").strftime("%d.%m.%Y")
-    )
-
-    elif relationship_status_id == 3:
-        wedding_date = get_setting_by_name('wedding_date').value
-        if not wedding_date:
-            return _('Please set your wedding date in the settings.')
-        years_count, months_count, days_count, diffInMonthsTotal, diffInWeeksTotal, diffInDays = calculate_banner_diff(wedding_date)
-        translated_text = _('banner_text_wedding')
-
-    else:
-        return None
-
-    if relationship_status_id != 2:
-        banner_text = translated_text.format(
-            relationship_status=relationship_status,
-            years_count=years_count,
-            months_count=months_count,
-            days_count=days_count,
-            diffInMonthsTotal=diffInMonthsTotal,
-            diffInWeeksTotal=diffInWeeksTotal,
-            diffInDays=diffInDays
-        )
-
-    return banner_text
-
 
 def calculate_banner_diff(date):
     try:
@@ -143,10 +83,10 @@ def calculate_banner_diff(date):
         diffInWeeksTotal = diffInDays // 7
 
         return years_count, months_count, days_count, diffInMonthsTotal, diffInWeeksTotal, diffInDays
-    
+
     except Exception as e:
         raise Exception(f'Error while calculating the banner diff: {e}')
-    
+
 
 def get_texts_for_translations():
     # Das Regex-Muster zum Suchen von Werten innerhalb des Regex

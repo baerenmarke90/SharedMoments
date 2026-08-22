@@ -654,9 +654,7 @@ async function _doSync() {
       formData.append('listType', item.listType);
       formData.append('contentURL', uploadedUrls.join(';') || item.contentURL || '');
       formData.append('dateCreated', item.dateCreated);
-      formData.append('edition', item.edition || 'all');
-
-      const response = await fetch('/api/v2/items', { method: 'POST', body: formData });
+const response = await fetch('/api/v2/items', { method: 'POST', body: formData });
       if (!response.ok) throw new Error('Create failed');
       const result = await response.json();
       if (result.status !== 'success') throw new Error(result.message);

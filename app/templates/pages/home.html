@@ -149,7 +149,7 @@
 
 </style>
    </head>
-   <body class="{% if sm_edition == 'couples' %}couple-app {% if memories_page|default(false) %}couple-page-memories {% elif milestones_page|default(false) %}couple-page-milestones {% else %}couple-page-home {% endif %}{% endif %}{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="couple-app {% if memories_page|default(false) %}couple-page-memories {% elif milestones_page|default(false) %}couple-page-milestones {% else %}couple-page-home {% endif %}{% if darkmode.value == 'TRUE' %}dark{% endif %}">
    <!-- Header -->
    {% include 'layouts/header.html' %}
    <!-- Overlay wenn Nav-Drawer geöffnet -->
@@ -317,7 +317,7 @@
          </div>
       </section>
 
-      {% elif sm_edition == 'couples' %}
+      {% else %}
       <div id="div-render-couple-home-dashboard">
          {% include 'layouts/couple-home-dashboard.html' %}
       </div>
@@ -426,9 +426,7 @@
       </div>
       {% endif %}
 
-      {% if sm_edition == 'couples'
-            and not memories_page|default(false)
-            and not milestones_page|default(false) %}
+
       <div class="overlay"
            id="div-overlay-couple-memory-detail"
            data-dialog="#dialog-couple-memory-detail"
@@ -454,7 +452,7 @@
          <p id="couple-memory-detail-meta" class="small"></p>
       </dialog>
 
-      {% endif %}
+
 
       <!-- Footer -->
       {% include 'layouts/footer.html' %}
@@ -483,7 +481,7 @@
          <i>add</i>
       </button>
    </div>
-   {% elif sm_edition == 'couples' %}
+   {% else %}
    <div id="div-fab-couple-create"
         class="fixed bottom right"
         style="margin-right: 8px;margin-bottom: 16px;z-index: 40;"
@@ -561,7 +559,6 @@
    </dialog>
 
    <script>
-      window.currentEdition = '{{ sm_edition }}';
       window.currentUserId = '{{ current_user_id|default('') }}';
       window.ownItemsOnly = {{ 'true' if memories_page|default(false) else 'false' }};
       window.canSelectItems = {{ 'true' if has_list_permission('Update', list_type_title) or has_list_permission('Delete', list_type_title) else 'false' }};
@@ -569,7 +566,7 @@
       window.listType = '{{ list_type }}';
       window.uploadedUrls = '';
 
-      {% if sm_edition == 'couples' %}
+
       /*
        * Couple home is server-rendered from several existing data sources.
        * Refresh only after a successful item mutation.
@@ -647,9 +644,9 @@
             return response;
          };
       })();
-      {% endif %}
+
    </script>
-   {% if sm_edition == 'couples' %}
+
       {% if memories_page|default(false) %}
          {% set couple_nav_active = 'more' %}
          {% set couple_create_query = 'memory' %}
@@ -662,7 +659,7 @@
       {% endif %}
       {% include 'layouts/couple-create-sheet.html' %}
       {% include 'layouts/couple-bottom-nav.html' %}
-   {% endif %}
+
 
    <script src="{{ static_versioned('js/main.js') }}"></script>
    <script src="{{ static_versioned('js/home.js') }}"></script>

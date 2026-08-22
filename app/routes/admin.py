@@ -293,8 +293,8 @@ def create_user_route():
 
         # Create default user settings
         lang = session.get('lang', 'en')
-        db_session.add(UserSetting(userID=user_id, name='language', value=lang, icon='language', edition='all', category='about', type='text'))
-        db_session.add(UserSetting(userID=user_id, name='darkmode', value='FALSE', icon='dark_mode', edition='all', category='about', type='text'))
+        db_session.add(UserSetting(userID=user_id, name='language', value=lang, icon='language', category='about', type='text'))
+        db_session.add(UserSetting(userID=user_id, name='darkmode', value='FALSE', icon='dark_mode', category='about', type='text'))
 
         db_session.commit()
         db_session.close()

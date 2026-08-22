@@ -210,7 +210,7 @@ function getFileContentType (dataUrl=null, filename=null) {
       // no data or filename provided
       return
    }
-   
+
 
 }
 
@@ -226,8 +226,6 @@ async function saveHomeItemToOutbox(uploadedContentURL) {
       const content = document.getElementById("textarea-create-home-item-content").value;
       const listType = window.listType;
       const dateCreated = document.getElementById("div-create-home-item-date-created").value;
-      const edition = window.currentEdition || 'couples';
-
       // Wenn Dateien bereits hochgeladen wurden, keine rohen Dateien speichern
       const files = [];
       if (!uploadedContentURL) {
@@ -421,8 +419,6 @@ async function saveNewHomeItem(btn) {
       }
    }
 
-   var edition = window.currentEdition || 'couples';
-
    var formData = new FormData();
    formData.append("title", document.getElementById("div-create-home-item-title").value);
    formData.append("content", document.getElementById("textarea-create-home-item-content").value);
@@ -430,9 +426,7 @@ async function saveNewHomeItem(btn) {
    formData.append("listType", window.listType);
    formData.append("contentURL", window.uploadedUrls);
    formData.append("dateCreated", document.getElementById("div-create-home-item-date-created").value);
-   formData.append("edition", edition);
-
-   var originalContent = document.getElementById("div-render-home-items").innerHTML;
+var originalContent = document.getElementById("div-render-home-items").innerHTML;
    showSkeletonCards('div-render-home-items');
 
    // Item erstellen mit Retry bei 5xx/Netzwerkfehler (z.B. 502 Bad Gateway)
@@ -481,8 +475,7 @@ async function saveNewHomeItem(btn) {
             formData.append("listType", window.listType);
             formData.append("contentURL", window.uploadedUrls);
             formData.append("dateCreated", document.getElementById("div-create-home-item-date-created").value);
-            formData.append("edition", edition);
-            continue;
+continue;
          } else {
             // Redirect oder anderer Fehler ohne Retry
             throw new Error('HTTP ' + response.status);
@@ -498,8 +491,7 @@ async function saveNewHomeItem(btn) {
             formData.append("listType", window.listType);
             formData.append("contentURL", window.uploadedUrls);
             formData.append("dateCreated", document.getElementById("div-create-home-item-date-created").value);
-            formData.append("edition", edition);
-            continue;
+continue;
          }
       }
    }
@@ -555,8 +547,6 @@ async function saveEditedHomeItem(btn) {
       }
    }
 
-   var edition = window.currentEdition || 'couples';
-
    const formData = new FormData();
    formData.append("title", document.getElementById("edit-home-item-title").value);
    formData.append("content", document.getElementById("edit-home-item-content").value);
@@ -564,9 +554,7 @@ async function saveEditedHomeItem(btn) {
    formData.append("contentType", contentType);
    formData.append("listType", window.listType);
    formData.append("contentURL", window.uploadedUrls);
-   formData.append("edition", edition);
-
-   selectedArticles = selectedArticles.map((id) => id.replace("article_", "")); // Entferne "article_" aus der ID, um diese im nächsten Schritt zu verwenden
+selectedArticles = selectedArticles.map((id) => id.replace("article_", "")); // Entferne "article_" aus der ID, um diese im nächsten Schritt zu verwenden
 
    var originalEditContent = document.getElementById("div-render-home-items").innerHTML;
    showSkeletonCards('div-render-home-items');
@@ -1079,7 +1067,7 @@ async function generatePreviewForFileInput(event, mode) {
       document.getElementById('progress-edit-home-item').style.display = "";
       document.getElementById('headline-article-edit-home-item').textContent = _('Render preview images...');
    }
-   
+
    selectedImages = selectedImages || []; // Stelle sicher, dass selectedImages definiert ist
 
    let containerDiv = previewGrid.querySelector('.s12');
@@ -1833,7 +1821,7 @@ async function uploadImages(mode) {
    let fileInputId, hiddenInputId; // Variablen zum Speichern der IDs der File-Inputs
 
 
-   if (mode === "create") { 
+   if (mode === "create") {
        fileInputId = "file-input-create-home-item";
    } else if (mode === "edit") {
        fileInputId = "file-input-edit-home-item";
@@ -2134,7 +2122,7 @@ function handleTouchContextMenu(event) {
    }
 }
 
-// Füge die Event Listener zu allen Artikeln mit der Klasse "home-item" hinzu 
+// Füge die Event Listener zu allen Artikeln mit der Klasse "home-item" hinzu
 function addEventListeners() {
    document.querySelectorAll(".home-item").forEach((article) => { // Schleife über alle Artikel
       if (

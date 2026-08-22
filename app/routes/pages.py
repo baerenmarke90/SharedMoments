@@ -1,8 +1,7 @@
 import json
 from datetime import date, datetime, timezone
 from flask import Blueprint, g, jsonify, make_response, render_template, send_file, request, redirect, url_for, session
-from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
-    get_relationship_statuses_with_names, get_items_by_type,
+from app.db_queries import (get_all_list_types, get_items_by_type,
     get_supported_languages, get_translation_for_entity, get_translation_progress,
     get_translations_by_language, get_user_by_id, get_user_setting, update_user_setting, get_setting_by_name,
     get_item_by_id, create_item, update_item, delete_item, get_user_settings,
@@ -110,11 +109,7 @@ def inject_static_text():
         }, ensure_ascii=False)
     except Exception:
         pass
-    try:
-        nav_edition = get_setting_by_name('sm_edition').value
-    except Exception:
-        nav_edition = 'couples'
-    return dict(_=_, translations_json=translations_json, nav_edition=nav_edition)
+    return dict(_=_, translations_json=translations_json)
 
 
 @pages_bp.route('/')
@@ -145,16 +140,7 @@ def setup():
             set_locale()
             setupUser = get_user_by_id(1)
             response = login_jwt(setupUser)
-            relationship_statuses = get_all_relationship_statuses()
-            relationship_statuses_translated = []
-            for status in relationship_statuses:
-                translated_text = get_translation_for_entity('relationship_status', status, os.environ['LANG'])
-                relationship_statuses_translated.append({
-                    'id': status,
-                    'translatedText': translated_text
-                })
-
-            response.data = render_template('pages/setup.html', relationship_statuses=relationship_statuses, relationship_statuses_translated=relationship_statuses_translated)
+            response.data = render_template('pages/setup.html')
             response.mimetype = 'text/html'
             return response
 
@@ -788,7 +774,6 @@ def _enrich_story_entries_with_relationship_context(
 
 def _build_couple_year_snapshot(
     selected_year,
-    sm_edition,
     user_id,
     items=None,
     moments=None,
@@ -809,7 +794,6 @@ def _build_couple_year_snapshot(
             get_items_by_type(
                 home_list_type.id,
                 'desc',
-                edition=sm_edition,
             )
             if can_view_items and home_list_type
             else []
@@ -821,7 +805,6 @@ def _build_couple_year_snapshot(
             get_items_by_type(
                 moments_list_type.id,
                 'desc',
-                edition=sm_edition,
             )
             if can_view_moments and moments_list_type
             else []
@@ -893,7 +876,6 @@ def _build_couple_year_snapshot(
         bucket_rows = get_items_by_type(
             bucket_list_type.id,
             'desc',
-            edition=sm_edition,
             checked_last=True,
         )
 
@@ -1248,7 +1230,7 @@ def _chapter_date_label(chapter):
     return ''
 
 
-def _couple_content_for_chapters(sm_edition, user_id):
+def _couple_content_for_chapters(user_id):
     can_view_items = has_list_permission('View', 'Home')
     can_view_moments = has_list_permission('View', 'Moments')
 
@@ -1259,7 +1241,6 @@ def _couple_content_for_chapters(sm_edition, user_id):
         get_items_by_type(
             home_list_type.id,
             'desc',
-            edition=sm_edition,
         )
         if can_view_items and home_list_type
         else []
@@ -1269,7 +1250,6 @@ def _couple_content_for_chapters(sm_edition, user_id):
         get_items_by_type(
             moments_list_type.id,
             'desc',
-            edition=sm_edition,
         )
         if can_view_moments and moments_list_type
         else []
@@ -1573,9 +1553,9 @@ def _place_map_config():
     }
 
 
-def _couple_place_candidates(sm_edition, user_id):
+def _couple_place_candidates(user_id):
     """Return everything that can be connected to a shared place."""
-    content = _couple_content_for_chapters(sm_edition, user_id)
+    content = _couple_content_for_chapters(user_id)
     candidates = []
 
     for entry in content['entries']:
@@ -1835,16 +1815,15 @@ def _couple_thinking_retry_after(user_id, now=None):
 def home():
     try:
         list_type = 1
-        sm_edition = get_setting_by_name('sm_edition').value
-        items = get_items_by_type(list_type, 'desc', edition=sm_edition)
+        items = get_items_by_type(list_type, 'desc', )
         list_types = get_all_list_types()
         title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings = get_all_settings()
         list_type_moments = 2
-        moments = get_items_by_type(list_type_moments, 'asc', edition=sm_edition)
-        banner_text = generate_banner_text(sm_edition)
+        moments = get_items_by_type(list_type_moments, 'asc', )
+        banner_text = generate_banner_text()
         shared_item_ids = get_shared_item_ids()
 
         ensure_countdown_list_type()
@@ -1853,7 +1832,6 @@ def home():
         countdowns = get_items_by_type(
             countdown_list_type.id,
             'asc',
-            edition=sm_edition,
         ) if countdown_list_type else []
         countdown_list_type_id = countdown_list_type.id if countdown_list_type else ''
 
@@ -1867,82 +1845,80 @@ def home():
         couple_home_year = None
         couple_home_flashback = []
 
-        if sm_edition == 'couples':
-            from app.heart_moments import (
-                get_daily_shared_heart_moment_memory,
-                list_heart_moments,
+        from app.heart_moments import (
+            get_daily_shared_heart_moment_memory,
+            list_heart_moments,
+        )
+
+        heart_moment_memory = get_daily_shared_heart_moment_memory()
+
+        # Stable ordering for both partners; system user is already excluded.
+        couple_users = sorted(
+            get_all_users(),
+            key=lambda user: user.id,
+        )[:2]
+        if any(user.id == g.user_id for user in couple_users):
+            couple_partner = next(
+                (user for user in couple_users if user.id != g.user_id),
+                None,
             )
+        if couple_partner:
+            couple_thinking_retry_after = _couple_thinking_retry_after(g.user_id)
 
-            heart_moment_memory = get_daily_shared_heart_moment_memory()
+        can_view_countdowns = has_list_permission('View', 'Countdown')
+        can_view_reminders = has_permission('View Reminders')
 
-            # Stable ordering for both partners; system user is already excluded.
-            couple_users = sorted(
-                get_all_users(),
-                key=lambda user: user.id,
-            )[:2]
-            if any(user.id == g.user_id for user in couple_users):
-                couple_partner = next(
-                    (user for user in couple_users if user.id != g.user_id),
-                    None,
-                )
-            if couple_partner:
-                couple_thinking_retry_after = _couple_thinking_retry_after(g.user_id)
+        reminder_list = (
+            get_all_reminders()
+            if can_view_reminders
+            else []
+        )
+        muted_ids = (
+            get_user_muted_reminder_ids(g.user_id)
+            if can_view_reminders
+            else set()
+        )
 
-            can_view_countdowns = has_list_permission('View', 'Countdown')
-            can_view_reminders = has_permission('View Reminders')
+        couple_home_upcoming = _build_couple_home_upcoming(
+            countdowns,
+            reminder_list,
+            muted_ids,
+            can_view_countdowns,
+            can_view_reminders,
+        )
 
-            reminder_list = (
-                get_all_reminders()
-                if can_view_reminders
-                else []
-            )
-            muted_ids = (
-                get_user_muted_reminder_ids(g.user_id)
-                if can_view_reminders
-                else set()
-            )
+        shared_heart_moments = list_heart_moments(
+            g.user_id,
+            filter_name='shared',
+        )
 
-            couple_home_upcoming = _build_couple_home_upcoming(
-                countdowns,
-                reminder_list,
-                muted_ids,
-                can_view_countdowns,
-                can_view_reminders,
-            )
+        couple_home_recent = _build_couple_home_recent(
+            items,
+            moments,
+            shared_heart_moments,
+            has_list_permission('View', 'Home'),
+            has_list_permission('View', 'Moments'),
+        )
 
-            shared_heart_moments = list_heart_moments(
-                g.user_id,
-                filter_name='shared',
-            )
+        couple_home_plans = _couple_home_plans(
+            get_couple_plans()
+        )
 
-            couple_home_recent = _build_couple_home_recent(
-                items,
-                moments,
-                shared_heart_moments,
-                has_list_permission('View', 'Home'),
-                has_list_permission('View', 'Moments'),
-            )
+        couple_home_year = _build_couple_year_snapshot(
+            date.today().year,
+            g.user_id,
+            items=items,
+            moments=moments,
+            shared_heart_moments=shared_heart_moments,
+        )
 
-            couple_home_plans = _couple_home_plans(
-                get_couple_plans()
-            )
-
-            couple_home_year = _build_couple_year_snapshot(
-                date.today().year,
-                sm_edition,
-                g.user_id,
-                items=items,
-                moments=moments,
-                shared_heart_moments=shared_heart_moments,
-            )
-
-            couple_home_flashback = _build_couple_flashback(
-                items,
-                moments,
-                shared_heart_moments,
-                has_list_permission('View', 'Home'),
-                has_list_permission('View', 'Moments'),
-            )
+        couple_home_flashback = _build_couple_flashback(
+            items,
+            moments,
+            shared_heart_moments,
+            has_list_permission('View', 'Home'),
+            has_list_permission('View', 'Moments'),
+        )
 
         return render_template(
             'pages/home.html',
@@ -1955,7 +1931,6 @@ def home():
             moments=moments,
             settings=settings,
             banner_text=banner_text,
-            sm_edition=sm_edition,
             list_type_title='Home',
             moments_title='Moments',
             shared_item_ids=shared_item_ids,
@@ -1971,7 +1946,7 @@ def home():
             couple_home_plans=couple_home_plans,
             couple_home_year=couple_home_year,
             couple_home_flashback=couple_home_flashback,
-            page_title='Wir' if sm_edition == 'couples' else None,
+            page_title='Wir',
             memories_page=False,
             milestones_page=False,
             current_user_id=g.user_id,
@@ -1988,7 +1963,6 @@ def home():
 @jwt_required
 def couple_thinking_of_you():
     """Store an in-app couple signal and optionally nudge the partner externally."""
-    edition = get_setting_by_name('sm_edition')
     if not edition or edition.value != 'couples':
         return jsonify(
             status='error',
@@ -2078,7 +2052,6 @@ def couple_thinking_of_you():
 @jwt_required
 def couple_thinking_of_you_pending():
     """Return the current user's pending in-app couple signal."""
-    edition = get_setting_by_name('sm_edition')
     if not edition or edition.value != 'couples':
         return jsonify(status='success', data={'signal': None})
 
@@ -2105,7 +2078,6 @@ def couple_thinking_of_you_pending():
 @jwt_required
 def couple_thinking_of_you_delivered():
     """Acknowledge a signal after its in-app arrival animation has been shown."""
-    edition = get_setting_by_name('sm_edition')
     if not edition or edition.value != 'couples':
         return jsonify(status='error', message='Ungültige Anfrage.'), 404
 
@@ -2158,7 +2130,6 @@ def couple_thinking_of_you_delivered():
 @jwt_required
 def couple_thinking_of_you_status():
     """Return the delivery state of the current user's latest couple signal."""
-    edition = get_setting_by_name('sm_edition')
     if not edition or edition.value != 'couples':
         return jsonify(status='success', data={'state': 'none', 'retry_after': 0})
 
@@ -2208,8 +2179,6 @@ def memories():
     try:
         if not has_list_permission('View', 'Home'):
             return redirect(url_for('pages.home'))
-
-        sm_edition = get_setting_by_name('sm_edition').value
         home_list_type = get_list_type_by_title('Home')
         if not home_list_type:
             return redirect(url_for('pages.home'))
@@ -2217,7 +2186,6 @@ def memories():
         items = get_items_by_type(
             home_list_type.id,
             'desc',
-            edition=sm_edition,
         )
 
         list_types = get_all_list_types()
@@ -2234,7 +2202,6 @@ def memories():
             title=title,
             darkmode=darkmode,
             user_data=user_data,
-            sm_edition=sm_edition,
             list_type_title='Home',
             moments_title='Moments',
             countdown_title='Countdown',
@@ -2265,8 +2232,6 @@ def milestones():
     try:
         if not has_list_permission('View', 'Moments'):
             return redirect(url_for('pages.home'))
-
-        sm_edition = get_setting_by_name('sm_edition').value
         moments_list_type = get_list_type_by_title('Moments')
         home_list_type = get_list_type_by_title('Home')
 
@@ -2276,7 +2241,6 @@ def milestones():
         moments = get_items_by_type(
             moments_list_type.id,
             'asc',
-            edition=sm_edition,
         )
 
         list_types = get_all_list_types()
@@ -2292,7 +2256,6 @@ def milestones():
             title=title,
             darkmode=darkmode,
             user_data=user_data,
-            sm_edition=sm_edition,
             list_type_title='Home',
             moments_title='Moments',
             countdown_title='Countdown',
@@ -2320,12 +2283,11 @@ def milestones():
 @jwt_required
 def places():
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         # Existing text locations from 4C/4D are kept as-is and mirrored into
         # the new place graph on first use. This is additive and idempotent.
         bootstrap_couple_places_from_existing_locations()
 
-        candidates = _couple_place_candidates(sm_edition, g.user_id)
+        candidates = _couple_place_candidates(g.user_id)
         candidate_index = {
             (entry['source_type'], entry['source_id']): entry
             for entry in candidates
@@ -2369,7 +2331,6 @@ def places():
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
-            sm_edition=sm_edition,
             page_title='Unsere Orte',
             places=place_cards,
             map_places=map_places,
@@ -2385,9 +2346,6 @@ def places():
 @pages_bp.route('/places/create', methods=['POST'])
 @jwt_required
 def create_place_page():
-    if get_setting_by_name('sm_edition').value != 'couples':
-        return redirect(url_for('pages.home'))
-
     try:
         values = _place_form_values()
         place_id = create_couple_place(
@@ -2414,13 +2372,12 @@ def create_place_page():
 @jwt_required
 def place(place_id):
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         bootstrap_couple_places_from_existing_locations()
         place_data = get_couple_place(place_id)
         if not place_data:
             return redirect(url_for('pages.places'))
 
-        candidates = _couple_place_candidates(sm_edition, g.user_id)
+        candidates = _couple_place_candidates(g.user_id)
         candidate_index = {
             (entry['source_type'], entry['source_id']): entry
             for entry in candidates
@@ -2480,7 +2437,6 @@ def place(place_id):
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
-            sm_edition=sm_edition,
             page_title=place_data['name'],
             place=place_data,
             candidate_groups=candidate_groups,
@@ -2495,8 +2451,6 @@ def place(place_id):
 @pages_bp.route('/places/<int:place_id>/update', methods=['POST'])
 @jwt_required
 def update_place_page(place_id):
-    if get_setting_by_name('sm_edition').value != 'couples':
-        return redirect(url_for('pages.home'))
     if not get_couple_place(place_id):
         return redirect(url_for('pages.places'))
 
@@ -2529,14 +2483,13 @@ def update_place_page(place_id):
 @pages_bp.route('/places/<int:place_id>/links', methods=['POST'])
 @jwt_required
 def update_place_links_page(place_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     if not get_couple_place(place_id):
         return redirect(url_for('pages.places'))
 
     try:
         valid_links = {
             (entry['source_type'], entry['source_id'])
-            for entry in _couple_place_candidates(sm_edition, g.user_id)
+            for entry in _couple_place_candidates(g.user_id)
         }
         requested = set()
         for raw in request.form.getlist('source_links'):
@@ -2562,9 +2515,6 @@ def update_place_links_page(place_id):
 @pages_bp.route('/places/<int:place_id>/delete', methods=['POST'])
 @jwt_required
 def delete_place_page(place_id):
-    if get_setting_by_name('sm_edition').value != 'couples':
-        return redirect(url_for('pages.home'))
-
     try:
         delete_couple_place(place_id)
         return redirect(url_for('pages.places'))
@@ -2580,9 +2530,6 @@ def delete_place_page(place_id):
 @pages_bp.route('/places/geocode')
 @jwt_required
 def geocode_place():
-    if get_setting_by_name('sm_edition').value != 'couples':
-        return jsonify({'status': 'error', 'results': []}), 403
-
     if os.environ.get('MAP_GEOCODING_ENABLED', 'true').lower() not in {
         '1', 'true', 'yes', 'on'
     }:
@@ -2663,7 +2610,6 @@ def _bucket_item_or_none(item_id, list_type):
 @jwt_required
 def bucketlist():
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         list_type = _get_bucket_list_type()
         if not list_type:
             return "Bucket List not found.", 404
@@ -2695,7 +2641,6 @@ def bucketlist():
         raw_items = get_items_by_type(
             list_type.id,
             'desc',
-            edition=sm_edition,
             checked_last=True,
         )
 
@@ -2810,7 +2755,6 @@ def bucketlist():
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
-            sm_edition=sm_edition,
             page_title='Bucketlist',
             bucket_items=bucket_items,
             bucket_list_type=list_type,
@@ -2858,7 +2802,6 @@ def create_bucket_item_page():
             contentURL='',
             createdByUser=g.user_id,
             dateCreated=datetime.utcnow(),
-            edition='couples',
         )
         return redirect(url_for('pages.bucketlist'))
     except Exception as e:
@@ -2967,7 +2910,6 @@ def delete_bucket_item_page(item_id):
 @pages_bp.route('/bucketlist/<int:item_id>/plan', methods=['POST'])
 @jwt_required
 def bucket_item_to_plan_page(item_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     list_type = _get_bucket_list_type()
     if not list_type or not has_list_permission('Update', list_type.title):
         return redirect(url_for('pages.bucketlist'))
@@ -3011,7 +2953,6 @@ def bucket_item_to_plan_page(item_id):
 @jwt_required
 def plans():
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         selected_status = str(
             request.args.get('status', 'all')
         ).strip()
@@ -3080,7 +3021,6 @@ def plans():
             darkmode=darkmode,
             user_data=user_data,
             list_types=list_types,
-            sm_edition=sm_edition,
             page_title='Unsere Pläne',
             plans=visible_plans,
             selected_status=selected_status,
@@ -3095,7 +3035,6 @@ def plans():
 @pages_bp.route('/plans/create', methods=['POST'])
 @jwt_required
 def create_plan_page():
-    sm_edition = get_setting_by_name('sm_edition').value
     try:
         values = _plan_form_values()
         plan_id = create_couple_plan(
@@ -3128,7 +3067,6 @@ def create_plan_page():
 @pages_bp.route('/plans/<int:plan_id>/update', methods=['POST'])
 @jwt_required
 def update_plan_page(plan_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -3173,7 +3111,6 @@ def update_plan_page(plan_id):
 @pages_bp.route('/plans/<int:plan_id>/delete', methods=['POST'])
 @jwt_required
 def delete_plan_page(plan_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -3197,7 +3134,6 @@ def delete_plan_page(plan_id):
 @pages_bp.route('/plans/<int:plan_id>/bucketlist', methods=['POST'])
 @jwt_required
 def plan_back_to_bucketlist_page(plan_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -3236,7 +3172,6 @@ def plan_back_to_bucketlist_page(plan_id):
 @pages_bp.route('/plans/<int:plan_id>/chapter', methods=['POST'])
 @jwt_required
 def plan_to_chapter_page(plan_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     plan = get_couple_plan(plan_id)
     if not plan:
         return redirect(url_for('pages.plans'))
@@ -3291,14 +3226,12 @@ def plan_to_chapter_page(plan_id):
 @jwt_required
 def chapters():
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         list_types = get_all_list_types()
         title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
 
         content = _couple_content_for_chapters(
-            sm_edition,
             g.user_id,
         )
         link_map = get_couple_chapter_link_map()
@@ -3325,7 +3258,6 @@ def chapters():
             darkmode=darkmode,
             user_data=user_data,
             list_types=list_types,
-            sm_edition=sm_edition,
             page_title='Kapitel',
             chapters=chapter_cards,
             chapter_error=request.args.get('error', ''),
@@ -3339,7 +3271,6 @@ def chapters():
 @pages_bp.route('/chapters/create', methods=['POST'])
 @jwt_required
 def create_chapter_page():
-    sm_edition = get_setting_by_name('sm_edition').value
     try:
         values = _chapter_form_values()
         chapter_id = create_couple_chapter(
@@ -3371,7 +3302,6 @@ def create_chapter_page():
 @jwt_required
 def chapter(chapter_id):
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         chapter_data = get_couple_chapter(chapter_id)
         if not chapter_data:
             return redirect(url_for('pages.chapters'))
@@ -3382,7 +3312,6 @@ def chapter(chapter_id):
         user_data = get_user_by_id(g.user_id)
 
         content = _couple_content_for_chapters(
-            sm_edition,
             g.user_id,
         )
         links = get_couple_chapter_links(chapter_id)
@@ -3417,7 +3346,6 @@ def chapter(chapter_id):
             darkmode=darkmode,
             user_data=user_data,
             list_types=list_types,
-            sm_edition=sm_edition,
             page_title=chapter_data['title'],
             chapter=chapter_data,
             chapter_entries=chapter_data['entries'],
@@ -3433,7 +3361,6 @@ def chapter(chapter_id):
 @pages_bp.route('/chapters/<int:chapter_id>/update', methods=['POST'])
 @jwt_required
 def update_chapter_page(chapter_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     existing_chapter = get_couple_chapter(chapter_id)
     if not existing_chapter:
         return redirect(url_for('pages.chapters'))
@@ -3473,13 +3400,11 @@ def update_chapter_page(chapter_id):
 @pages_bp.route('/chapters/<int:chapter_id>/links', methods=['POST'])
 @jwt_required
 def update_chapter_links_page(chapter_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     if not get_couple_chapter(chapter_id):
         return redirect(url_for('pages.chapters'))
 
     try:
         content = _couple_content_for_chapters(
-            sm_edition,
             g.user_id,
         )
 
@@ -3530,7 +3455,6 @@ def update_chapter_links_page(chapter_id):
 @pages_bp.route('/chapters/<int:chapter_id>/delete', methods=['POST'])
 @jwt_required
 def delete_chapter_page(chapter_id):
-    sm_edition = get_setting_by_name('sm_edition').value
     try:
         delete_couple_chapter(chapter_id)
     except Exception as e:
@@ -3550,7 +3474,6 @@ def delete_chapter_page(chapter_id):
 def couple_year(selected_year=None):
     """Automatic yearly relationship recap for the Couples edition."""
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         if selected_year is None:
             selected_year = date.today().year
 
@@ -3563,7 +3486,6 @@ def couple_year(selected_year=None):
 
         snapshot = _build_couple_year_snapshot(
             selected_year,
-            sm_edition,
             g.user_id,
         )
 
@@ -3573,7 +3495,6 @@ def couple_year(selected_year=None):
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
-            sm_edition=sm_edition,
             page_title=f'Unser {selected_year}',
             year_snapshot=snapshot,
             selected_year=selected_year,
@@ -3590,10 +3511,6 @@ def couple_year(selected_year=None):
 def couple_month(selected_year, selected_month):
     """Render a monthly recap from the existing yearly relationship snapshot."""
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
-        if sm_edition != 'couples':
-            return redirect(url_for('pages.home'))
-
         current_year = date.today().year
         if selected_year < 1900 or selected_year > current_year + 2:
             return redirect(url_for(
@@ -3608,7 +3525,6 @@ def couple_month(selected_year, selected_month):
 
         snapshot = _build_couple_year_snapshot(
             selected_year,
-            sm_edition,
             g.user_id,
         )
 
@@ -3658,7 +3574,6 @@ def couple_month(selected_year, selected_month):
             darkmode=get_user_setting(g.user_id, 'darkmode'),
             user_data=get_user_by_id(g.user_id),
             list_types=get_all_list_types(),
-            sm_edition=sm_edition,
             page_title=f"Unser {month_snapshot['label']} {selected_year}",
             selected_year=selected_year,
             selected_month=selected_month,
@@ -3683,7 +3598,6 @@ def couple_month(selected_year, selected_month):
 def story():
     """Relationship-first chronology for the Couples edition."""
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
         list_types = get_all_list_types()
         title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
@@ -3699,7 +3613,6 @@ def story():
             get_items_by_type(
                 home_list_type.id,
                 'desc',
-                edition=sm_edition,
             )
             if can_view_items and home_list_type
             else []
@@ -3709,7 +3622,6 @@ def story():
             get_items_by_type(
                 moments_list_type.id,
                 'desc',
-                edition=sm_edition,
             )
             if can_view_moments and moments_list_type
             else []
@@ -3815,7 +3727,6 @@ def story():
             darkmode=darkmode,
             user_data=user_data,
             list_types=list_types,
-            sm_edition=sm_edition,
             page_title='Unsere Story',
             story_groups=story_groups,
             story_total=len(filtered_entries),
@@ -3863,12 +3774,7 @@ def settings():
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings_type = 'settings'
-        lang = os.environ.get('LANG', 'en')
-        relationship_statuses = get_relationship_statuses_with_names(lang)
         supported_languages = get_supported_languages()
-
-        sm_edition = get_setting_by_name('sm_edition').value
-
         return render_template(
             'pages/settings.html',
             settings=settings,
@@ -3877,9 +3783,7 @@ def settings():
             darkmode=darkmode,
             user_data=user_data,
             settings_type=settings_type,
-            relationship_statuses=relationship_statuses,
             supported_languages=supported_languages,
-            sm_edition=sm_edition
         )
     except Exception as e:
         log('error', f'Error while rendering the settings.html-Template: {e}')
@@ -4140,14 +4044,12 @@ def reminders():
         user_data = get_user_by_id(g.user_id)
         reminder_list = get_all_reminders()
         muted_ids = get_user_muted_reminder_ids(g.user_id)
-        sm_edition = get_setting_by_name('sm_edition').value
-
         return render_template('pages/reminders.html',
             list_types=list_types, title=title, darkmode=darkmode, user_data=user_data,
             reminders=reminder_list, muted_ids=muted_ids,
             translate_title=_translate_reminder_title,
             translate_desc=_translate_reminder_description,
-            page_title='Termine & Benachrichtigungen' if sm_edition == 'couples' else None)
+            page_title='Termine & Benachrichtigungen')
     except Exception as e:
         log('error', f'Error while rendering reminders page: {e}')
         return "An error occurred while rendering the page. Please check the server logs for details.", 500
@@ -4164,15 +4066,12 @@ def list_view(content_url):
 
         if not has_list_permission('View', list_type.title):
             return redirect(url_for('pages.home'))
-
-        sm_edition = get_setting_by_name('sm_edition').value
-
         # Couples get the relationship-first Bucketlist UI while the generic
         # custom-list implementation remains untouched for other editions.
-        if content_url == 'bucket-list' and sm_edition == 'couples':
+        if content_url == 'bucket-list':
             return redirect(url_for('pages.bucketlist'))
 
-        items = get_items_by_type(list_type.id, edition=sm_edition, checked_last=True)
+        items = get_items_by_type(list_type.id,  checked_last=True)
         list_types = get_all_list_types()
         title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
@@ -4188,7 +4087,6 @@ def list_view(content_url):
                                user_data=user_data,
                                error_msg=error_msg,
                                list_type_title=list_type.title,
-                               sm_edition=sm_edition,
                                page_title=_(list_type.mainTitle or list_type.title))
     except Exception as e:
         log('error', f'Error while processing the list view: {e}')
@@ -4203,8 +4101,6 @@ def list_view(content_url):
 @jwt_required
 def heart_moments_page():
     try:
-        sm_edition = get_setting_by_name('sm_edition').value
-
         list_types = get_all_list_types()
         title = None
         darkmode = get_user_setting(g.user_id, 'darkmode')
@@ -4217,7 +4113,6 @@ def heart_moments_page():
             darkmode=darkmode,
             user_data=user_data,
             current_user_id=g.user_id,
-            sm_edition=sm_edition,
         )
 
     except Exception as e:

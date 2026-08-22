@@ -5,9 +5,9 @@
     <title>{{ page_title }} · SideBySide</title>
 
     {% include 'layouts/head.html' %}
-    {% if sm_edition == 'couples' %}
+
     <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
-    {% endif %}
+
 
     <style>
         .list-item-row {
@@ -53,7 +53,7 @@
 </head>
 
 
-<body class="{% if sm_edition == 'couples' %}couple-app couple-page-list {% endif %}{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+<body class="couple-app couple-page-list {% if darkmode.value == 'TRUE' %}dark{% endif %}">
 
     <!-- Header -->
     {% include 'layouts/header.html' %}
@@ -81,7 +81,7 @@
     </div>
 
 
-    <main class="responsive{% if sm_edition == 'couples' %} custom-list-page{% endif %}">
+    <main class="responsive custom-list-page">
 
         <div id="div-render-list-items">
             {% include 'layouts/list-items.html' %}
@@ -251,15 +251,13 @@
         window.listType =
             '{{ list_type }}';
 
-        window.currentEdition =
-            '{{ sm_edition }}';
     </script>
 
 
-    {% if sm_edition == 'couples' %}
+
     {% set couple_nav_active = 'more' %}
     {% include 'layouts/couple-bottom-nav.html' %}
-    {% endif %}
+
 
     <script src="{{ static_versioned('js/main.js') }}"></script>
     <script src="{{ static_versioned('js/list.js') }}"></script>

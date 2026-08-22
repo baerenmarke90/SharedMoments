@@ -1,7 +1,7 @@
 from flask import Blueprint, g, make_response, render_template, send_file, request, jsonify, session, abort, current_app as app
 from werkzeug.utils import secure_filename
 from app.db_queries import (approve_new_translations_to_all_languages, create_new_language,
-    create_new_translations, get_all_list_types, get_all_relationship_statuses, get_items_by_type,
+    create_new_translations, get_all_list_types, get_items_by_type,
     create_item, get_supported_languages, get_translation_progress, get_translations_by_language,
     get_user_by_id, get_user_setting, get_setting_by_name, delete_item, get_item_by_id,
     update_item, get_list_type_by_id, update_list_type, delete_list_type, create_list_type,
@@ -85,22 +85,9 @@ def setup_complete():
         set_locale()
         users = setup_data['users']
         settings = setup_data['settings']
-
-        # SharedMoments gibt es nur als Couples-Edition.
-        sm_edition_setting = db_session.query(Setting).filter_by(name='sm_edition').first()
-        if sm_edition_setting:
-            sm_edition_setting.value = 'couples'
-
-        relationship_status = settings[0]['relationshipStatus']
         anniversary_date = settings[0]['anniversary']
         wedding_date = settings[0]['weddingAnniversary']
         engaged_date = settings[0]['engagement']
-
-
-        relationship_status_setting = db_session.query(Setting).filter_by(name='relationship_status').first()
-        if relationship_status_setting:
-            relationship_status_setting.value = relationship_status
-
         anniversary_date_setting = db_session.query(Setting).filter_by(name='anniversary_date').first()
         if anniversary_date_setting:
             anniversary_date_setting.value = anniversary_date
@@ -192,7 +179,6 @@ def setup_complete():
                 name='language',
                 value=session['lang'],
                 icon='language',
-                edition='all',
                 category='about',
                 type='text'
             ))
@@ -203,7 +189,6 @@ def setup_complete():
                 name='darkmode',
                 value='FALSE',
                 icon='dark_mode',
-                edition='all',
                 category='about',
                 type='text'
             ))
@@ -734,9 +719,6 @@ def item():
                 dateCreated = datetime.strptime(request.form['dateCreated'], "%Y-%m-%d")
             else:
                 dateCreated = datetime.utcnow()
-
-            edition = request.form.get('edition', 'all')
-
             # LQIP + Dimensionen generieren
             lqip, media_w, media_h = None, None, None
             first_url = content_url.split(';')[0].strip() if content_url else ''
@@ -749,25 +731,23 @@ def item():
                 if thumb_path:
                     lqip, media_w, media_h = generate_lqip(thumb_path)
 
-            new_item_id = create_item(title, content, content_type, list_type, content_url, created_by_user, dateCreated, edition=edition, blurPlaceholder=lqip, mediaWidth=media_w, mediaHeight=media_h)
+            new_item_id = create_item(title, content, content_type, list_type, content_url, created_by_user, dateCreated, blurPlaceholder=lqip, mediaWidth=media_w, mediaHeight=media_h)
 
             log('info', f'Item created: ID={new_item_id}, ContentType={content_type}, ListType={list_type}, User={created_by_user}')
-
-            sm_edition = get_setting_by_name('sm_edition').value
             list_type_obj = get_list_type_by_id(list_type)
             list_type_title = list_type_obj.title if list_type_obj else ''
             shared_item_ids = get_shared_item_ids()
             if list_type == 1:
-                items = get_items_by_type(list_type, 'desc', edition=sm_edition)
+                items = get_items_by_type(list_type, 'desc')
                 rendered_items = render_template('layouts/home-items.html', items=items, list_type_title=list_type_title, shared_item_ids=shared_item_ids)
             elif list_type == 2:
-                items = get_items_by_type(list_type, 'asc', edition=sm_edition)
+                items = get_items_by_type(list_type, 'asc')
                 rendered_items = render_template('layouts/timeline-card.html', moments=items, moments_title=list_type_title)
             elif list_type_title == 'Countdown':
-                items = get_items_by_type(list_type, 'asc', edition=sm_edition)
+                items = get_items_by_type(list_type, 'asc')
                 rendered_items = render_template('layouts/countdown-card.html', countdowns=items, countdown_title='Countdown')
             else:
-                items = get_items_by_type(list_type, 'desc', edition=sm_edition, checked_last=True)
+                items = get_items_by_type(list_type, 'desc', checked_last=True)
                 rendered_items = render_template('layouts/list-items.html', items=items, mainTitle=list_type_obj.mainTitle, list_type_title=list_type_title)
 
             return jsonify({
@@ -804,15 +784,12 @@ def item():
                     delete_item(id)
 
                 log('info', f'Items deleted successfully:\nIDs: {ids}')
-
-                sm_edition = get_setting_by_name('sm_edition').value
                 list_type_obj = get_list_type_by_id(list_type)
                 list_type_title = list_type_obj.title if list_type_obj else ''
 
                 if list_type == 1:
                     items = get_items_by_type(
                         list_type,
-                        edition=sm_edition
                     )
 
                     shared_item_ids = (
@@ -830,7 +807,6 @@ def item():
                     items = get_items_by_type(
                         list_type,
                         sort_by='asc',
-                        edition=sm_edition
                     )
 
                     rendered_items = render_template(
@@ -843,7 +819,6 @@ def item():
                     items = get_items_by_type(
                         list_type,
                         sort_by='asc',
-                        edition=sm_edition
                     )
 
                     rendered_items = render_template(
@@ -855,7 +830,6 @@ def item():
                 else:
                     items = get_items_by_type(
                         list_type,
-                        edition=sm_edition,
                         checked_last=True
                     )
 
@@ -1025,9 +999,6 @@ def item_by_id(id):
 
             if content_url is None:
                 content_url = ''
-
-            edition = request.form.get('edition')
-
             # LQIP + Dimensionen neu generieren wenn sich das Bild geändert hat
             lqip, media_w, media_h = None, None, None
             first_url = content_url.split(';')[0].strip() if content_url else ''
@@ -1040,26 +1011,24 @@ def item_by_id(id):
                 if thumb_path:
                     lqip, media_w, media_h = generate_lqip(thumb_path)
 
-            update_item(id, title, content, content_type, content_url, dateCreated, edition=edition, blurPlaceholder=lqip, mediaWidth=media_w, mediaHeight=media_h)
+            update_item(id, title, content, content_type, content_url, dateCreated, blurPlaceholder=lqip, mediaWidth=media_w, mediaHeight=media_h)
 
             log('info', f'Item updated: ID={id}, ContentType={content_type}')
-
-            sm_edition = get_setting_by_name('sm_edition').value
             list_type_obj = get_list_type_by_id(list_type)
             list_type_title = list_type_obj.title if list_type_obj else ''
 
             shared_item_ids = get_shared_item_ids()
             if list_type == 1:
-                items = get_items_by_type(list_type, edition=sm_edition)
+                items = get_items_by_type(list_type)
                 rendered_items = render_template('layouts/home-items.html', items=items, list_type_title=list_type_title, shared_item_ids=shared_item_ids)
             elif list_type == 2:
-                items = get_items_by_type(list_type, sort_by='asc', edition=sm_edition)
+                items = get_items_by_type(list_type, sort_by='asc')
                 rendered_items = render_template('layouts/timeline-card.html', moments=items, moments_title=list_type_title)
             elif list_type_title == 'Countdown':
-                items = get_items_by_type(list_type, sort_by='asc', edition=sm_edition)
+                items = get_items_by_type(list_type, sort_by='asc')
                 rendered_items = render_template('layouts/countdown-card.html', countdowns=items, countdown_title='Countdown')
             else:
-                items = get_items_by_type(list_type, edition=sm_edition, checked_last=True)
+                items = get_items_by_type(list_type, checked_last=True)
                 rendered_items = render_template('layouts/list-items.html', items=items, mainTitle=list_type_obj.mainTitle, list_type_title=list_type_title)
 
             return jsonify({
@@ -1098,8 +1067,6 @@ def list_type_by_id(id):
             routeID = request.form.get('routeID', '')
             mainTitle = request.form.get('mainTitle', '')
             navbar = request.form.get('navbar', '')
-            edition = request.form.get('edition', '')
-
             message = _('List type updated successfully')
 
             if title:
@@ -1124,12 +1091,9 @@ def list_type_by_id(id):
                     mainTitle = list_type.mainTitle
                 if not navbar:
                     navbar = list_type.navbar
-                if not edition:
-                    edition = list_type.edition
-
             # Check if title changed — rename associated permissions
             old_title = list_type.title if list_type else None
-            update_list_type(id, title, icon, contentURL, navbar, navbarOrder, routeID, mainTitle, edition=edition)
+            update_list_type(id, title, icon, contentURL, navbar, navbarOrder, routeID, mainTitle)
             if old_title and title != old_title:
                 rename_list_type_permissions(id, title)
 
@@ -1208,9 +1172,7 @@ def list_types():
 
         if navbar == 'true':
             navbar = True
-
-        edition = request.form.get('edition', 'all')
-        new_item_id = create_list_type(title, icon, contentURL, createdByUser, navbar, navbarOrder, routeID, mainTitle, edition=edition)
+        new_item_id = create_list_type(title, icon, contentURL, createdByUser, navbar, navbarOrder, routeID, mainTitle)
         create_permissions_for_list_type(new_item_id, title)
 
         log('info', f'List type created: ID={new_item_id}')
@@ -2027,7 +1989,7 @@ def migration_set_language():
             if lang_setting:
                 lang_setting.value = language
             else:
-                db_session.add(UserSetting(userID=user.id, name='language', value=language, icon='language', edition='all', category='about', type='text'))
+                db_session.add(UserSetting(userID=user.id, name='language', value=language, icon='language', category='about', type='text'))
 
         # Set app-wide language
         os.environ['LANG'] = language
@@ -2079,7 +2041,7 @@ def migration_review_complete():
                 if not existing:
                     db_session.add(UserSetting(
                         userID=user.id, name=setting_name, value=default_value,
-                        icon=icon, edition='all', category='about', type='text'
+                        icon=icon, category='about', type='text'
                     ))
 
         review_setting.value = 'True'
@@ -2282,7 +2244,6 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
                     if existing:
                         existing.value = s_data.get('value', existing.value)
                         existing.icon = s_data.get('icon', existing.icon)
-                        existing.edition = s_data.get('edition', existing.edition)
                         existing.category = s_data.get('category', existing.category)
                         existing.type = s_data.get('type', existing.type)
                     else:
@@ -2290,7 +2251,6 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
                             name=s_name,
                             value=s_data.get('value'),
                             icon=s_data.get('icon'),
-                            edition=s_data.get('edition'),
                             category=s_data.get('category'),
                             type=s_data.get('type')
                         ))
@@ -2385,7 +2345,6 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
                             name=us_data['name'],
                             value=us_data.get('value', ''),
                             icon=us_data.get('icon'),
-                            edition=us_data.get('edition'),
                             category=us_data.get('category'),
                             type=us_data.get('type')
                         ))
@@ -2478,7 +2437,6 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
                         contentURL=item_data.get('contentURL', ''),
                         createdByUser=item_owner,
                         dateCreated=date_created,
-                        edition=item_data.get('edition', 'all'),
                         blurPlaceholder=item_data.get('blurPlaceholder'),
                         mediaWidth=item_data.get('mediaWidth'),
                         mediaHeight=item_data.get('mediaHeight')
@@ -2539,10 +2497,6 @@ def _run_import(import_id, zip_path, user_id, app_ref, is_setup=False):
 
             # If setup import, mark setup as complete
             if is_setup:
-                # Get edition from imported settings
-                edition_setting = get_setting_by_name('sm_edition')
-                if edition_setting:
-                    update_setting('sm_edition', edition_setting.value)
                 update_setting('setup_complete', 'True')
 
             log('info', f'Data import completed: {imported} items, {skipped_duplicate} duplicates, {skipped_error} errors, {media_copied} media, {settings_updated} settings, {users_imported} users, {user_settings_imported} user settings, {reminders_imported} reminders')
@@ -2618,7 +2572,6 @@ def _run_export(export_id, user_id, app_ref):
                     'name': s.name,
                     'value': s.value,
                     'icon': s.icon,
-                    'edition': s.edition,
                     'category': s.category,
                     'type': s.type
                 })
@@ -2657,7 +2610,6 @@ def _run_export(export_id, user_id, app_ref):
                     'content': item.content,
                     'contentType': item.contentType,
                     'contentURL': item.contentURL,
-                    'edition': item.edition,
                     'dateCreated': item.dateCreated.isoformat() if item.dateCreated else None,
                     'listType': {
                         'title': lt_obj.title if lt_obj else '',
@@ -2694,7 +2646,6 @@ def _run_export(export_id, user_id, app_ref):
                     'name': us.name,
                     'value': us.value,
                     'icon': us.icon,
-                    'edition': us.edition,
                     'category': us.category,
                     'type': us.type,
                     'userEmail': user_obj.email if user_obj else None

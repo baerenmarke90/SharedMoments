@@ -23,8 +23,6 @@ except Exception as exc:
     raise
 
 # SharedMoments laeuft nur noch als Couples-Edition
-from app.db_queries import ensure_couples_edition
-
 try:
     ensure_couples_edition()
 except Exception as exc:

@@ -41,7 +41,7 @@ class User(Base):
 
     def get_id(self):
         return str(self.id)
-    
+
 class Passkey(Base):
     __tablename__ = 'passkeys'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -232,7 +232,6 @@ class Setting(Base):
     name = Column(String(255))
     value = Column(Text)
     icon = Column(String(255))
-    edition = Column(String(255))
     category = Column(String(255))
     type = Column(String(255))
     dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
@@ -245,7 +244,6 @@ class UserSetting(Base):
     name = Column(String(255))
     value = Column(Text)
     icon = Column(String(255))
-    edition = Column(String(255))
     category = Column(String(255))
     type = Column(String(255))
     dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
@@ -261,7 +259,6 @@ class Item(Base):
     contentType = Column(String(50))
     listType = Column(Integer, ForeignKey('listTypes.id'), index=True)
     contentURL = Column(Text)
-    edition = Column(String(50), default='all')
     createdByUser = Column(Integer, ForeignKey('users.id'))
     dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
     dateModified = Column(TIMESTAMP, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
@@ -463,19 +460,12 @@ class ListType(Base):
     navbar = Column(Boolean)
     routeID = Column(Integer, default=0)
     mainTitle = Column(String(255))
-    edition = Column(String(50), default='all')
     dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
     dateModified = Column(TIMESTAMP, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     creator = relationship('User', back_populates='list_types')
     items = relationship('Item', back_populates='list_type')
     permissions = relationship('Permission', back_populates='list_type')
-
-class RelationshipStatus(Base):
-    __tablename__ = 'relationship_status'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
-    dateModified = Column(TIMESTAMP, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
 class Translation(Base):
     __tablename__ = 'translations'

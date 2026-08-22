@@ -27,32 +27,6 @@ VIDEO_EXTENSIONS = {'mp4', 'mov', 'avi', 'webm', 'mkv'}
 MUSIC_EXTENSIONS = {'mp3'}
 
 # v1 relationship status text → v2 integer ID
-RELATIONSHIP_STATUS_MAP = {
-    # German
-    'zusammen': '1', 'in einer beziehung': '1',
-    'verlobt': '2',
-    'verheiratet': '3',
-    'es ist kompliziert': '4', 'kompliziert': '4',
-    'offen': '5', 'offene beziehung': '5',
-    # English
-    'in a relationship': '1', 'together': '1', 'dating': '1',
-    'engaged': '2',
-    'married': '3',
-    "it's complicated": '4', 'complicated': '4',
-    'open': '5', 'open relationship': '5',
-    # Spanish
-    'en una relación': '1',
-    'casado': '3', 'casada': '3',
-    'en una relación abierta': '5',
-    'en una relación complicada': '4',
-    # Portuguese
-    'em um relacionamento': '1',
-    'em um relacionamento aberto': '5',
-    'em um relacionamento complicado': '4',
-    # Numeric pass-through
-    '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
-}
-
 # v1 contentType → v2 contentType
 CONTENT_TYPE_MAP = {
     'picture': 'image',
@@ -547,8 +521,8 @@ def _step_migrate_users(status, dry_run, prefix):
                 session.add(UserRole(userID=new_user.id, roleID=role.id))
 
             from app.models import UserSetting
-            session.add(UserSetting(userID=new_user.id, name='language', value='en-US', icon='language', edition='all', category='about', type='text'))
-            session.add(UserSetting(userID=new_user.id, name='darkmode', value='FALSE', icon='dark_mode', edition='all', category='about', type='text'))
+            session.add(UserSetting(userID=new_user.id, name='language', value='en-US', icon='language', category='about', type='text'))
+            session.add(UserSetting(userID=new_user.id, name='darkmode', value='FALSE', icon='dark_mode', category='about', type='text'))
 
             users_created.append(user_key)
             _summary['users_created'] += 1
@@ -570,7 +544,6 @@ def _step_migrate_settings(status, dry_run, prefix):
       music        → banner song path (value), specialvalue='true'/'false'
       mainTitle    → app title (value)
       anniversary  → anniversary date (value)
-      relationship_status → status text (value), map to integer
       wedding_date → wedding date (value)
       countdown    → title (value), target date (specialvalue) → migrated as item
     """
@@ -586,7 +559,6 @@ def _step_migrate_settings(status, dry_run, prefix):
         # v2_name → (v1 option name, transform)
         mappings = {
             'title': ('mainTitle', None),
-            'relationship_status': ('relationship_status', '_map_relationship_status'),
             'anniversary_date': ('anniversary', None),
             'wedding_date': ('wedding_date', None),
             'banner_image': ('banner', '_strip_upload'),
@@ -607,7 +579,6 @@ def _step_migrate_settings(status, dry_run, prefix):
                 log('info', f'{prefix} Skipping placeholder banner image')
                 continue
 
-            if transform == '_map_relationship_status':
                 mapped = RELATIONSHIP_STATUS_MAP.get(v1_value.lower().strip(), '')
                 if mapped:
                     v1_value = mapped
@@ -628,9 +599,7 @@ def _step_migrate_settings(status, dry_run, prefix):
                 migrated += 1
 
         # Set edition to couples
-        edition_setting = session.query(Setting).filter(Setting.name == 'sm_edition').first()
         if edition_setting and edition_setting.value != 'couples':
-            log('info', f'{prefix} Setting sm_edition = "couples"')
             if not dry_run:
                 edition_setting.value = 'couples'
             migrated += 1
@@ -724,7 +693,6 @@ def _step_migrate_moments(status, dry_run, prefix):
                 contentType='text',
                 listType=2,
                 contentURL='',
-                edition='couples',
                 createdByUser=creator_id,
             )
             if date_created:
@@ -789,7 +757,6 @@ def _step_migrate_countdown(status, dry_run, prefix):
             contentType='countdown',
             listType=countdown_lt.id,
             contentURL='',
-            edition='couples',
             createdByUser=creator_id,
         )
         if target_date:
@@ -931,7 +898,7 @@ def _step_post_migration(status, dry_run, prefix):
             # Create it if missing (older DB without this setting)
             log('info', f'{prefix} Creating migration_review_complete setting')
             if not dry_run:
-                session.add(Setting(name='migration_review_complete', value='False', icon='', edition='all', category='', type='text'))
+                session.add(Setting(name='migration_review_complete', value='False', icon='', category='', type='text'))
 
         if not dry_run:
             session.commit()
@@ -996,7 +963,6 @@ def _migrate_items_to_v2(v1_items, list_type_id, default_content_type, item_type
                 contentType=v2_content_type,
                 listType=list_type_id,
                 contentURL=v2_content_url,
-                edition='couples',
                 createdByUser=creator_id,
             )
             if date_created:
@@ -1050,7 +1016,6 @@ def _migrate_list_items_to_v2(v1_items, list_type_id, item_type, dry_run, prefix
                 contentType='list',
                 listType=list_type_id,
                 contentURL='',
-                edition='couples',
                 createdByUser=creator_id,
             )
             if date_created:

@@ -1,5 +1,4 @@
 // --- Setup State ---
-var relationship_status = 1;
 var users = [];
 var settings = [];
 let passkeyRegistered = false;
@@ -105,7 +104,6 @@ function callUi(id) {
             document.getElementById("div-overlay-setup-add-user").classList.remove("active");
         } else if (id === '#edit-settings') {
             document.getElementById("div-overlay-setup-edit-settings").classList.remove("active");
-            document.getElementById('relationship-status').closest('.s6').classList.add('hidden');
             document.getElementById('anniversary').closest('.s6').classList.add('hidden');
             document.getElementById('engagement').closest('.s6').classList.add('hidden');
             document.getElementById('wedding-anniversary').closest('.s6').classList.add('hidden');
@@ -126,12 +124,9 @@ function callUi(id) {
             if (childOption) childOption.style.display = 'none';
         } else if (id === '#edit-settings') {
             document.getElementById("div-overlay-setup-edit-settings").classList.add("active");
-            document.getElementById('relationship-status').closest('.hidden').classList.remove('hidden');
             document.getElementById('anniversary').closest('.hidden').classList.remove('hidden');
             // Apply date requirements based on current relationship status
-            setupUpdateDateFields();
             // Listen for status changes
-            document.getElementById('relationship-status').onchange = function() { setupUpdateDateFields(); };
         }
         document.body.style.overflow = "hidden";
     }
@@ -331,58 +326,7 @@ function updateExitButton() {
 }
 
 // --- Settings ---
-var setupDateRequirements = {
-    '1': ['anniversary'],
-    '2': ['anniversary', 'engagement'],
-    '3': ['wedding-anniversary'],
-    '4': ['anniversary'],
-    '5': ['anniversary']
-};
 
-function setupUpdateDateFields() {
-    var status = document.getElementById('relationship-status').value;
-    var required = setupDateRequirements[String(status)] || [];
-
-    // Hide all date fields first
-    ['anniversary', 'engagement', 'wedding-anniversary'].forEach(function(field) {
-        var el = document.getElementById(field);
-        if (el) el.closest('.s6').classList.add('hidden');
-    });
-
-    // Show required ones
-    required.forEach(function(field) {
-        var el = document.getElementById(field);
-        if (el) el.closest('.hidden').classList.remove('hidden');
-    });
-}
-
-function saveSettings() {
-    var anniversary = document.getElementById('anniversary').value;
-    var engagement = document.getElementById('engagement').value;
-    var weddingAnniversary = document.getElementById('wedding-anniversary').value;
-    var relationshipStatus = document.getElementById('relationship-status').value;
-
-    // Validate visible date fields
-    var dateFields = ['anniversary', 'engagement', 'wedding-anniversary'];
-    for (var i = 0; i < dateFields.length; i++) {
-        var el = document.getElementById(dateFields[i]);
-        if (el && !el.closest('.hidden') && !el.value) {
-            el.focus();
-            showSnackbar('setup', true, 'error', _('Please fill in all date fields.'), null, false);
-            return;
-        }
-    }
-
-    settings = [{
-        anniversary: anniversary,
-        engagement: engagement,
-        weddingAnniversary: weddingAnniversary,
-        relationshipStatus: relationshipStatus
-    }];
-
-    updateExitButton();
-    callUi('#edit-settings');
-}
 
 // --- Image Upload ---
 function uploadImage(file) {
@@ -656,4 +600,17 @@ async function registerPasskey(btn) {
         btnReset(btn);
         showSnackbar('setup', true, 'error', result.message, result, true);
     }
+}
+
+function saveSettings() {
+    const anniversary = document.getElementById('anniversary')?.value || '';
+    const engagement = document.getElementById('engagement')?.value || '';
+    const weddingAnniversary = document.getElementById('wedding-anniversary')?.value || '';
+    settings = [{
+        anniversary: anniversary,
+        engagement: engagement,
+        weddingAnniversary: weddingAnniversary
+    }];
+    updateExitButton();
+    callUi('#edit-settings');
 }

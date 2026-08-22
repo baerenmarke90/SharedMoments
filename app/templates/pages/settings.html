@@ -3,8 +3,9 @@
    <head>
       <title>SideBySide </title>
       {% include 'layouts/head.html' %}
+       <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
    </head>
-   <body class="{% if darkmode.value == 'TRUE' %}dark{% endif %}">
+   <body class="couple-app settings-page {% if darkmode.value == 'TRUE' %}dark{% endif %}">
    <!-- Header -->
    {% include 'layouts/header.html' %}
    <!-- Overlay wenn Nav-Drawer geöffnet -->
@@ -49,8 +50,8 @@
 
    <!-- Settings -->
 
-   <main class="responsive">
-    <article class="primary-container">
+   <main class="responsive settings-main">
+    <article class="primary-container settings-shell">
             <legend>{{ _('About') }}</legend>
             {% if settings_type == 'settings' %}
             {% for setting in settings %}
@@ -62,15 +63,6 @@
                 <div class="max">
                   <h6 class="small" id="{{ setting.name }}-name">{{ _(setting.name) }}</h6>
                   <div id="{{setting.name}}-value">{{ setting.value }}</div>
-                </div>
-              </a>
-              {% elif setting.name == 'sm_edition' %}
-              {# Nur noch Anzeige: SideBySide gibt es nur als Couples-Edition. #}
-              <a class="row padding primary-container">
-                <i>{{ setting.icon }}</i>
-                <div class="max">
-                  <h6 class="small" id="{{ setting.name }}-name">{{ _(setting.name) }}</h6>
-                  <div id="{{setting.name}}-value">Couples</div>
                 </div>
               </a>
               {% else %}
@@ -89,21 +81,13 @@
               <legend>{{ _('General') }}</legend>
 
               {% for setting in settings %}
-              {% if setting.category == 'general' and setting.edition == 'couples' and setting.name in ['relationship_status', 'anniversary_date', 'engaged_date', 'wedding_date'] %}
+              {% if setting.category == 'general' and setting.name in ['anniversary_date', 'engaged_date', 'wedding_date'] %}
               <a class="row padding primary-container{% if has_permission('Update Setting') %} wave" onclick="editSetting('{{setting.name}}', '{{setting.type}}'){% endif %}"
                 {% if setting.name in ['anniversary_date', 'engaged_date', 'wedding_date'] %} data-date-setting="{{ setting.name }}"{% endif %}>
                 <i>{{ setting.icon }}</i>
                 <div class="max">
                   <h6 class="small" id="{{ setting.name }}-name">{{ _(setting.name) }}</h6>
-                  {% if setting.name == 'relationship_status' %}
-                  <div id="{{setting.name}}-value" data-value="{{ setting.value }}">
-                    {% for status in relationship_statuses %}
-                      {% if status.id|string == setting.value|string %}{{ status.name }}{% endif %}
-                    {% endfor %}
-                  </div>
-                  {% elif setting.type == 'date' %}
-                  <div id="{{setting.name}}-value" data-value="{{ setting.value or '' }}">{{ setting.value | format_string_date_dmy if setting.value else '-' }}</div>
-                  {% else %}
+
                   <div id="{{setting.name}}-value">{{ setting.value }}</div>
                   {% endif %}
                 </div>
@@ -628,7 +612,6 @@
 
    <script>
     // Data from backend (must stay inline for Jinja)
-    const relationshipStatuses = {% if relationship_statuses is defined %}{{ relationship_statuses | tojson }}{% else %}[]{% endif %};
     const supportedLanguages = {% if supported_languages is defined %}{{ supported_languages | tojson }}{% else %}[]{% endif %};
     const settingsType = '{{ settings_type }}';
     const appLocale = '{{ session.get("lang", "en-US") }}';

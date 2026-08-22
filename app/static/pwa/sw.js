@@ -397,9 +397,7 @@ async function syncOutbox() {
       formData.append('listType', item.listType);
       formData.append('contentURL', contentURL);
       formData.append('dateCreated', item.dateCreated);
-      formData.append('edition', item.edition || 'all');
-
-      const response = await fetch('/api/v2/items', {
+const response = await fetch('/api/v2/items', {
         method: 'POST',
         body: formData,
       });

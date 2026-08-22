@@ -1017,10 +1017,8 @@ def login():
         if request.method == 'GET':
             try:
                 smtp_configured = bool(os.environ.get('SMTP_HOST') and os.environ.get('SMTP_USER'))
-                sm_edition = get_setting_by_name('sm_edition')
                 return render_template(
                     'pages/login.html',
-                    sm_edition=sm_edition,
                     smtp_configured=smtp_configured,
                     local_login_enabled=(
                         local_login_enabled()

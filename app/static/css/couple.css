@@ -2647,31 +2647,96 @@ body.couple-app .list-circle-control:focus-within .list-circle-indicator {
         min-height: 34px;
     }
 }
-/* SideBySide: final Admin drawer alignment
-   Der Text war nie das Problem. Das alte Material-Symbol
-   admin_panel_settings ist innerhalb seiner Glyphenbox optisch asymmetrisch.
-   Deshalb bekommt Admin ein symmetrisches shield und exakt dieselbe feste
-   Iconbox wie alle anderen Drawer-Eintraege. */
-body.couple-app #dialog-nav-drawer .drawer > a.nav-admin-link {
-   grid-template-columns: 2rem minmax(0, 1fr) !important;
-   column-gap: 0.8rem !important;
+
+/* SideBySide: settings experience */
+body.couple-app.settings-page {
+   background:
+      radial-gradient(circle at 12% -8%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 32rem),
+      var(--surface);
 }
-body.couple-app #dialog-nav-drawer .drawer > a.nav-admin-link > i {
+body.couple-app.settings-page .settings-main {
+   width: min(100%, 920px);
+   margin: 0 auto;
+   padding: 1rem 1rem 7rem;
+}
+body.couple-app.settings-page .settings-shell {
+   background: transparent !important;
+   box-shadow: none !important;
+   border: 0 !important;
+   padding: 0 !important;
+   margin: 0 !important;
+}
+body.couple-app.settings-page .settings-shell > legend {
+   display: flex;
+   align-items: center;
+   min-height: 2.25rem;
+   margin: 1.35rem 0 0.5rem;
+   padding: 0 0.3rem;
+   color: var(--primary);
+   font-size: 0.78rem;
+   font-weight: 750;
+   letter-spacing: 0.055em;
+   text-transform: uppercase;
+}
+body.couple-app.settings-page .settings-shell > a.row,
+body.couple-app.settings-page .settings-shell > div.row {
+   min-height: 4.35rem;
+   margin: 0 0 0.55rem !important;
+   padding: 0.8rem 0.9rem !important;
+   gap: 0.75rem;
+   background: var(--surface-container) !important;
+   border: 1px solid var(--outline-variant);
+   border-radius: 1.05rem;
+   box-shadow: 0 6px 20px rgba(35, 27, 48, 0.055);
+}
+body.couple-app.settings-page .settings-shell > a.row > i:first-child,
+body.couple-app.settings-page .settings-shell > div.row > i:first-child {
    position: static !important;
-   inset: auto !important;
    display: grid !important;
    place-items: center !important;
-   justify-self: center !important;
-   align-self: center !important;
-   width: 2rem !important;
-   min-width: 2rem !important;
-   max-width: 2rem !important;
-   height: 2rem !important;
-   min-height: 2rem !important;
+   flex: 0 0 2.55rem;
+   width: 2.55rem !important;
+   height: 2.55rem !important;
    margin: 0 !important;
-   padding: 0 !important;
-   transform: none !important;
-   text-indent: 0 !important;
-   letter-spacing: 0 !important;
-   line-height: 1 !important;
+   border-radius: 50%;
+   background: var(--primary-container);
+   color: var(--primary);
+}
+body.couple-app.settings-page .settings-shell .max > h6.small {
+   margin: 0 0 0.12rem;
+   font-size: 0.95rem;
+   font-weight: 700;
+}
+body.couple-app.settings-page .settings-shell .max > div:not(.field) {
+   opacity: 0.68;
+   font-size: 0.84rem;
+   line-height: 1.35;
+}
+body.couple-app.settings-page .settings-shell label.switch,
+body.couple-app.settings-page .settings-shell .field.suffix {
+   margin-left: auto !important;
+   flex: 0 0 auto;
+}
+body.couple-app.settings-page dialog {
+   border-radius: 1.25rem;
+}
+@media (hover: hover) and (pointer: fine) {
+   body.couple-app.settings-page .settings-shell > a.row.wave:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 9px 24px rgba(35, 27, 48, 0.085);
+   }
+}
+@media (max-width: 600px) {
+   body.couple-app.settings-page .settings-main {
+      padding: 0.65rem 0.75rem 7rem;
+   }
+   body.couple-app.settings-page .settings-shell > legend {
+      margin-top: 1.05rem;
+   }
+   body.couple-app.settings-page .settings-shell > a.row,
+   body.couple-app.settings-page .settings-shell > div.row {
+      min-height: 4rem;
+      padding: 0.72rem 0.75rem !important;
+      border-radius: 0.95rem;
+   }
 }

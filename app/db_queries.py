@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, Setting,
-    UserSetting, Item, ItemShare, ListType, SessionLocal, RelationshipStatus, Translation,
+    UserSetting, Item, ItemShare, ListType, SessionLocal, Translation,
     Reminder, ReminderMute, PushSubscription, NotificationLog, CoupleChapter,
     CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan, CoupleBucketPlanLink,
     CouplePlace, CouplePlaceLink)
@@ -118,25 +118,17 @@ def init_db():
 
         # Settings
         settings = [
-            Setting(name='sm_edition', value='couples', icon='stacks', edition='all', category='about', type='text'),
-            Setting(name='sm_version', value=__version__, icon='update', edition='all', category='about', type='text'),
-            Setting(name='setup_complete', value='False', icon='', edition='all', category='', type='text'),
-            Setting(name='relationship_status', value='', icon='favorite', edition='couples', category='general', type='text'),
-            Setting(name='anniversary_date', value='', icon='event', edition='couples', category='general', type='date'),
-            Setting(name='engaged_date', value='', icon='event', edition='couples', category='general', type='date'),
-            Setting(name='wedding_date', value='', icon='event', edition='couples', category='general', type='date'),
-            Setting(name='share_tracking', value='True', icon='analytics', edition='all', category='general', type='toggle'),
-            Setting(name='banner_image', value='', icon='image', edition='couples', category='general', type='file'),
-            Setting(name='banner_song', value='', icon='music_note', edition='couples', category='general', type='file'),
-            Setting(name='migration_review_complete', value='True', icon='', edition='all', category='', type='text'),
+            Setting(name='sm_version', value=__version__, icon='update', category='about', type='text'),
+            Setting(name='setup_complete', value='False', icon='', category='', type='text'),
+            Setting(name='anniversary_date', value='', icon='event', category='general', type='date'),
+            Setting(name='engaged_date', value='', icon='event', category='general', type='date'),
+            Setting(name='wedding_date', value='', icon='event', category='general', type='date'),
+            Setting(name='share_tracking', value='True', icon='analytics', category='general', type='toggle'),
+            Setting(name='banner_image', value='', icon='image', category='general', type='file'),
+            Setting(name='banner_song', value='', icon='music_note', category='general', type='file'),
+            Setting(name='migration_review_complete', value='True', icon='', category='', type='text'),
         ]
         session.add_all(settings)
-
-        # Relationship statuses
-        for i in range(1, 6):
-            session.add(RelationshipStatus(id=i))
-
-
         # Default user setting
         session.add(UserSetting(userID=system_user.id, name='language', value='en-US'))
 
@@ -754,14 +746,13 @@ def ensure_notification_settings(userID):
             if not existing:
                 session.add(UserSetting(
                     userID=userID, name=name, value=defaults['value'],
-                    icon=defaults['icon'], edition='all',
+                    icon=defaults['icon'],
                     category=defaults['category'], type=defaults['type']
                 ))
             elif not existing.icon:
                 existing.icon = defaults['icon']
                 existing.category = defaults['category']
                 existing.type = defaults['type']
-                existing.edition = 'all'
         session.commit()
     finally:
         session.close()
@@ -792,7 +783,7 @@ def ensure_pwa_settings(userID):
 
 # Table Item
 
-def create_item(title, content, contentType, listType, contentURL, createdByUser, dateCreated, edition='all', blurPlaceholder=None, mediaWidth=None, mediaHeight=None):
+def create_item(title, content, contentType, listType, contentURL, createdByUser, dateCreated, blurPlaceholder=None, mediaWidth=None, mediaHeight=None):
     session = SessionLocal()
     try:
         new_item = Item(
@@ -803,7 +794,6 @@ def create_item(title, content, contentType, listType, contentURL, createdByUser
             contentURL=contentURL,
             createdByUser=createdByUser,
             dateCreated=dateCreated,
-            edition=edition,
             blurPlaceholder=blurPlaceholder,
             mediaWidth=mediaWidth,
             mediaHeight=mediaHeight
@@ -840,13 +830,11 @@ def get_all_media_urls():
     finally:
         session.close()
 
-def get_items_by_type(list_type_id, sort_by='desc', edition=None, checked_last=False):
+def get_items_by_type(list_type_id, sort_by='desc', checked_last=False):
     session = SessionLocal()
     try:
         order_func = desc if sort_by == 'desc' else asc
         query = session.query(Item, User).join(User, Item.createdByUser == User.id).filter(Item.listType == list_type_id)
-        if edition:
-            query = query.filter(or_(Item.edition == edition, Item.edition == 'all', Item.edition.is_(None)))
         if checked_last:
             query = query.order_by(asc(Item.content == '1'), order_func(Item.dateCreated))
         else:
@@ -856,7 +844,7 @@ def get_items_by_type(list_type_id, sort_by='desc', edition=None, checked_last=F
     finally:
         session.close()
 
-def update_item(item_id, title=None, content=None, contentType=None, contentURL=None, dateCreated=None, edition=None, blurPlaceholder=None, mediaWidth=None, mediaHeight=None):
+def update_item(item_id, title=None, content=None, contentType=None, contentURL=None, dateCreated=None, blurPlaceholder=None, mediaWidth=None, mediaHeight=None):
     session = SessionLocal()
     try:
         item = session.query(Item).filter(Item.id == item_id).first()
@@ -871,8 +859,6 @@ def update_item(item_id, title=None, content=None, contentType=None, contentURL=
                 item.contentURL = contentURL
             if dateCreated is not None:
                 item.dateCreated = dateCreated
-            if edition is not None:
-                item.edition = edition
             if blurPlaceholder is not None:
                 item.blurPlaceholder = blurPlaceholder
             if mediaWidth is not None:
@@ -2134,7 +2120,7 @@ def copy_couple_place_links(source_type, source_id, target_type, target_id):
 
 # Table ListType
 
-def create_list_type(title, icon, contentURL, createdByUser, navbar, navbarOrder, routeID, mainTitle, edition='all'):
+def create_list_type(title, icon, contentURL, createdByUser, navbar, navbarOrder, routeID, mainTitle):
     session = SessionLocal()
     try:
         new_list_type = ListType(
@@ -2146,7 +2132,6 @@ def create_list_type(title, icon, contentURL, createdByUser, navbar, navbarOrder
             navbar=navbar,
             routeID=routeID,
             mainTitle=mainTitle,
-            edition=edition
         )
         session.add(new_list_type)
         session.commit()
@@ -2179,7 +2164,7 @@ def get_all_list_types():
     finally:
         session.close()
 
-def update_list_type(list_type_id, title=None, icon=None, contentURL=None, navbar=None, navbarOrder=None, routeID=None, mainTitle=None, edition=None):
+def update_list_type(list_type_id, title=None, icon=None, contentURL=None, navbar=None, navbarOrder=None, routeID=None, mainTitle=None):
     session = SessionLocal()
     try:
         list_type = session.query(ListType).filter(ListType.id == list_type_id).first()
@@ -2198,8 +2183,6 @@ def update_list_type(list_type_id, title=None, icon=None, contentURL=None, navba
                 list_type.mainTitle = mainTitle
             if navbarOrder is not None:
                 list_type.navbarOrder = navbarOrder
-            if edition is not None:
-                list_type.edition = edition
             session.commit()
     finally:
         session.close()
@@ -2231,40 +2214,8 @@ def ensure_banner_song_setting():
         existing = session.query(Setting).filter(Setting.name == 'banner_song').first()
         if existing:
             return
-        session.add(Setting(name='banner_song', value='', icon='music_note', edition='couples', category='general', type='file'))
+        session.add(Setting(name='banner_song', value='', icon='music_note', category='general', type='file'))
         session.commit()
-    finally:
-        session.close()
-
-
-def ensure_couples_edition():
-    """SharedMoments ist eine reine Couples-App.
-
-    Bestehende Installationen koennen noch auf 'family' oder 'friends' stehen -
-    dann waeren Navigation und Inhalte auf zwei Editionen verteilt. Die
-    Einstellung bleibt in der Datenbank, wird aber auf 'couples' festgezurrt.
-    """
-    session = SessionLocal()
-    try:
-        setting = session.query(Setting).filter(Setting.name == 'sm_edition').first()
-        if setting and setting.value != 'couples':
-            log('info', f"sm_edition war '{setting.value}' - wird auf 'couples' gesetzt")
-            setting.value = 'couples'
-            session.commit()
-    finally:
-        session.close()
-
-
-def ensure_list_type_edition_column():
-    """For existing databases: adds the edition column to listTypes if missing."""
-    session = SessionLocal()
-    try:
-        from sqlalchemy import inspect, text
-        inspector = inspect(session.bind)
-        columns = [c['name'] for c in inspector.get_columns('listTypes')]
-        if 'edition' not in columns:
-            session.execute(text("ALTER TABLE listTypes ADD COLUMN edition VARCHAR(50) DEFAULT 'all'"))
-            session.commit()
     finally:
         session.close()
 
@@ -2339,35 +2290,6 @@ def rename_list_type_permissions(list_type_id, new_title):
             action = perm.permissionName.split(' ', 1)[0]
             perm.permissionName = f'{action} {new_title}'
         session.commit()
-    finally:
-        session.close()
-
-
-# Table RelationshipStatus
-def get_all_relationship_statuses():
-    session = SessionLocal()
-    try:
-        relationship_statuses = session.query(RelationshipStatus).all()
-        return [status.id for status in relationship_statuses]
-    finally:
-        session.close()
-
-def get_relationship_statuses_with_names(language_code):
-    session = SessionLocal()
-    try:
-        statuses = session.query(RelationshipStatus).all()
-        status_ids = [s.id for s in statuses]
-        # Batch-load all translations in one query instead of N+1
-        translations = session.query(Translation).filter(
-            Translation.entityType == 'relationship_status',
-            Translation.entityID.in_(status_ids),
-            Translation.languageCode == language_code
-        ).all()
-        translation_map = {t.entityID: t.translatedText for t in translations}
-        return [
-            {'id': sid, 'name': translation_map.get(sid, f'Status {sid}')}
-            for sid in status_ids
-        ]
     finally:
         session.close()
 

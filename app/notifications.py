@@ -37,7 +37,7 @@ def _ensure_vapid_keys():
                 if existing:
                     existing.value = value
                 else:
-                    session.add(Setting(name=name, value=value, icon='', edition='all', category='system', type='text'))
+                    session.add(Setting(name=name, value=value, icon='', category='system', type='text'))
             session.commit()
             log('info', 'VAPID keys generated and stored')
         finally:
