@@ -100,6 +100,30 @@ from app.permissions import has_permission, has_list_permission
 def inject_permissions():
     return dict(has_permission=has_permission, has_list_permission=has_list_permission)
 
+from app.feature_flags import disabled_feature_for_request, is_feature_enabled
+
+@app.context_processor
+def inject_feature_flags():
+    return dict(feature_enabled=is_feature_enabled)
+
+@app.before_request
+def enforce_sidebyside_feature_flags():
+    disabled_feature = disabled_feature_for_request(request)
+    if not disabled_feature:
+        return None
+
+    from flask import jsonify, redirect, url_for
+
+    if request.path.startswith('/api/') or request.path.startswith('/couple/'):
+        return jsonify({
+            'status': 'disabled',
+            'feature_disabled': True,
+            'feature': disabled_feature,
+            'message': 'Diese Funktion ist durch den Admin deaktiviert.',
+        }), 404
+
+    return redirect(url_for('pages.home'))
+
 # Import und Registrierung der Blueprints
 from app.routes import auth_bp, pages_bp, api_bp, ai_bp, share_bp
 app.register_blueprint(auth_bp)

@@ -11,6 +11,10 @@ from app.db_queries import (
     get_all_active_shares, deactivate_share
 )
 from app.models import User, Role, Permission, Passkey, RolePermission, UserRole, UserSetting, SessionLocal
+from app.feature_flags import (
+    feature_exists, get_feature_groups, normalize_feature_key,
+    set_feature_enabled,
+)
 from app.logger import log
 from app.utils import generate_admin_filename
 from datetime import datetime
@@ -33,12 +37,7 @@ def admin_panel():
         darkmode = get_user_setting(g.user_id, 'darkmode')
         user_data = get_user_by_id(g.user_id)
         settings = get_all_settings()
-        daily_questions_setting = get_setting_by_name('daily_questions_enabled')
-        daily_questions_enabled = (
-            daily_questions_setting.value is None
-            or str(daily_questions_setting.value).strip().lower()
-            in {'true', '1', 'yes', 'on'}
-        )
+        feature_groups = get_feature_groups()
         active_shares = get_all_active_shares()
 
         admin_user_system_settings = {}
@@ -91,7 +90,7 @@ def admin_panel():
                                darkmode=darkmode,
                                user_data=user_data,
                                settings=settings,
-                               daily_questions_enabled=daily_questions_enabled,
+                               feature_groups=feature_groups,
                                active_shares=active_shares,
                                admin_user_system_settings=admin_user_system_settings,
                                auth_settings=auth_settings,
@@ -475,11 +474,18 @@ def delete_share_admin(share_id):
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-@admin_bp.route('/api/v2/admin/features/daily-questions', methods=['PUT'])
+@admin_bp.route('/api/v2/admin/features/<feature_key>', methods=['PUT'])
 @jwt_required
 @require_permission('Access Admin Panel')
-def update_daily_questions_feature():
+def update_admin_feature(feature_key):
     try:
+        feature_key = normalize_feature_key(feature_key)
+        if not feature_exists(feature_key):
+            return jsonify({
+                'status': 'error',
+                'message': 'Unbekannte Funktion.',
+            }), 404
+
         payload = request.get_json(silent=True) or {}
         enabled = payload.get('enabled')
         if not isinstance(enabled, bool):
@@ -488,36 +494,29 @@ def update_daily_questions_feature():
                 'message': 'Ungültiger Wert für die Funktion.',
             }), 400
 
-        from app.db_queries import create_setting, update_setting
-
-        value = 'True' if enabled else 'False'
-        current = get_setting_by_name('daily_questions_enabled')
-        if current is None or current.value is None:
-            create_setting('daily_questions_enabled', value)
-        else:
-            update_setting('daily_questions_enabled', value)
-
+        set_feature_enabled(feature_key, enabled)
         log(
             'info',
-            f"Daily Questions feature {'enabled' if enabled else 'disabled'} "
+            f"Feature {feature_key} "
+            f"{'enabled' if enabled else 'disabled'} "
             f"by admin user {g.user_id}",
         )
         return jsonify({
             'status': 'success',
+            'feature': feature_key,
             'enabled': enabled,
             'message': (
-                'Frage des Tages wurde aktiviert.'
+                'Funktion wurde aktiviert.'
                 if enabled
-                else 'Frage des Tages wurde deaktiviert.'
+                else 'Funktion wurde deaktiviert.'
             ),
         }), 200
     except Exception as exc:
-        log('error', f'Error updating Daily Questions feature: {exc}')
+        log('error', f'Error updating feature {feature_key}: {exc}')
         return jsonify({
             'status': 'error',
             'message': 'Die Funktionseinstellung konnte nicht gespeichert werden.',
         }), 500
-
 
 def _get_admin_role_id():
     """Returns the ID of the Admin role."""

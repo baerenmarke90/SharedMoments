@@ -480,16 +480,16 @@
          {% if banner_text %}
          <p class="couple-duration">{{ banner_text }}</p>
          {% endif %}
-         {% if couple_home_year %}
+         {% if feature_enabled('year_recap') and couple_home_year %}
          <div class="couple-hero-meta" aria-label="Euer Jahr in Zahlen">
-            {% if couple_home_year.stats.memories %}
-            <span><i>photo_library</i>{{ couple_home_year.stats.memories }} Erinnerungen</span>
+            {% if feature_enabled('memories') and couple_home_year.stats.memories %}
+            {% if feature_enabled('memories') %}<span><i>photo_library</i>{{ couple_home_year.stats.memories }} Erinnerungen</span>{% endif %}
             {% endif %}
-            {% if couple_home_year.stats.hearts %}
-            <span><i>favorite</i>{{ couple_home_year.stats.hearts }} Herzmomente</span>
+            {% if feature_enabled('heart_moments') and couple_home_year.stats.hearts %}
+            {% if feature_enabled('heart_moments') %}<span><i>favorite</i>{{ couple_home_year.stats.hearts }} Herzmomente</span>{% endif %}
             {% endif %}
-            {% if couple_home_year.stats.places %}
-            <span><i>location_on</i>{{ couple_home_year.stats.places }} Orte</span>
+            {% if feature_enabled('places') and couple_home_year.stats.places %}
+            {% if feature_enabled('places') %}<span><i>location_on</i>{{ couple_home_year.stats.places }} Orte</span>{% endif %}
             {% endif %}
          </div>
          {% endif %}
@@ -507,7 +507,7 @@
    </article>
 
 
-   {% if couple_partner|default(None) %}
+   {% if feature_enabled('thinking_of_you') and couple_partner|default(None) %}
    <section class="couple-section" aria-labelledby="couple-thinking-title">
       <article class="surface-container">
          <div class="padding couple-thinking-card">
@@ -539,14 +539,14 @@
    </section>
    {% endif %}
 
-   {% if heart_moment_memory %}
+   {% if feature_enabled('heart_moments') and heart_moment_memory %}
    <div class="couple-section" id="div-render-heart-moment-memory">
       {% include 'layouts/heart-moment-memory-card.html' %}
    </div>
    {% endif %}
 
    {# Verdichtung statt Liste: ein Moment, der von selbst zurueckkommt. #}
-   {% if couple_home_flashback|default([]) %}
+   {% if feature_enabled('flashback') and couple_home_flashback|default([]) %}
    <section class="couple-section couple-flashback">
       <h5 class="couple-section-title">
          <i>history_toggle_off</i>
@@ -579,7 +579,7 @@
    </section>
    {% endif %}
 
-   {% if couple_home_year %}
+   {% if feature_enabled('year_recap') and couple_home_year %}
    <section class="couple-section">
       <a class="couple-year-card"
          href="/year/{{ couple_home_year.year }}">
@@ -601,10 +601,10 @@
                      Unser {{ couple_home_year.year }}
                   </div>
                   <div class="couple-year-stats">
-                     <span><i>photo_library</i>{{ couple_home_year.stats.memories }} Erinnerungen</span>
-                     <span><i>favorite</i>{{ couple_home_year.stats.hearts }} Herzmomente</span>
-                     <span><i>location_on</i>{{ couple_home_year.stats.places }} Orte</span>
-                     <span><i>checklist</i>{{ couple_home_year.stats.bucket }} Wünsche erfüllt</span>
+                     {% if feature_enabled('memories') %}<span><i>photo_library</i>{{ couple_home_year.stats.memories }} Erinnerungen</span>{% endif %}
+                     {% if feature_enabled('heart_moments') %}<span><i>favorite</i>{{ couple_home_year.stats.hearts }} Herzmomente</span>{% endif %}
+                     {% if feature_enabled('places') %}<span><i>location_on</i>{{ couple_home_year.stats.places }} Orte</span>{% endif %}
+                     {% if feature_enabled('bucketlist') %}<span><i>checklist</i>{{ couple_home_year.stats.bucket }} Wünsche erfüllt</span>{% endif %}
                   </div>
                </div>
                <i class="couple-year-arrow">chevron_right</i>
@@ -615,6 +615,7 @@
    {% endif %}
 
    <div class="couple-home-grid">
+    {% if feature_enabled('dashboard_upcoming') and feature_enabled('reminders') %}
     <section class="couple-section">
       <h5 class="couple-section-title">
          <i>event_upcoming</i>
@@ -641,7 +642,7 @@
             {% else %}
                <div class="couple-empty">
                   <p>Gerade steht nichts unmittelbar bevor.</p>
-                  {% if has_permission('View Reminders') %}
+                  {% if feature_enabled('reminders') and has_permission('View Reminders') %}
                   <a class="button round small" href="/reminders">
                      <i>event</i>
                      <span>Termin anlegen</span>
@@ -650,7 +651,7 @@
                </div>
             {% endif %}
 
-            {% if has_permission('View Reminders') %}
+            {% if feature_enabled('reminders') and has_permission('View Reminders') %}
             <nav class="right-align">
                <a href="/reminders">Alle Termine ansehen</a>
             </nav>
@@ -658,7 +659,9 @@
          </div>
       </article>
    </section>
+    {% endif %}
 
+   {% if feature_enabled('plans') %}
    <section class="couple-section">
       <h5 class="couple-section-title">
          <i>explore</i>
@@ -707,7 +710,9 @@
             {% endif %}
 
             <nav class="right-align" style="gap:.8rem;flex-wrap:wrap;">
+               {% if feature_enabled('bucketlist') %}
                <a href="/bucketlist">Zur Bucketlist</a>
+               {% endif %}
                <a href="/plans">
                   {% if couple_home_plans|default([]) %}
                   Alle Pläne ansehen
@@ -719,8 +724,10 @@
          </div>
       </article>
    </section>
+   {% endif %}
 
    </div>
+    {% if feature_enabled('dashboard_recent') %}
     <section class="couple-section couple-recent-section">
       <h5 class="couple-section-title">
          <i>history</i>
@@ -824,4 +831,5 @@
          </div>
       </article>
    </section>
+    {% endif %}
 </section>

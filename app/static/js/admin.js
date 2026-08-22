@@ -15,25 +15,30 @@ function showAdminTab(tab) {
 }
 
 // --- Optional app features ---
-async function setDailyQuestionsFeature(input) {
+async function setAdminFeature(input) {
     const enabled = Boolean(input.checked);
+    const featureKey = input.dataset.featureKey;
+    if (!featureKey) return;
+
     input.disabled = true;
-
     try {
-        const response = await fetch('/api/v2/admin/features/daily-questions', {
-            method: 'PUT',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ enabled })
-        });
+        const response = await fetch(
+            '/api/v2/admin/features/' + encodeURIComponent(featureKey),
+            {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ enabled })
+            }
+        );
         const result = await response.json();
-
         if (!response.ok || result.status !== 'success') {
-            throw new Error(result.message || 'Einstellung konnte nicht gespeichert werden.');
+            throw new Error(
+                result.message || 'Einstellung konnte nicht gespeichert werden.'
+            );
         }
-
         showAdminSnackbar(result.message, false);
     } catch (error) {
         input.checked = !enabled;

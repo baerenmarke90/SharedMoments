@@ -1,39 +1,103 @@
-<section class="admin-auth-page">
+<section class="admin-auth-page admin-features-page">
     <article class="surface-container admin-auth-card">
         <div class="admin-auth-heading">
             <div>
                 <h5>Funktionen</h5>
-                <p>Optionale Funktionen der Couples-App zentral verwalten.</p>
+                <p>SideBySide auf die Funktionen reduzieren, die ihr wirklich nutzt.</p>
             </div>
             <i>extension</i>
-        </div>
-
-        <div class="admin-auth-row">
-            <i>local_florist</i>
-            <div class="max">
-                <h6>Frage des Tages</h6>
-                <p>
-                    Zeigt täglich eine gemeinsame Frage auf dem Wir-Bildschirm.
-                    Beide Antworten bleiben verborgen, bis beide geantwortet haben.
-                </p>
-            </div>
-            <label class="switch" title="Frage des Tages aktivieren oder deaktivieren">
-                <input
-                    id="admin-feature-daily-questions"
-                    type="checkbox"
-                    {% if daily_questions_enabled %}checked{% endif %}
-                    onchange="setDailyQuestionsFeature(this)"
-                >
-                <span></span>
-            </label>
         </div>
 
         <div class="admin-auth-warning surface-container-low padding">
             <i>info</i>
             <span>
-                Beim Deaktivieren bleiben vorhandene Fragen und Antworten erhalten.
-                Dashboard, Archiv und Antwortfunktion werden lediglich ausgeblendet.
+                Deaktivieren löscht keine vorhandenen Daten. Navigation,
+                Dashboard und zugehörige Seiten werden ausgeblendet bzw. gesperrt.
             </span>
         </div>
     </article>
+
+    <div class="admin-feature-groups">
+        {% for group in feature_groups %}
+        <article class="surface-container admin-auth-card admin-feature-group">
+            <div class="admin-feature-group-heading">
+                <i>{{ group.icon }}</i>
+                <div>
+                    <h6>{{ group.label }}</h6>
+                    <p>{{ group.description }}</p>
+                </div>
+            </div>
+
+            <div class="admin-feature-list">
+                {% for feature in group.features %}
+                <div class="admin-auth-row admin-feature-row">
+                    <i>{{ feature.icon }}</i>
+                    <div class="max">
+                        <h6>{{ feature.label }}</h6>
+                        <p>{{ feature.description }}</p>
+                    </div>
+                    <label class="switch"
+                           title="{{ feature.label }} aktivieren oder deaktivieren">
+                        <input
+                            type="checkbox"
+                            data-feature-key="{{ feature.key }}"
+                            {% if feature.enabled %}checked{% endif %}
+                            onchange="setAdminFeature(this)"
+                        >
+                        <span></span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
 </section>
+
+<style>
+.admin-feature-groups {
+    display: grid;
+    gap: 1rem;
+    max-width: 960px;
+    margin: 1rem auto 0;
+}
+.admin-feature-group {
+    padding: 0.9rem 1rem;
+}
+.admin-feature-group-heading {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.2rem 0.25rem 0.65rem;
+    border-bottom: 1px solid var(--outline-variant);
+}
+.admin-feature-group-heading > i {
+    position: static !important;
+    width: 2rem;
+    text-align: center;
+}
+.admin-feature-group-heading h6,
+.admin-feature-group-heading p,
+.admin-feature-row p {
+    margin: 0;
+}
+.admin-feature-group-heading p,
+.admin-feature-row p {
+    margin-top: 0.18rem;
+    opacity: 0.68;
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+.admin-feature-row + .admin-feature-row {
+    border-top: 1px solid var(--outline-variant);
+}
+@media (max-width: 700px) {
+    .admin-feature-groups {
+        gap: 0.75rem;
+    }
+    .admin-feature-group {
+        padding: 0.7rem 0.75rem;
+    }
+}
+</style>

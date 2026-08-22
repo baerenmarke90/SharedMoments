@@ -98,9 +98,7 @@
        </header>
 
 
-       {# Couples: nach Bedeutung gruppiert statt nach Datenherkunft.
-          Die eigenen Listen stehen unten unter "Listen", damit sie nicht
-          zwischen Beziehungsseiten auftauchen. #}
+       {# SideBySide: Navigation folgt den Admin-Funktionsschaltern. #}
        {% set nav_ns = namespace(home=none, bucket=false, extra=[]) %}
        {% for list_type in list_types %}
           {% if list_type.navbar == 1
@@ -111,7 +109,8 @@
                 {% set nav_ns.extra = nav_ns.extra + [list_type] %}
              {% endif %}
           {% endif %}
-          {% if list_type.contentURL == 'bucket-list' and has_list_permission('View', list_type.title) %}
+          {% if list_type.contentURL == 'bucket-list'
+                and has_list_permission('View', list_type.title) %}
              {% set nav_ns.bucket = true %}
           {% endif %}
        {% endfor %}
@@ -124,59 +123,82 @@
           <span>Wir</span>
        </a>
        {% endif %}
+       {% if feature_enabled('story') %}
        <a href="/story"{{ nav_state('/story') }}>
           <i>auto_stories</i>
           <span>Unsere Story</span>
        </a>
+       {% endif %}
+       {% if feature_enabled('year_recap') %}
        <a href="/year"{{ nav_state('/year') }}>
           <i>calendar_view_month</i>
           <span>Unser Jahr</span>
        </a>
-        {# daily-questions-nav-conditional-v3 #}
-        {% if daily_questions_nav_enabled %}
-        <a href="/questions"{{ nav_state('/questions') }}>
-           <i>local_florist</i>
-           <span>Unsere Fragen</span>
-        </a>
-        {% endif %}
+       {% endif %}
+       {% if feature_enabled('daily_questions') %}
+       <a href="/questions"{{ nav_state('/questions') }}>
+          <i>local_florist</i>
+          <span>Unsere Fragen</span>
+       </a>
+       {% endif %}
 
+       {% if feature_enabled('bucketlist')
+             or feature_enabled('plans')
+             or feature_enabled('chapters') %}
        <div class="nav-drawer-group">Planen &amp; Erleben</div>
-       {% if nav_ns.bucket %}
+       {% if nav_ns.bucket and feature_enabled('bucketlist') %}
        <a href="/bucketlist"{{ nav_state('/bucketlist') }}>
           <i>checklist</i>
           <span>Bucketlist</span>
        </a>
        {% endif %}
+       {% if feature_enabled('plans') %}
        <a href="/plans"{{ nav_state('/plans') }}>
           <i>explore</i>
           <span>Unsere Pläne</span>
        </a>
+       {% endif %}
+       {% if feature_enabled('chapters') %}
        <a href="/chapters"{{ nav_state('/chapters') }}>
           <i>auto_stories</i>
           <span>Kapitel</span>
        </a>
+       {% endif %}
+       {% endif %}
 
+       {% if feature_enabled('memories')
+             or feature_enabled('milestones')
+             or feature_enabled('heart_moments')
+             or feature_enabled('places') %}
        <div class="nav-drawer-group">Momente &amp; Orte</div>
+       {% if feature_enabled('memories') %}
        <a href="/memories"{{ nav_state('/memories') }}>
           <i>photo_library</i>
           <span>Erinnerungen</span>
        </a>
-       {% if has_list_permission('View', 'Moments') %}
+       {% endif %}
+       {% if feature_enabled('milestones')
+             and has_list_permission('View', 'Moments') %}
        <a href="/milestones"{{ nav_state('/milestones') }}>
           <i>star</i>
           <span>Meilensteine</span>
        </a>
        {% endif %}
+       {% if feature_enabled('heart_moments') %}
        <a href="/heart-moments"{{ nav_state('/heart-moments') }}>
           <i>favorite</i>
           <span>{{ _('Heart Moments') }}</span>
        </a>
+       {% endif %}
+       {% if feature_enabled('places') %}
        <a href="/places"{{ nav_state('/places') }}>
           <i>map</i>
           <span>Unsere Orte</span>
        </a>
+       {% endif %}
+       {% endif %}
 
-       {% if nav_ns.extra %}
+       {% if feature_enabled('custom_lists') and nav_ns.extra %}
        <div class="nav-drawer-group">Listen</div>
        {% for list_type in nav_ns.extra %}
        <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}"
@@ -187,19 +209,19 @@
        {% endfor %}
        {% endif %}
 
-
-
-       {% if has_permission('Manage Lists') %}
+       {% if feature_enabled('custom_lists')
+             and has_permission('Manage Lists') %}
        <a onclick="callUi('#dialog-manage-list-types')">
-       <i>tune</i>
-       <span>{{ _('Manage lists') }}</span>
+          <i>tune</i>
+          <span>{{ _('Manage lists') }}</span>
        </a>
        {% endif %}
 
-       {% if has_permission('View Reminders') %}
-       <a href="/reminders">
-       <i>notifications_active</i>
-       <span>Termine &amp; Benachrichtigungen</span>
+       {% if feature_enabled('reminders')
+             and has_permission('View Reminders') %}
+       <a href="/reminders"{{ nav_state('/reminders') }}>
+          <i>notifications_active</i>
+          <span>Termine &amp; Benachrichtigungen</span>
        </a>
        {% endif %}
 
