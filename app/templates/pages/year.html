@@ -498,35 +498,90 @@
          }
 
          /* ===== Monthly Scrapbook ===== */
+         /* Monthly Scrapbook compact redesign v3 */
+         .year-month-scrapbook-section {
+            margin-top: 1.55rem;
+         }
+         .year-month-scrapbook-heading {
+            display: flex;
+            align-items: center;
+            gap: var(--sm-space-3);
+            margin: 0 var(--sm-space-1) var(--sm-space-4);
+         }
+         .year-month-scrapbook-heading-icon {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--primary-container);
+            color: var(--on-primary-container);
+         }
+         .year-month-scrapbook-heading-icon > i {
+            position: static !important;
+            font-size: var(--sm-text-xl);
+         }
+         .year-month-scrapbook-heading-copy {
+            min-width: 0;
+         }
+         .year-month-scrapbook-heading h5 {
+            margin: 0;
+            font-size: var(--sm-text-xl);
+            line-height: 1.12;
+            white-space: nowrap;
+         }
+         .year-month-scrapbook-heading p {
+            margin: 0.18rem 0 0;
+            font-size: var(--sm-text-xs);
+            line-height: 1.35;
+            opacity: 0.62;
+         }
          .year-month-scrapbook-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: var(--sm-space-4);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: var(--sm-space-3);
          }
          .year-month-scrapbook-card {
-            display: block;
+            display: grid;
+            grid-template-columns: 112px minmax(0, 1fr);
+            min-height: 112px;
             min-width: 0;
             overflow: hidden;
             border-radius: var(--sm-radius-md);
             color: inherit;
             text-decoration: none;
-            transition: transform 160ms ease, box-shadow 160ms ease;
+            background: var(--surface-container);
+            transition: transform 160ms ease, box-shadow 160ms ease,
+                        background 160ms ease;
          }
          .year-month-scrapbook-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+            background: var(--surface-container-high);
          }
-         .year-month-scrapbook-cover {
-            height: 138px;
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 2px;
+         .year-month-scrapbook-card:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+         }
+         .year-month-scrapbook-cover,
+         .year-month-scrapbook-placeholder {
+            width: 112px;
+            height: 112px;
+            min-width: 0;
             overflow: hidden;
             background: var(--surface-container-high);
+         }
+         .year-month-scrapbook-cover {
+            display: grid;
+            grid-template-columns: 1.45fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
          }
          .year-month-scrapbook-cover img {
             width: 100%;
             height: 100%;
+            min-width: 0;
             object-fit: cover;
             display: block;
          }
@@ -540,51 +595,131 @@
             width: 100%;
             height: 100%;
          }
+         .year-month-scrapbook-cover[data-count="2"] {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: 1fr;
+         }
+         .year-month-scrapbook-cover[data-count="2"] img:first-child {
+            grid-row: auto;
+         }
          .year-month-scrapbook-placeholder {
-            height: 138px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: var(--primary-container);
-            color: var(--on-primary-container);
+            color: #e56aa6;
          }
          .year-month-scrapbook-placeholder > i {
             position: static !important;
-            font-size: 2.25rem;
-            color: #e56aa6;
+            font-size: 2rem;
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
          }
          .year-month-scrapbook-body {
-            padding: var(--sm-space-4);
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: var(--sm-space-3) var(--sm-space-4);
          }
          .year-month-scrapbook-title {
             display: flex;
             align-items: center;
             gap: var(--sm-space-2);
-            font-size: var(--sm-text-lg);
-            font-weight: 650;
+            min-width: 0;
+            font-size: var(--sm-text-base);
+            font-weight: 680;
+            line-height: 1.2;
+         }
+         .year-month-scrapbook-title > span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
          }
          .year-month-scrapbook-title > i {
             position: static !important;
+            flex: 0 0 auto;
             margin-left: auto;
-            opacity: 0.5;
+            font-size: var(--sm-text-xl);
+            opacity: 0.42;
          }
          .year-month-scrapbook-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: var(--sm-space-1) var(--sm-space-3);
-            margin-top: var(--sm-space-2);
+            align-items: center;
+            gap: 0.22rem 0.55rem;
+            margin-top: 0.38rem;
             font-size: var(--sm-text-xs);
-            opacity: 0.7;
+            line-height: 1.25;
+            opacity: 0.68;
          }
          .year-month-scrapbook-meta > span {
             display: inline-flex;
             align-items: center;
-            gap: 0.2rem;
+            gap: 0.18rem;
+            min-width: 0;
+            white-space: nowrap;
          }
          .year-month-scrapbook-meta i {
             position: static !important;
             font-size: var(--sm-text-base);
+         }
+         .year-month-scrapbook-meta .year-month-primary-meta {
+            flex-basis: 100%;
+            font-weight: 550;
+            opacity: 0.95;
+         }
+
+         @media (max-width: 700px) {
+            .year-month-scrapbook-section {
+               margin-top: 1.35rem;
+            }
+            .year-month-scrapbook-heading {
+               align-items: center;
+               margin-bottom: var(--sm-space-3);
+            }
+            .year-month-scrapbook-heading-icon {
+               width: 34px;
+               height: 34px;
+               flex-basis: 34px;
+            }
+            .year-month-scrapbook-heading h5 {
+               font-size: 1.3rem;
+            }
+            .year-month-scrapbook-heading p {
+               font-size: var(--sm-text-xxs);
+            }
+            .year-month-scrapbook-grid {
+               grid-template-columns: 1fr;
+               gap: var(--sm-space-3);
+            }
+            .year-month-scrapbook-card {
+               grid-template-columns: 96px minmax(0, 1fr);
+               min-height: 96px;
+               border-radius: var(--sm-radius-md);
+            }
+            .year-month-scrapbook-cover,
+            .year-month-scrapbook-placeholder {
+               width: 96px;
+               height: 96px;
+            }
+            .year-month-scrapbook-body {
+               padding: var(--sm-space-3);
+            }
+            .year-month-scrapbook-title {
+               font-size: var(--sm-text-md);
+            }
+            .year-month-scrapbook-meta {
+               margin-top: 0.3rem;
+               gap: 0.16rem 0.5rem;
+               font-size: var(--sm-text-xxs);
+            }
+            .year-month-scrapbook-meta i {
+               font-size: var(--sm-text-sm);
+            }
+            .year-page {
+               padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+            }
          }
 
          @media (max-width: 700px) {
@@ -757,16 +892,21 @@
          {% endif %}
 
          {% if year_snapshot.month_groups %}
-         <section class="year-section">
-            <h5 class="year-section-title">
-               <i>collections_bookmark</i>
-               <span>Monatsrückblicke</span>
-               <span class="year-section-hint">Euer Jahr Monat für Monat</span>
-            </h5>
+         <section class="year-section year-month-scrapbook-section">
+            <div class="year-month-scrapbook-heading">
+               <span class="year-month-scrapbook-heading-icon" aria-hidden="true">
+                  <i>collections_bookmark</i>
+               </span>
+               <div class="year-month-scrapbook-heading-copy">
+                  <h5>Monatsrückblicke</h5>
+                  <p>Euer Jahr – Monat für Monat</p>
+               </div>
+            </div>
             <div class="year-month-scrapbook-grid">
                {% for group in year_snapshot.month_groups %}
                <a class="surface-container year-month-scrapbook-card"
-                  href="/year/{{ selected_year }}/month/{{ group.month }}">
+                  href="/year/{{ selected_year }}/month/{{ group.month }}"
+                  aria-label="Monatsrückblick {{ group.label }} {{ selected_year }} öffnen">
                   {% if group.cover_images %}
                   <div class="year-month-scrapbook-cover"
                        data-count="{{ [group.cover_images|length, 3]|min }}"
@@ -786,12 +926,21 @@
                         <i>chevron_right</i>
                      </div>
                      <div class="year-month-scrapbook-meta">
-                        <span><i>auto_awesome</i>{{ group.total }} Momente</span>
+                        <span class="year-month-primary-meta">
+                           <i>auto_awesome</i>
+                           {{ group.total }} {% if group.total == 1 %}Moment{% else %}Momente{% endif %}
+                        </span>
                         {% if group.stats.hearts %}
-                        <span><i>favorite</i>{{ group.stats.hearts }} Herzmomente</span>
+                        <span>
+                           <i>favorite</i>
+                           {{ group.stats.hearts }} {% if group.stats.hearts == 1 %}Herzmoment{% else %}Herzmomente{% endif %}
+                        </span>
                         {% endif %}
                         {% if group.stats.places %}
-                        <span><i>location_on</i>{{ group.stats.places }} Orte</span>
+                        <span>
+                           <i>location_on</i>
+                           {{ group.stats.places }} {% if group.stats.places == 1 %}Ort{% else %}Orte{% endif %}
+                        </span>
                         {% endif %}
                      </div>
                   </div>
