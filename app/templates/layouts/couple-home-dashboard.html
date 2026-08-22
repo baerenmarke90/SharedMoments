@@ -321,6 +321,19 @@
          {% if banner_text %}
          <p class="couple-duration">{{ banner_text }}</p>
          {% endif %}
+         {% if couple_home_year %}
+         <div class="couple-hero-meta" aria-label="Euer Jahr in Zahlen">
+            {% if couple_home_year.stats.memories %}
+            <span><i>photo_library</i>{{ couple_home_year.stats.memories }} Erinnerungen</span>
+            {% endif %}
+            {% if couple_home_year.stats.hearts %}
+            <span><i>favorite</i>{{ couple_home_year.stats.hearts }} Herzmomente</span>
+            {% endif %}
+            {% if couple_home_year.stats.places %}
+            <span><i>location_on</i>{{ couple_home_year.stats.places }} Orte</span>
+            {% endif %}
+         </div>
+         {% endif %}
 
          {% if settings.banner_song.value %}
          <button class="round"
@@ -380,7 +393,17 @@
          href="/year/{{ couple_home_year.year }}">
          <article class="surface-container">
             <div class="padding couple-year-card-inner">
-               <i class="couple-year-badge">favorite</i>
+                <div class="couple-year-visual">
+                   {% if couple_home_year.cover_images %}
+                   <div class="couple-year-preview" aria-hidden="true">
+                      {% for image in couple_home_year.cover_images[:3] %}
+                      <img src="{{ image.url }}" alt="" loading="lazy">
+                      {% endfor %}
+                   </div>
+                   {% else %}
+                   <i class="couple-year-badge">favorite</i>
+                   {% endif %}
+                </div>
                <div class="couple-year-main">
                   <div class="couple-year-title">
                      Unser {{ couple_home_year.year }}
@@ -392,14 +415,15 @@
                      <span><i>checklist</i>{{ couple_home_year.stats.bucket }} Wünsche erfüllt</span>
                   </div>
                </div>
-               <i>chevron_right</i>
+               <i class="couple-year-arrow">chevron_right</i>
             </div>
          </article>
       </a>
    </section>
    {% endif %}
 
-   <section class="couple-section">
+   <div class="couple-home-grid">
+    <section class="couple-section">
       <h5 class="couple-section-title">
          <i>event_upcoming</i>
          <span>Demnächst</span>
@@ -504,7 +528,8 @@
       </article>
    </section>
 
-   <section class="couple-section">
+   </div>
+    <section class="couple-section couple-recent-section">
       <h5 class="couple-section-title">
          <i>history</i>
          <span>Zuletzt bei uns</span>
@@ -516,10 +541,10 @@
                {% for entry in couple_home_recent %}
                {% if entry.url %}
                <a href="{{ entry.url }}"
-                  class="couple-recent-row couple-clickable"
+                  class="couple-recent-row couple-recent-row-{{ entry.type }} couple-clickable"
                   style="color:inherit;text-decoration:none;">
                {% else %}
-               <div class="couple-recent-row{% if entry.type in ('milestone', 'memory') %} couple-clickable{% endif %}"
+               <div class="couple-recent-row couple-recent-row-{{ entry.type }}{% if entry.type in ('milestone', 'memory') %} couple-clickable{% endif %}"
                     {% if entry.type == 'milestone' %}
                     data-id="{{ entry.timeline_id }}"
                     data-title="{{ entry.title }}"
@@ -549,6 +574,14 @@
                   </div>
 
                   <div class="couple-row-main">
+                     <div class="couple-recent-type couple-recent-type-{{ entry.type }}">
+                        <i>{{ entry.icon }}</i>
+                        <span>
+                           {% if entry.type == 'heart' %}Herzmoment
+                           {% elif entry.type == 'milestone' %}Meilenstein
+                           {% else %}Erinnerung{% endif %}
+                        </span>
+                     </div>
                      <div class="couple-row-title">{{ entry.title }}</div>
 
                      {% if entry.text %}

@@ -1161,3 +1161,1027 @@ body.couple-app #dialog-nav-drawer .nav-drawer-group {
       display: none !important;
    }
 }
+
+/* ==========================================================================
+   Relationship polish pass
+   Dashboard, Story and Year recap get stronger hierarchy without changing
+   data models or behaviour. These selectors intentionally carry the body
+   scope so they win over the page-local legacy <style> blocks.
+   ========================================================================== */
+
+/* Shared visual rhythm */
+body.couple-page-home .couple-section-title,
+body.couple-page-year .year-section-title {
+   font-weight: 700;
+   letter-spacing: -0.02em;
+}
+
+body.couple-page-home .couple-empty,
+body.couple-page-story .story-empty,
+body.couple-page-year .year-empty {
+   border: 1px dashed color-mix(in srgb, var(--outline-variant) 74%, transparent);
+   background: color-mix(in srgb, var(--surface-container) 70%, transparent);
+   border-radius: var(--couple-radius);
+}
+
+/* --------------------------------------------------------------------------
+   Wir / dashboard
+   -------------------------------------------------------------------------- */
+body.couple-page-home .couple-home {
+   max-width: 980px;
+}
+
+body.couple-page-home .couple-hero > .padding {
+   padding: 0.95rem 1.2rem 1.05rem;
+}
+
+body.couple-page-home .couple-avatars {
+   gap: 0.9rem;
+   margin: 0.05rem 0 0.55rem;
+}
+
+body.couple-page-home .couple-names {
+   margin: 0;
+   font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+body.couple-page-home .couple-duration {
+   margin: 0.15rem 0 0;
+   font-size: var(--sm-text-sm);
+   color: color-mix(in srgb, var(--on-primary-container) 76%, transparent);
+   opacity: 1;
+}
+
+body.couple-page-home .couple-hero-meta {
+   display: flex;
+   justify-content: center;
+   flex-wrap: wrap;
+   gap: 0.3rem 0.75rem;
+   margin: 0.55rem auto 0;
+   color: color-mix(in srgb, var(--on-primary-container) 70%, transparent);
+   font-size: var(--sm-text-xxs);
+}
+
+body.couple-page-home .couple-hero-meta > span {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.2rem;
+}
+
+body.couple-page-home .couple-hero-meta i {
+   position: static !important;
+   font-size: var(--sm-text-md);
+}
+
+body.couple-page-home #btn-play-song {
+   min-height: 36px;
+   margin-top: 0.65rem;
+   padding-inline: 0.85rem;
+   font-size: var(--sm-text-xs);
+   box-shadow: 0 7px 18px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+body.couple-page-home #btn-play-song > i {
+   font-size: var(--sm-text-lg);
+}
+
+body.couple-page-home .couple-section {
+   margin-top: 1.25rem;
+}
+
+body.couple-page-home .couple-section-title {
+   margin-bottom: 0.6rem;
+}
+
+body.couple-page-home .couple-home-grid {
+   display: grid;
+   grid-template-columns: minmax(0, 1fr);
+   gap: 0;
+}
+
+body.couple-page-home .couple-year-card article {
+   overflow: hidden;
+   background:
+      radial-gradient(circle at 12% 0, color-mix(in srgb, var(--couple-heart) 12%, transparent), transparent 35%),
+      linear-gradient(135deg, color-mix(in srgb, var(--primary-container) 68%, var(--surface)), var(--surface-container));
+}
+
+body.couple-page-home .couple-year-card-inner {
+   gap: 0.9rem;
+   min-height: 94px;
+   padding: 0.7rem 0.8rem;
+}
+
+body.couple-page-home .couple-year-visual {
+   width: 118px;
+   height: 78px;
+   flex: 0 0 118px;
+}
+
+body.couple-page-home .couple-year-preview {
+   width: 100%;
+   height: 100%;
+   display: grid;
+   grid-template-columns: 1.12fr 0.88fr;
+   grid-template-rows: 1fr 1fr;
+   gap: 3px;
+   padding: 3px;
+   overflow: hidden;
+   border-radius: var(--sm-radius-md);
+   background: color-mix(in srgb, var(--surface) 76%, transparent);
+   box-shadow: 0 8px 22px rgba(35, 24, 54, 0.14);
+}
+
+body.couple-page-home .couple-year-preview img {
+   width: 100%;
+   height: 100%;
+   min-width: 0;
+   min-height: 0;
+   display: block;
+   object-fit: cover;
+   border-radius: 0.55rem;
+}
+
+body.couple-page-home .couple-year-preview img:first-child {
+   grid-row: 1 / 3;
+}
+
+body.couple-page-home .couple-year-preview img:only-child {
+   grid-column: 1 / 3;
+}
+
+body.couple-page-home .couple-year-preview img:nth-child(2):last-child {
+   grid-row: 1 / 3;
+}
+
+body.couple-page-home .couple-year-visual .couple-year-badge {
+   width: 78px;
+   height: 78px;
+   margin: 0 auto;
+}
+
+body.couple-page-home .couple-year-title {
+   font-size: var(--sm-text-xl);
+   font-weight: 720;
+   letter-spacing: -0.025em;
+}
+
+body.couple-page-home .couple-year-stats {
+   gap: 0.3rem 0.4rem;
+   margin-top: 0.35rem;
+   opacity: 1;
+}
+
+body.couple-page-home .couple-year-stats > span {
+   min-height: 24px;
+   padding: 0.1rem 0.42rem;
+   border-radius: var(--sm-radius-pill);
+   background: color-mix(in srgb, var(--surface) 66%, transparent);
+   color: color-mix(in srgb, var(--on-surface) 72%, transparent);
+}
+
+body.couple-page-home .couple-year-arrow {
+   color: color-mix(in srgb, var(--on-surface) 42%, transparent);
+   font-size: var(--sm-text-xl);
+}
+
+body.couple-page-home .couple-recent-section > article {
+   background: color-mix(in srgb, var(--surface) 88%, var(--primary-container));
+}
+
+body.couple-page-home .couple-recent-section > article > .padding {
+   padding: 0.45rem;
+}
+
+body.couple-page-home .couple-recent-row {
+   position: relative;
+   gap: 0.8rem;
+   margin: 0.25rem 0;
+   padding: 0.72rem;
+   overflow: hidden;
+   border: 1px solid color-mix(in srgb, var(--outline-variant) 48%, transparent);
+   border-radius: var(--sm-radius-md);
+   background: color-mix(in srgb, var(--surface) 92%, transparent);
+   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+body.couple-page-home .couple-recent-row + .couple-recent-row {
+   border-top: 1px solid color-mix(in srgb, var(--outline-variant) 48%, transparent);
+}
+
+body.couple-page-home .couple-recent-row::before {
+   content: '';
+   position: absolute;
+   left: 0;
+   top: 0.6rem;
+   bottom: 0.6rem;
+   width: 3px;
+   border-radius: 0 3px 3px 0;
+   background: var(--couple-memory);
+}
+
+body.couple-page-home .couple-recent-row-heart::before {
+   background: var(--couple-heart);
+}
+
+body.couple-page-home .couple-recent-row-milestone::before {
+   background: var(--couple-star);
+}
+
+body.couple-page-home .couple-recent-leading,
+body.couple-page-home .couple-recent-leading > i,
+body.couple-page-home .couple-recent-thumb {
+   width: 68px;
+   height: 68px;
+}
+
+body.couple-page-home .couple-recent-leading {
+   flex-basis: 68px;
+}
+
+body.couple-page-home .couple-recent-leading > i,
+body.couple-page-home .couple-recent-thumb {
+   border-radius: 0.9rem;
+}
+
+body.couple-page-home .couple-recent-leading-memory > i {
+   color: var(--couple-memory);
+   background: var(--couple-memory-soft);
+}
+
+body.couple-page-home .couple-recent-leading-milestone > i {
+   color: var(--couple-star);
+   background: var(--couple-star-soft);
+}
+
+body.couple-page-home .couple-recent-type {
+   width: fit-content;
+   display: inline-flex;
+   align-items: center;
+   gap: 0.2rem;
+   margin-bottom: 0.16rem;
+   padding: 0.12rem 0.42rem;
+   border-radius: var(--sm-radius-pill);
+   background: var(--couple-memory-soft);
+   color: var(--couple-memory);
+   font-size: 0.68rem;
+   font-weight: 700;
+   letter-spacing: 0.035em;
+   text-transform: uppercase;
+}
+
+body.couple-page-home .couple-recent-type > i {
+   position: static !important;
+   font-size: 0.85rem;
+}
+
+body.couple-page-home .couple-recent-type-heart {
+   background: var(--couple-heart-soft);
+   color: var(--couple-heart);
+}
+
+body.couple-page-home .couple-recent-type-milestone {
+   background: var(--couple-star-soft);
+   color: var(--couple-star);
+}
+
+body.couple-page-home .couple-recent-row .couple-row-title {
+   font-weight: 700;
+   letter-spacing: -0.012em;
+}
+
+body.couple-page-home .couple-recent-row .couple-row-meta {
+   margin-top: 0.3rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+   body.couple-page-home .couple-recent-row.couple-clickable:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--primary) 24%, var(--outline-variant));
+      background: var(--surface);
+   }
+}
+
+@media (min-width: 760px) {
+   body.couple-page-home .couple-home-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: start;
+   }
+
+   body.couple-page-home .couple-home-grid > .couple-section {
+      min-width: 0;
+   }
+
+   body.couple-page-home .couple-recent-section .couple-recent-row {
+      padding: 0.8rem 0.9rem;
+   }
+}
+
+/* --------------------------------------------------------------------------
+   Unsere Story / timeline
+   -------------------------------------------------------------------------- */
+body.couple-page-story .story-page {
+   max-width: 960px;
+}
+
+body.couple-page-story .story-intro {
+   margin: 0.15rem 0 0.45rem;
+   padding: 0;
+   border: 0;
+   box-shadow: none;
+   background: transparent;
+   color: color-mix(in srgb, var(--on-surface) 70%, transparent);
+   font-size: var(--sm-text-sm);
+   opacity: 1;
+}
+
+body.couple-page-story .story-context-links {
+   display: flex;
+   justify-content: flex-end;
+   flex-wrap: wrap;
+   gap: 0.4rem;
+   margin: 0 0 0.75rem;
+}
+
+body.couple-page-story .story-context-links > a {
+   min-height: 32px;
+   display: inline-flex;
+   align-items: center;
+   gap: 0.3rem;
+   padding: 0.2rem 0.55rem;
+   border-radius: var(--sm-radius-pill);
+   background: color-mix(in srgb, var(--surface-container) 76%, transparent);
+   color: color-mix(in srgb, var(--on-surface) 74%, transparent);
+   text-decoration: none;
+   font-size: var(--sm-text-xs);
+}
+
+body.couple-page-story .story-context-links i {
+   position: static !important;
+   font-size: var(--sm-text-md);
+}
+
+body.couple-page-story .story-controls {
+   margin-bottom: 1rem;
+   padding: 0.65rem;
+   border-color: color-mix(in srgb, var(--outline-variant) 48%, transparent);
+   background: color-mix(in srgb, var(--surface-container) 68%, transparent);
+   box-shadow: none;
+}
+
+body.couple-page-story .story-filter-row {
+   gap: 0.35rem;
+   padding-bottom: 0.25rem;
+}
+
+body.couple-page-story .story-filter-row .chip {
+   min-height: 34px;
+   padding-inline: 0.62rem;
+   font-size: var(--sm-text-xs);
+}
+
+body.couple-page-story .story-search-row {
+   grid-template-columns: minmax(0, 1fr) 145px 175px;
+   gap: 0.45rem;
+   margin-top: 0.5rem;
+}
+
+body.couple-page-story .story-search-row > .field {
+   min-height: 44px;
+}
+
+body.couple-page-story .story-result-count {
+   margin: 0.45rem 0.15rem 0;
+   color: color-mix(in srgb, var(--on-surface) 58%, transparent);
+   opacity: 1;
+}
+
+body.couple-page-story .story-month {
+   position: relative;
+   margin-top: 1.45rem;
+   padding-left: 1.3rem;
+}
+
+body.couple-page-story .story-month::before {
+   content: '';
+   position: absolute;
+   left: 0.28rem;
+   top: 2.35rem;
+   bottom: -1.2rem;
+   width: 2px;
+   border-radius: var(--sm-radius-pill);
+   background: color-mix(in srgb, var(--primary) 20%, var(--outline-variant));
+}
+
+body.couple-page-story .story-month:last-of-type::before {
+   bottom: 1rem;
+}
+
+body.couple-page-story .story-month-title {
+   margin: 0 0 0.7rem;
+   font-size: var(--sm-text-lg);
+   font-weight: 720;
+}
+
+body.couple-page-story .story-month-title::after {
+   background: color-mix(in srgb, var(--outline-variant) 64%, transparent);
+}
+
+body.couple-page-story .story-card {
+   position: relative;
+   margin-bottom: 0.7rem;
+   overflow: visible;
+   border-left-width: 1px;
+   border-left-color: color-mix(in srgb, var(--outline-variant) 46%, transparent);
+}
+
+body.couple-page-story .story-card::before {
+   content: '';
+   position: absolute;
+   z-index: 2;
+   left: -1.25rem;
+   top: 1.25rem;
+   width: 10px;
+   height: 10px;
+   border: 3px solid var(--background);
+   border-radius: 50%;
+   background: var(--couple-memory);
+   box-shadow: 0 0 0 2px color-mix(in srgb, var(--couple-memory) 22%, transparent);
+}
+
+body.couple-page-story .story-card-heart::before {
+   background: var(--couple-heart);
+   box-shadow: 0 0 0 2px color-mix(in srgb, var(--couple-heart) 22%, transparent);
+}
+
+body.couple-page-story .story-card-milestone::before {
+   background: var(--couple-star);
+   box-shadow: 0 0 0 2px color-mix(in srgb, var(--couple-star) 22%, transparent);
+}
+
+body.couple-page-story .story-card-grid {
+   grid-template-columns: 136px minmax(0, 1fr);
+   min-height: 132px;
+   overflow: hidden;
+   border-radius: inherit;
+}
+
+body.couple-page-story .story-card-media,
+body.couple-page-story .story-card-placeholder {
+   min-height: 132px;
+}
+
+body.couple-page-story .story-card-body {
+   padding: 0.85rem 1rem;
+}
+
+body.couple-page-story .story-card-type {
+   width: fit-content;
+   margin-bottom: 0.28rem;
+   padding: 0.12rem 0.42rem;
+   border-radius: var(--sm-radius-pill);
+   background: var(--couple-memory-soft);
+   color: var(--couple-memory);
+   font-size: 0.68rem;
+   font-weight: 720;
+   letter-spacing: 0.035em;
+   text-transform: uppercase;
+   opacity: 1;
+}
+
+body.couple-page-story .story-card-type-heart {
+   background: var(--couple-heart-soft);
+   color: var(--couple-heart);
+}
+
+body.couple-page-story .story-card-type-milestone {
+   background: var(--couple-star-soft);
+   color: var(--couple-star);
+}
+
+body.couple-page-story .story-card-type > i {
+   font-size: 0.9rem;
+}
+
+body.couple-page-story .story-card-title {
+   font-weight: 720;
+   letter-spacing: -0.014em;
+}
+
+body.couple-page-story .story-card-text {
+   margin-top: 0.38rem;
+   color: color-mix(in srgb, var(--on-surface) 78%, transparent);
+   display: -webkit-box;
+   -webkit-line-clamp: 3;
+   -webkit-box-orient: vertical;
+   overflow: hidden;
+}
+
+body.couple-page-story .story-chapter-tags,
+body.couple-page-story .story-place-tags {
+   gap: 0.3rem;
+   margin-top: 0.42rem;
+}
+
+body.couple-page-story .story-chapter-tag,
+body.couple-page-story .story-place-tag {
+   border: 1px solid color-mix(in srgb, currentColor 13%, transparent);
+   font-weight: 580;
+}
+
+body.couple-page-story .story-card-meta {
+   margin-top: 0.62rem;
+   padding-top: 0.5rem;
+   border-top: 1px solid color-mix(in srgb, var(--outline-variant) 45%, transparent);
+   opacity: 0.68;
+}
+
+/* --------------------------------------------------------------------------
+   Unser Jahr / recap
+   -------------------------------------------------------------------------- */
+body.couple-page-year .year-page {
+   max-width: 1040px;
+}
+
+body.couple-page-year .year-toolbar {
+   margin-bottom: 0.55rem;
+}
+
+body.couple-page-year .year-select {
+   width: 134px;
+}
+
+body.couple-page-year .year-hero {
+   overflow: hidden;
+   border-radius: var(--sm-radius-xl);
+   background:
+      radial-gradient(circle at 14% 4%, color-mix(in srgb, var(--couple-heart) 14%, transparent), transparent 34%),
+      radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 32%),
+      linear-gradient(150deg, color-mix(in srgb, var(--primary-container) 86%, var(--surface)), color-mix(in srgb, var(--secondary-container) 44%, var(--surface)));
+   box-shadow: 0 18px 48px rgba(35, 24, 54, 0.10);
+}
+
+body.couple-page-year .year-hero-main {
+   padding: 1rem 1.25rem 0.85rem;
+}
+
+body.couple-page-year .year-kicker {
+   padding: 0.22rem 0.55rem;
+   border-radius: var(--sm-radius-pill);
+   background: color-mix(in srgb, var(--couple-heart-soft) 80%, var(--surface));
+   color: var(--couple-heart);
+   font-size: var(--sm-text-xs);
+   opacity: 1;
+}
+
+body.couple-page-year .year-hero h2 {
+   margin-top: 0.1rem;
+   font-size: clamp(3.2rem, 8vw, 5rem);
+   font-weight: 760;
+   letter-spacing: -0.055em;
+}
+
+body.couple-page-year .year-hero-subtitle {
+   max-width: 54ch;
+   margin-top: 0.25rem;
+   color: color-mix(in srgb, var(--on-primary-container) 76%, transparent);
+   font-size: var(--sm-text-sm);
+   opacity: 1;
+}
+
+body.couple-page-year .year-collage-shell {
+   height: 340px;
+   margin: 0 0.9rem 0.9rem;
+   border-radius: 1.2rem;
+   background: color-mix(in srgb, var(--surface-container-high) 82%, transparent);
+   box-shadow: 0 12px 30px rgba(35, 24, 54, 0.14);
+}
+
+body.couple-page-year .year-collage-item {
+   border-radius: 1rem;
+}
+
+body.couple-page-year .year-collage-item::after {
+   content: '';
+   position: absolute;
+   inset: 0;
+   pointer-events: none;
+   background: linear-gradient(to top, rgba(20, 14, 28, 0.12), transparent 38%);
+}
+
+body.couple-page-year .year-stats {
+   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+   gap: 0.65rem;
+   margin: 1rem 0 1.6rem;
+}
+
+body.couple-page-year .year-stat {
+   min-width: 0;
+   display: grid;
+   grid-template-columns: 42px minmax(0, 1fr);
+   grid-template-rows: auto auto;
+   align-items: center;
+   gap: 0 0.65rem;
+   padding: 0.72rem 0.8rem 0.78rem;
+   text-align: left;
+   background: color-mix(in srgb, var(--surface) 88%, var(--surface-container));
+}
+
+body.couple-page-year .year-stat > i {
+   grid-row: 1 / 3;
+   width: 42px;
+   height: 42px;
+   margin: 0;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 0.8rem;
+   background: var(--couple-memory-soft);
+   color: var(--couple-memory);
+   font-size: var(--sm-text-xl);
+}
+
+body.couple-page-year .year-stat-number {
+   align-self: end;
+   font-size: 1.45rem;
+   font-weight: 760;
+   letter-spacing: -0.035em;
+   line-height: 1.05;
+}
+
+body.couple-page-year .year-stat-label {
+   align-self: start;
+   margin-top: 0.08rem;
+   color: color-mix(in srgb, var(--on-surface) 63%, transparent);
+   opacity: 1;
+}
+
+body.couple-page-year .year-stat-hearts > i {
+   background: var(--couple-heart-soft);
+   color: var(--couple-heart);
+}
+
+body.couple-page-year .year-stat-milestones > i,
+body.couple-page-year .year-stat-bucket > i {
+   background: var(--couple-star-soft);
+   color: var(--couple-star);
+}
+
+body.couple-page-year .year-stat-chapters > i {
+   background: var(--couple-chapter-soft);
+   color: var(--couple-chapter);
+}
+
+body.couple-page-year .year-stat-places > i {
+   background: var(--couple-place-soft);
+   color: var(--couple-place);
+}
+
+body.couple-page-year .year-stat-plans > i {
+   background: var(--couple-plan-soft);
+   color: var(--couple-plan);
+}
+
+body.couple-page-year .year-section {
+   margin-top: 1.65rem;
+}
+
+body.couple-page-year .year-section-title {
+   margin-bottom: 0.7rem;
+}
+
+body.couple-page-year .year-section-title > i {
+   width: 34px;
+   height: 34px;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 50%;
+   background: color-mix(in srgb, var(--primary-container) 70%, var(--surface));
+   color: var(--primary);
+}
+
+body.couple-page-year .year-month {
+   margin-top: 1rem;
+}
+
+body.couple-page-year .year-month-title {
+   margin-bottom: 0.55rem;
+   color: color-mix(in srgb, var(--on-surface) 78%, transparent);
+}
+
+body.couple-page-year .year-highlight-list {
+   gap: 0.55rem;
+   overflow: visible;
+   border: 0;
+   background: transparent;
+   box-shadow: none;
+}
+
+body.couple-page-year .year-highlight {
+   position: relative;
+   grid-template-columns: 78px minmax(0, 1fr) auto;
+   gap: 0.8rem;
+   overflow: hidden;
+   padding: 0.72rem 0.82rem;
+   border: 1px solid color-mix(in srgb, var(--outline-variant) 48%, transparent);
+   border-radius: var(--sm-radius-md);
+   background: color-mix(in srgb, var(--surface) 94%, transparent);
+   box-shadow: 0 6px 18px rgba(35, 24, 54, 0.055);
+   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+body.couple-page-year .year-highlight + .year-highlight {
+   border-top: 1px solid color-mix(in srgb, var(--outline-variant) 48%, transparent);
+}
+
+body.couple-page-year .year-highlight::before {
+   content: '';
+   position: absolute;
+   left: 0;
+   top: 0.55rem;
+   bottom: 0.55rem;
+   width: 3px;
+   border-radius: 0 3px 3px 0;
+   background: var(--couple-memory);
+}
+
+body.couple-page-year .year-highlight-heart::before {
+   background: var(--couple-heart);
+}
+
+body.couple-page-year .year-highlight-milestone::before,
+body.couple-page-year .year-highlight-bucket::before {
+   background: var(--couple-star);
+}
+
+body.couple-page-year .year-highlight-chapter::before {
+   background: var(--couple-chapter);
+}
+
+body.couple-page-year .year-highlight-place::before {
+   background: var(--couple-place);
+}
+
+body.couple-page-year .year-highlight-plan::before {
+   background: var(--couple-plan);
+}
+
+body.couple-page-year .year-highlight-media,
+body.couple-page-year .year-highlight-icon {
+   width: 78px;
+   height: 78px;
+   border-radius: 0.9rem;
+   box-shadow: 0 5px 14px rgba(35, 24, 54, 0.08);
+}
+
+body.couple-page-year .year-highlight-type {
+   width: fit-content;
+   padding: 0.1rem 0.38rem;
+   border-radius: var(--sm-radius-pill);
+   background: var(--couple-memory-soft);
+   color: var(--couple-memory);
+   font-size: 0.67rem;
+   font-weight: 720;
+   letter-spacing: 0.03em;
+   text-transform: uppercase;
+   opacity: 1;
+}
+
+body.couple-page-year .year-highlight-heart .year-highlight-type {
+   background: var(--couple-heart-soft);
+   color: var(--couple-heart);
+}
+
+body.couple-page-year .year-highlight-milestone .year-highlight-type,
+body.couple-page-year .year-highlight-bucket .year-highlight-type {
+   background: var(--couple-star-soft);
+   color: var(--couple-star);
+}
+
+body.couple-page-year .year-highlight-chapter .year-highlight-type {
+   background: var(--couple-chapter-soft);
+   color: var(--couple-chapter);
+}
+
+body.couple-page-year .year-highlight-place .year-highlight-type {
+   background: var(--couple-place-soft);
+   color: var(--couple-place);
+}
+
+body.couple-page-year .year-highlight-plan .year-highlight-type {
+   background: var(--couple-plan-soft);
+   color: var(--couple-plan);
+}
+
+body.couple-page-year .year-highlight-title {
+   font-weight: 720;
+   letter-spacing: -0.012em;
+}
+
+body.couple-page-year .year-highlight-arrow {
+   color: color-mix(in srgb, var(--on-surface) 38%, transparent);
+   opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+   body.couple-page-year .year-highlight:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--primary) 22%, var(--outline-variant));
+      box-shadow: 0 10px 24px rgba(35, 24, 54, 0.09);
+   }
+}
+
+/* --------------------------------------------------------------------------
+   Mobile refinements + floating navigation
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+   body.couple-app .couple-bottom-nav > .active {
+      background: transparent;
+   }
+
+   body.couple-app .couple-bottom-nav > .active > i {
+      min-width: 2.25rem;
+      min-height: 1.55rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.08rem 0.45rem;
+      border-radius: var(--sm-radius-pill);
+      background: color-mix(in srgb, var(--primary-container) 72%, transparent);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 11%, transparent);
+   }
+
+   body.couple-app .couple-bottom-nav > .couple-bottom-add {
+      box-shadow:
+         0 12px 28px color-mix(in srgb, var(--primary) 30%, transparent),
+         0 2px 8px rgba(35, 24, 54, 0.14),
+         inset 0 1px 0 rgba(255, 255, 255, 0.38);
+   }
+}
+
+@media (max-width: 700px) {
+   body.couple-page-home .couple-hero > .padding {
+      padding: 0.72rem 0.85rem 0.85rem;
+   }
+
+   body.couple-page-home .couple-avatars {
+      gap: 0.7rem;
+      margin-bottom: 0.42rem;
+   }
+
+   body.couple-page-home .couple-hero-meta {
+      gap: 0.25rem 0.55rem;
+      margin-top: 0.42rem;
+   }
+
+   body.couple-page-home .couple-year-card-inner {
+      gap: 0.65rem;
+      min-height: 86px;
+      padding: 0.6rem;
+   }
+
+   body.couple-page-home .couple-year-visual {
+      width: 86px;
+      height: 68px;
+      flex-basis: 86px;
+   }
+
+   body.couple-page-home .couple-year-visual .couple-year-badge {
+      width: 68px;
+      height: 68px;
+   }
+
+   body.couple-page-home .couple-year-title {
+      font-size: var(--sm-text-lg);
+   }
+
+   body.couple-page-home .couple-year-stats > span {
+      min-height: 22px;
+      padding-inline: 0.34rem;
+   }
+
+   body.couple-page-home .couple-recent-section > article > .padding {
+      padding: 0.35rem;
+   }
+
+   body.couple-page-home .couple-recent-row {
+      gap: 0.65rem;
+      padding: 0.62rem;
+   }
+
+   body.couple-page-home .couple-recent-leading,
+   body.couple-page-home .couple-recent-leading > i,
+   body.couple-page-home .couple-recent-thumb {
+      width: 62px;
+      height: 62px;
+   }
+
+   body.couple-page-home .couple-recent-leading {
+      flex-basis: 62px;
+   }
+
+   body.couple-page-story .story-context-links {
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 0.15rem;
+      scrollbar-width: none;
+   }
+
+   body.couple-page-story .story-context-links::-webkit-scrollbar {
+      display: none;
+   }
+
+   body.couple-page-story .story-context-links > a {
+      flex: 0 0 auto;
+   }
+
+   body.couple-page-story .story-search-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+   }
+
+   body.couple-page-story .story-search-field {
+      grid-column: 1 / -1;
+   }
+
+   body.couple-page-story .story-month {
+      padding-left: 0.85rem;
+   }
+
+   body.couple-page-story .story-month::before {
+      left: 0.08rem;
+   }
+
+   body.couple-page-story .story-card::before {
+      left: -0.9rem;
+   }
+
+   body.couple-page-story .story-card-grid {
+      grid-template-columns: 96px minmax(0, 1fr);
+      min-height: 120px;
+   }
+
+   body.couple-page-story .story-card-media,
+   body.couple-page-story .story-card-placeholder {
+      min-height: 120px;
+   }
+
+   body.couple-page-story .story-card-body {
+      padding: 0.68rem 0.72rem;
+   }
+
+   body.couple-page-story .story-card-meta {
+      flex-wrap: wrap;
+      gap: 0.2rem 0.4rem;
+   }
+
+   body.couple-page-year .year-hero-main {
+      padding: 0.82rem 0.85rem 0.68rem;
+   }
+
+   body.couple-page-year .year-hero h2 {
+      font-size: 3.25rem;
+   }
+
+   body.couple-page-year .year-collage-shell {
+      height: 230px;
+      margin: 0 0.55rem 0.55rem;
+      border-radius: 1rem;
+   }
+
+   body.couple-page-year .year-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+   }
+
+   body.couple-page-year .year-stat {
+      grid-template-columns: 36px minmax(0, 1fr);
+      gap: 0 0.5rem;
+      padding: 0.62rem;
+   }
+
+   body.couple-page-year .year-stat > i {
+      width: 36px;
+      height: 36px;
+      font-size: var(--sm-text-lg);
+   }
+
+   body.couple-page-year .year-stat-number {
+      font-size: 1.25rem;
+   }
+
+   body.couple-page-year .year-highlight {
+      grid-template-columns: 64px minmax(0, 1fr);
+      gap: 0.65rem;
+      padding: 0.65rem 0.7rem;
+   }
+
+   body.couple-page-year .year-highlight-media,
+   body.couple-page-year .year-highlight-icon {
+      width: 64px;
+      height: 64px;
+   }
+}
