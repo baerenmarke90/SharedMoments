@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Private Listen · SideBySide</title>
+      {% include 'layouts/head.html' %}
+      <link rel="stylesheet" href="{{ static_versioned('css/couple.css') }}">
+      <style>
+         .private-page { max-width: 760px; }
+         .private-hint {
+            display: flex; align-items: flex-start; gap: var(--sm-space-4);
+            margin: 0 0 var(--sm-space-6); padding: var(--sm-space-5);
+            border-radius: var(--sm-radius-lg);
+            background: color-mix(in srgb, var(--surface-container) 78%, transparent);
+            border: 1px solid color-mix(in srgb, var(--outline-variant) 46%, transparent);
+            line-height: 1.5;
+         }
+         .private-hint > i { color: var(--primary); }
+         .private-tabs {
+            display: flex; gap: var(--sm-space-3); margin-bottom: var(--sm-space-6);
+            overflow-x: auto; padding-bottom: .15rem;
+         }
+         .private-tabs a { flex: 0 0 auto; text-decoration: none; }
+         .private-list-card { margin-bottom: var(--sm-space-5); scroll-margin-top: 5rem; }
+         .private-list-head {
+            display: flex; align-items: center; gap: var(--sm-space-3); margin-bottom: var(--sm-space-4);
+         }
+         .private-list-head > i { color: var(--primary); font-size: 1.75rem; }
+         .private-list-title { margin: 0; min-width: 0; flex: 1 1 auto; line-height: 1.25; }
+         .private-list-progress { flex: 0 0 auto; }
+         .private-list-progress .progress-short { display: none; }
+         .private-list-items { display: grid; gap: .2rem; margin: 0 0 var(--sm-space-4); }
+         .private-list-item {
+            display: flex; align-items: center; gap: var(--sm-space-2);
+            min-height: 2.75rem; border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 35%, transparent);
+         }
+         .private-list-item:last-child { border-bottom: 0; }
+         .private-list-item form { margin: 0; }
+         .private-list-item-title { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+         .private-list-item.done .private-list-item-title { text-decoration: line-through; opacity: .55; }
+         .private-list-add { display: flex; align-items: stretch; gap: var(--sm-space-2); margin-top: var(--sm-space-3); }
+         .private-list-add .field { flex: 1 1 auto; margin: 0; }
+         .private-list-actions {
+            display: flex; justify-content: flex-end; gap: var(--sm-space-2); margin-top: var(--sm-space-3);
+         }
+         .private-empty { text-align: center; padding: 3rem var(--sm-space-6); }
+         .private-empty > i { font-size: 3rem; opacity: .7; }
+         @media (max-width: 600px) {
+            .private-list-head { align-items: flex-start; }
+            .private-list-progress .progress-long { display: none; }
+            .private-list-progress .progress-short { display: inline; }
+            .private-list-add { gap: var(--sm-space-1); }
+         }
+      </style>
+   </head>
+   <body class="couple-app couple-page-private {% if darkmode.value == 'TRUE' %}dark{% endif %}">
+      {% include 'layouts/header.html' %}
+      <div class="overlay" id="div-overlay-nav-drawer" onclick="callUi('#dialog-nav-drawer')"></div>
+      <div id="div-render-nav-drawer">{% include 'layouts/nav-drawer.html' %}</div>
+
+      <main class="responsive private-page">
+         {% if private_error %}
+         <article class="error-container" style="margin-bottom:var(--sm-space-5);">{{ private_error }}</article>
+         {% endif %}
+
+         <div class="private-hint">
+            <i>lock</i>
+            <div>
+               Diese Listen gehören nur dir. Dein Partner kann weder die Listen noch ihre Einträge sehen –
+               auch nicht über einen direkten Link.
+            </div>
+         </div>
+
+         <nav class="private-tabs">
+            {% if private_notes_enabled %}
+            <a class="chip round" href="{{ url_for('pages.private_area', kind='note') }}">
+               <i>sticky_note_2</i><span>Notizen ({{ private_counts.note }})</span>
+            </a>
+            {% endif %}
+            {% if private_gifts_enabled %}
+            <a class="chip round" href="{{ url_for('pages.private_area', kind='gift') }}">
+               <i>card_giftcard</i><span>Geschenke ({{ private_counts.gift }})</span>
+            </a>
+            <a class="chip round" href="{{ url_for('pages.private_area', kind='birthday') }}">
+               <i>cake</i><span>Geburtstage ({{ private_counts.birthday }})</span>
+            </a>
+            {% endif %}
+            <a class="chip round fill" href="{{ url_for('pages.private_lists_page') }}">
+               <i>checklist</i><span>Listen ({{ private_list_count }})</span>
+            </a>
+         </nav>
+
+         {% if private_lists %}
+         {% for list in private_lists %}
+         <article class="surface-container private-list-card" id="private-list-{{ list.id }}">
+            <div class="padding">
+               <div class="private-list-head">
+                  <i>{{ list.icon }}</i>
+                  <h6 class="private-list-title">{{ list.title }}</h6>
+                  <span class="chip small round private-list-progress">
+                     <i>done_all</i>
+                     <span class="progress-long">{{ list.completed_count }} / {{ list.item_count }} erledigt</span>
+                     <span class="progress-short">{{ list.completed_count }}/{{ list.item_count }}</span>
+                  </span>
+               </div>
+
+               {% if list.items %}
+               <div class="private-list-items">
+                  {% for item in list.items %}
+                  <div class="private-list-item{% if item.completed %} done{% endif %}">
+                     <form method="post" action="{{ url_for('pages.toggle_private_list_item_page', item_id=item.id) }}">
+                        <button class="circle transparent" type="submit"
+                                aria-label="{% if item.completed %}Als offen markieren{% else %}Als erledigt markieren{% endif %}">
+                           <i>{% if item.completed %}check_box{% else %}check_box_outline_blank{% endif %}</i>
+                        </button>
+                     </form>
+                     <span class="private-list-item-title">{{ item.title }}</span>
+                     <form method="post" action="{{ url_for('pages.delete_private_list_item_page', item_id=item.id) }}">
+                        <button class="circle transparent" type="submit" aria-label="Listenpunkt löschen">
+                           <i>delete</i>
+                        </button>
+                     </form>
+                  </div>
+                  {% endfor %}
+               </div>
+               {% else %}
+               <p class="small" style="opacity:.68;margin:0 0 var(--sm-space-4);">Noch keine Einträge.</p>
+               {% endif %}
+
+               <form class="private-list-add" method="post"
+                     action="{{ url_for('pages.create_private_list_item_page', list_id=list.id) }}">
+                  <div class="field label border">
+                     <input type="text" name="title" maxlength="255" autocomplete="off" required>
+                     <label>Neuer Listenpunkt</label>
+                  </div>
+                  <button class="square round" type="submit" aria-label="Hinzufügen"><i>add</i></button>
+               </form>
+
+               <div class="private-list-actions">
+                  <button class="chip small round" type="button"
+                          onclick="callUi('#dialog-edit-private-list-{{ list.id }}')">
+                     <i>edit</i><span>Bearbeiten</span>
+                  </button>
+                  <button class="chip small round" type="button"
+                          onclick="callUi('#dialog-delete-private-list-{{ list.id }}')">
+                     <i>delete</i><span>Löschen</span>
+                  </button>
+               </div>
+            </div>
+         </article>
+
+         <div class="overlay" data-dialog="#dialog-edit-private-list-{{ list.id }}"
+              onclick="callUi('#dialog-edit-private-list-{{ list.id }}')"></div>
+         <dialog class="bottom" id="dialog-edit-private-list-{{ list.id }}">
+            <form method="post" action="{{ url_for('pages.update_private_list_page', list_id=list.id) }}">
+               <h5>Liste bearbeiten</h5>
+               <div class="field label border">
+                  <input type="text" name="title" maxlength="255" value="{{ list.title }}" required>
+                  <label>Name</label>
+               </div>
+               <div class="field label border suffix">
+                  <select name="icon">
+                     {% for value, label in [('checklist','Checkliste'),('shopping_cart','Einkaufen'),('lightbulb','Ideen'),('favorite','Herz'),('flight','Reise'),('home','Zuhause'),('work','Arbeit'),('restaurant','Essen'),('movie','Filme'),('inventory_2','Sammlung')] %}
+                     <option value="{{ value }}" {% if list.icon == value %}selected{% endif %}>{{ label }}</option>
+                     {% endfor %}
+                  </select>
+                  <label>Symbol</label><i>arrow_drop_down</i>
+               </div>
+               <nav class="right-align no-space">
+                  <button type="button" class="transparent link" onclick="callUi('#dialog-edit-private-list-{{ list.id }}')">Abbrechen</button>
+                  <button type="submit" class="transparent link">Speichern</button>
+               </nav>
+            </form>
+         </dialog>
+
+         <div class="overlay" data-dialog="#dialog-delete-private-list-{{ list.id }}"
+              onclick="callUi('#dialog-delete-private-list-{{ list.id }}')"></div>
+         <dialog id="dialog-delete-private-list-{{ list.id }}">
+            <h5>Liste löschen?</h5>
+            <p>„{{ list.title }}“ und alle enthaltenen Listenpunkte werden endgültig entfernt.</p>
+            <form method="post" action="{{ url_for('pages.delete_private_list_page', list_id=list.id) }}">
+               <nav class="right-align no-space">
+                  <button type="button" class="transparent link" onclick="callUi('#dialog-delete-private-list-{{ list.id }}')">Abbrechen</button>
+                  <button type="submit" class="transparent link">Löschen</button>
+               </nav>
+            </form>
+         </dialog>
+         {% endfor %}
+         {% else %}
+         <article class="surface-container private-empty">
+            <i>checklist</i>
+            <h5>Noch keine privaten Listen</h5>
+            <p>Erstelle eigene Einkaufs-, Ideen-, To-do- oder Merklisten. Sie bleiben vollständig in deinem Bereich.</p>
+            <button class="round" type="button" onclick="callUi('#dialog-create-private-list')">
+               <i>add</i>Erste Liste
+            </button>
+         </article>
+         {% endif %}
+
+         {% include 'layouts/footer.html' %}
+      </main>
+
+      <div class="fixed bottom right" style="margin-right:8px;margin-bottom:16px;z-index:40;"
+           onclick="callUi('#dialog-create-private-list')">
+         <button class="square round extra" aria-label="Private Liste hinzufügen"
+                 style="box-shadow:0 3px 6px rgba(0,0,0,.16),0 3px 6px rgba(0,0,0,.23);">
+            <i>add</i>
+         </button>
+      </div>
+
+      <div class="overlay" data-dialog="#dialog-create-private-list"
+           onclick="callUi('#dialog-create-private-list')"></div>
+      <dialog class="bottom" id="dialog-create-private-list">
+         <form method="post" action="{{ url_for('pages.create_private_list_page') }}">
+            <h5>Neue private Liste</h5>
+            <div class="field label border">
+               <input type="text" name="title" maxlength="255" required>
+               <label>Name</label>
+            </div>
+            <div class="field label border suffix">
+               <select name="icon">
+                  <option value="checklist">Checkliste</option>
+                  <option value="shopping_cart">Einkaufen</option>
+                  <option value="lightbulb">Ideen</option>
+                  <option value="favorite">Herz</option>
+                  <option value="flight">Reise</option>
+                  <option value="home">Zuhause</option>
+                  <option value="work">Arbeit</option>
+                  <option value="restaurant">Essen</option>
+                  <option value="movie">Filme</option>
+                  <option value="inventory_2">Sammlung</option>
+               </select>
+               <label>Symbol</label><i>arrow_drop_down</i>
+            </div>
+            <nav class="right-align no-space">
+               <button type="button" class="transparent link" onclick="callUi('#dialog-create-private-list')">Abbrechen</button>
+               <button type="submit" class="transparent link">Erstellen</button>
+            </nav>
+         </form>
+      </dialog>
+
+      {% set couple_nav_active = 'more' %}
+      {% include 'layouts/couple-create-sheet.html' %}
+      {% include 'layouts/couple-bottom-nav.html' %}
+      <script src="{{ static_versioned('js/main.js') }}"></script>
+   </body>
+</html>

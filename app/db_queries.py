@@ -3,7 +3,7 @@ from .models import (Passkey, User, Role, Permission, RolePermission, UserRole, 
     UserSetting, Item, ItemShare, ListType, SessionLocal, Translation,
     Reminder, ReminderMute, PushSubscription, NotificationLog, CoupleChapter,
     CoupleChapterItem, CoupleChapterHeartMoment, CouplePlan, CoupleBucketPlanLink,
-    CouplePlace, CouplePlaceLink, PrivateEntry)
+    CouplePlace, CouplePlaceLink, PrivateEntry, PrivateList, PrivateListItem)
 from sqlalchemy.orm import joinedload
 from datetime import date
 import math
@@ -3153,5 +3153,271 @@ def count_private_entries(user_id):
         for kind, total in rows:
             counts[kind] = total
         return counts
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# Private Listen
+# ---------------------------------------------------------------------------
+PRIVATE_LIST_ICONS = (
+    'checklist', 'shopping_cart', 'lightbulb', 'favorite', 'flight',
+    'home', 'work', 'restaurant', 'movie', 'inventory_2',
+)
+
+
+def _private_list_icon(icon):
+    value = str(icon or '').strip()
+    return value if value in PRIVATE_LIST_ICONS else 'checklist'
+
+
+def _serialize_private_list_item(item):
+    return {
+        'id': item.id,
+        'listID': item.listID,
+        'title': item.title,
+        'completed': bool(item.completed),
+        'position': item.position,
+        'dateCreated': item.dateCreated,
+        'dateModified': item.dateModified,
+    }
+
+
+def get_private_lists(user_id):
+    """Alle eigenen privaten Listen samt Punkten."""
+    session = SessionLocal()
+    try:
+        lists = (
+            session.query(PrivateList)
+            .filter(PrivateList.userID == user_id)
+            .order_by(PrivateList.dateModified.desc(), PrivateList.id.desc())
+            .all()
+        )
+        if not lists:
+            return []
+
+        list_ids = [row.id for row in lists]
+        items = (
+            session.query(PrivateListItem)
+            .filter(PrivateListItem.listID.in_(list_ids))
+            .order_by(
+                PrivateListItem.listID.asc(),
+                PrivateListItem.position.asc(),
+                PrivateListItem.id.asc(),
+            )
+            .all()
+        )
+        grouped = {list_id: [] for list_id in list_ids}
+        for item in items:
+            grouped.setdefault(item.listID, []).append(_serialize_private_list_item(item))
+
+        result = []
+        for row in lists:
+            row_items = grouped.get(row.id, [])
+            completed = sum(1 for item in row_items if item['completed'])
+            result.append({
+                'id': row.id,
+                'userID': row.userID,
+                'title': row.title,
+                'icon': row.icon or 'checklist',
+                'items': row_items,
+                'item_count': len(row_items),
+                'completed_count': completed,
+                'dateCreated': row.dateCreated,
+                'dateModified': row.dateModified,
+            })
+        return result
+    finally:
+        session.close()
+
+
+def get_private_list(user_id, list_id):
+    """Eine eigene private Liste oder None. Fremde IDs werden nicht offengelegt."""
+    session = SessionLocal()
+    try:
+        row = (
+            session.query(PrivateList)
+            .filter(PrivateList.id == list_id, PrivateList.userID == user_id)
+            .first()
+        )
+        if not row:
+            return None
+        return {
+            'id': row.id,
+            'userID': row.userID,
+            'title': row.title,
+            'icon': row.icon or 'checklist',
+        }
+    finally:
+        session.close()
+
+
+def count_private_lists(user_id):
+    session = SessionLocal()
+    try:
+        return int(
+            session.query(func.count(PrivateList.id))
+            .filter(PrivateList.userID == user_id)
+            .scalar() or 0
+        )
+    finally:
+        session.close()
+
+
+def create_private_list(user_id, title, icon='checklist'):
+    title = str(title or '').strip()
+    if not title:
+        raise ValueError('Bitte gib der Liste einen Namen.')
+    if len(title) > 255:
+        raise ValueError('Der Listenname ist zu lang.')
+
+    session = SessionLocal()
+    try:
+        row = PrivateList(
+            userID=user_id,
+            title=title,
+            icon=_private_list_icon(icon),
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return row.id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def update_private_list(user_id, list_id, title, icon='checklist'):
+    title = str(title or '').strip()
+    if not title:
+        raise ValueError('Bitte gib der Liste einen Namen.')
+    if len(title) > 255:
+        raise ValueError('Der Listenname ist zu lang.')
+
+    session = SessionLocal()
+    try:
+        row = (
+            session.query(PrivateList)
+            .filter(PrivateList.id == list_id, PrivateList.userID == user_id)
+            .first()
+        )
+        if not row:
+            return False
+        row.title = title
+        row.icon = _private_list_icon(icon)
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def delete_private_list(user_id, list_id):
+    session = SessionLocal()
+    try:
+        row = (
+            session.query(PrivateList)
+            .filter(PrivateList.id == list_id, PrivateList.userID == user_id)
+            .first()
+        )
+        if not row:
+            return False
+        session.delete(row)
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def create_private_list_item(user_id, list_id, title):
+    title = str(title or '').strip()
+    if not title:
+        raise ValueError('Der Listenpunkt darf nicht leer sein.')
+    if len(title) > 255:
+        raise ValueError('Der Listenpunkt ist zu lang.')
+
+    session = SessionLocal()
+    try:
+        parent = (
+            session.query(PrivateList)
+            .filter(PrivateList.id == list_id, PrivateList.userID == user_id)
+            .first()
+        )
+        if not parent:
+            return None
+        last_position = (
+            session.query(func.max(PrivateListItem.position))
+            .filter(PrivateListItem.listID == list_id)
+            .scalar()
+        )
+        item = PrivateListItem(
+            listID=list_id,
+            title=title,
+            position=(last_position or 0) + 1,
+        )
+        session.add(item)
+        session.commit()
+        session.refresh(item)
+        return item.id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def toggle_private_list_item(user_id, item_id):
+    session = SessionLocal()
+    try:
+        item = (
+            session.query(PrivateListItem)
+            .join(PrivateList, PrivateList.id == PrivateListItem.listID)
+            .filter(
+                PrivateListItem.id == item_id,
+                PrivateList.userID == user_id,
+            )
+            .first()
+        )
+        if not item:
+            return None
+        item.completed = not bool(item.completed)
+        list_id = item.listID
+        session.commit()
+        return list_id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def delete_private_list_item(user_id, item_id):
+    session = SessionLocal()
+    try:
+        item = (
+            session.query(PrivateListItem)
+            .join(PrivateList, PrivateList.id == PrivateListItem.listID)
+            .filter(
+                PrivateListItem.id == item_id,
+                PrivateList.userID == user_id,
+            )
+            .first()
+        )
+        if not item:
+            return None
+        list_id = item.listID
+        session.delete(item)
+        session.commit()
+        return list_id
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()

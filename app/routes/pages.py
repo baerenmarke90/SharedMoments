@@ -23,6 +23,9 @@ from app.db_queries import (get_all_list_types, get_items_by_type,
     copy_couple_place_links,
     get_private_entries, get_private_entry, create_private_entry,
     update_private_entry, delete_private_entry, count_private_entries,
+    get_private_lists, get_private_list, count_private_lists,
+    create_private_list, update_private_list, delete_private_list,
+    create_private_list_item, toggle_private_list_item, delete_private_list_item,
     PRIVATE_GIFT_STATUSES
 )
 from app.feature_flags import is_feature_enabled
@@ -4555,6 +4558,7 @@ def private_area():
             private_gifts_enabled=gifts_on,
             private_entries=entries,
             private_counts=counts,
+            private_list_count=count_private_lists(g.user_id),
             private_statuses=_PRIVATE_GIFT_STATUS_META,
             private_error=request.args.get('error', ''),
         )
@@ -4633,3 +4637,109 @@ def delete_private_entry_page(entry_id):
 
     delete_private_entry(g.user_id, entry_id)
     return redirect(url_for('pages.private_area', kind=entry['kind']))
+
+
+# ---------------------------------------------------------------------------
+# Private Listen
+# ---------------------------------------------------------------------------
+@pages_bp.route('/private/lists')
+@jwt_required
+def private_lists_page():
+    try:
+        notes_on = is_feature_enabled('private_notes')
+        gifts_on = is_feature_enabled('private_gifts')
+        lists = get_private_lists(g.user_id)
+        return render_template(
+            'pages/private-lists.html',
+            title=None,
+            darkmode=get_user_setting(g.user_id, 'darkmode'),
+            user_data=get_user_by_id(g.user_id),
+            list_types=get_all_list_types(),
+            page_title='Nur fuer mich',
+            private_notes_enabled=notes_on,
+            private_gifts_enabled=gifts_on,
+            private_counts=count_private_entries(g.user_id),
+            private_list_count=len(lists),
+            private_lists=lists,
+            private_error=request.args.get('error', ''),
+        )
+    except Exception as e:
+        log('error', f'Error while rendering private lists: {e}')
+        return 'An error occurred while rendering the page. Please check the server logs for details.', 500
+
+
+@pages_bp.route('/private/lists/create', methods=['POST'])
+@jwt_required
+def create_private_list_page():
+    try:
+        list_id = create_private_list(
+            g.user_id,
+            request.form.get('title', ''),
+            request.form.get('icon', 'checklist'),
+        )
+        return redirect(url_for('pages.private_lists_page') + f'#private-list-{list_id}')
+    except ValueError as exc:
+        return redirect(url_for('pages.private_lists_page', error=str(exc)))
+    except Exception as e:
+        log('error', f'Error while creating private list: {e}')
+        return redirect(url_for('pages.private_lists_page', error='Die Liste konnte nicht gespeichert werden.'))
+
+
+@pages_bp.route('/private/lists/<int:list_id>/update', methods=['POST'])
+@jwt_required
+def update_private_list_page(list_id):
+    if not get_private_list(g.user_id, list_id):
+        return redirect(url_for('pages.private_lists_page'))
+    try:
+        update_private_list(
+            g.user_id,
+            list_id,
+            request.form.get('title', ''),
+            request.form.get('icon', 'checklist'),
+        )
+        return redirect(url_for('pages.private_lists_page') + f'#private-list-{list_id}')
+    except ValueError as exc:
+        return redirect(url_for('pages.private_lists_page', error=str(exc)) + f'#private-list-{list_id}')
+    except Exception as e:
+        log('error', f'Error while updating private list {list_id}: {e}')
+        return redirect(url_for('pages.private_lists_page', error='Die Liste konnte nicht gespeichert werden.'))
+
+
+@pages_bp.route('/private/lists/<int:list_id>/delete', methods=['POST'])
+@jwt_required
+def delete_private_list_page(list_id):
+    delete_private_list(g.user_id, list_id)
+    return redirect(url_for('pages.private_lists_page'))
+
+
+@pages_bp.route('/private/lists/<int:list_id>/items/create', methods=['POST'])
+@jwt_required
+def create_private_list_item_page(list_id):
+    if not get_private_list(g.user_id, list_id):
+        return redirect(url_for('pages.private_lists_page'))
+    try:
+        create_private_list_item(g.user_id, list_id, request.form.get('title', ''))
+        return redirect(url_for('pages.private_lists_page') + f'#private-list-{list_id}')
+    except ValueError as exc:
+        return redirect(url_for('pages.private_lists_page', error=str(exc)) + f'#private-list-{list_id}')
+    except Exception as e:
+        log('error', f'Error while creating private list item: {e}')
+        return redirect(url_for('pages.private_lists_page', error='Der Listenpunkt konnte nicht gespeichert werden.'))
+
+
+@pages_bp.route('/private/lists/items/<int:item_id>/toggle', methods=['POST'])
+@jwt_required
+def toggle_private_list_item_page(item_id):
+    list_id = toggle_private_list_item(g.user_id, item_id)
+    if not list_id:
+        return redirect(url_for('pages.private_lists_page'))
+    return redirect(url_for('pages.private_lists_page') + f'#private-list-{list_id}')
+
+
+@pages_bp.route('/private/lists/items/<int:item_id>/delete', methods=['POST'])
+@jwt_required
+def delete_private_list_item_page(item_id):
+    list_id = delete_private_list_item(g.user_id, item_id)
+    if not list_id:
+        return redirect(url_for('pages.private_lists_page'))
+    return redirect(url_for('pages.private_lists_page') + f'#private-list-{list_id}')

@@ -489,6 +489,54 @@ class PrivateEntry(Base):
     owner = relationship('User', foreign_keys=[userID])
 
 
+class PrivateList(Base):
+    """Eine ausschliesslich dem eigenen Nutzer gehoerende Liste."""
+    __tablename__ = 'privateLists'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    userID = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    icon = Column(String(64), nullable=False, default='checklist')
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    owner = relationship('User', foreign_keys=[userID])
+    items = relationship(
+        'PrivateListItem',
+        back_populates='private_list',
+        cascade='all, delete-orphan',
+        order_by='PrivateListItem.position, PrivateListItem.id',
+    )
+
+
+class PrivateListItem(Base):
+    """Ein Punkt innerhalb einer privaten Liste."""
+    __tablename__ = 'privateListItems'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    listID = Column(
+        Integer,
+        ForeignKey('privateLists.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    title = Column(String(255), nullable=False)
+    completed = Column(Boolean, nullable=False, default=False, index=True)
+    position = Column(Integer, nullable=False, default=0)
+    dateCreated = Column(TIMESTAMP, server_default=func.current_timestamp())
+    dateModified = Column(
+        TIMESTAMP,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    private_list = relationship('PrivateList', back_populates='items')
+
+
 class ListType(Base):
     __tablename__ = 'listTypes'
     id = Column(Integer, primary_key=True, autoincrement=True)

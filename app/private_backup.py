@@ -1,16 +1,10 @@
 """Sicherung des privaten Bereichs fuer Export und Import.
 
-Eigenes Modul nach dem Vorbild von daily_questions_backup: der private
-Bereich haengt an Nutzern, nicht an Listen, und wuerde in der allgemeinen
-Item-Schleife des Exports nicht auftauchen. Ohne diese Datei waeren Notizen
-und Geschenkideen bei einem Umzug weg.
-
-Zugeordnet wird ueber die E-Mail-Adresse, wie bei den Benutzereinstellungen:
-IDs sind nach einem Import andere.
+Private Daten haengen an Nutzern, nicht an den gemeinsamen Listen. Die Zuordnung
+beim Import erfolgt deshalb ueber die E-Mail-Adresse statt ueber alte IDs.
 """
 from datetime import date
-
-from app.models import PrivateEntry, SessionLocal, User
+from app.models import PrivateEntry, PrivateList, PrivateListItem, SessionLocal, User
 
 
 def _iso(value):
@@ -25,16 +19,12 @@ def export_private_entries_data():
     session = SessionLocal()
     try:
         users = {user.id: user for user in session.query(User).all()}
-        result = {'version': 1, 'entries': []}
+        result = {'version': 2, 'entries': [], 'lists': []}
 
         for entry in session.query(PrivateEntry).order_by(PrivateEntry.id.asc()).all():
             owner = users.get(entry.userID)
             if not owner or not owner.email:
-                # Ohne Zuordnung liesse sich der Eintrag beim Import keinem
-                # Konto zuweisen - und ein privater Eintrag darf nicht bei
-                # der falschen Person landen.
                 continue
-
             result['entries'].append({
                 'userEmail': owner.email,
                 'kind': entry.kind,
@@ -49,33 +39,55 @@ def export_private_entries_data():
                 'pinned': bool(entry.pinned),
             })
 
+        lists = session.query(PrivateList).order_by(PrivateList.id.asc()).all()
+        for private_list in lists:
+            owner = users.get(private_list.userID)
+            if not owner or not owner.email:
+                continue
+            items = (
+                session.query(PrivateListItem)
+                .filter(PrivateListItem.listID == private_list.id)
+                .order_by(PrivateListItem.position.asc(), PrivateListItem.id.asc())
+                .all()
+            )
+            result['lists'].append({
+                'userEmail': owner.email,
+                'title': private_list.title,
+                'icon': private_list.icon or 'checklist',
+                'items': [
+                    {
+                        'title': item.title,
+                        'completed': bool(item.completed),
+                        'position': item.position,
+                    }
+                    for item in items
+                ],
+            })
         return result
     finally:
         session.close()
 
 
 def import_private_entries_data(feature_data, user_email_to_id):
-    """Spielt private Eintraege zurueck.
+    """Spielt private Eintraege und Listen zurueck.
 
-    Aeltere Sicherungen kennen den Bereich nicht - dann bleibt der aktuelle
-    Bestand unangetastet, statt ihn zu leeren.
+    Aeltere Sicherungen kennen Listen nicht. Dann werden nur die vorhandenen
+    Bereiche importiert und bestehende Daten nicht geloescht.
     """
     if not feature_data:
-        return {'entries': 0, 'skipped': 0}
+        return {'entries': 0, 'lists': 0, 'items': 0, 'skipped': 0}
 
     session = SessionLocal()
     try:
         imported = 0
+        lists_imported = 0
+        items_imported = 0
         skipped = 0
 
         for payload in feature_data.get('entries', []):
             email = str(payload.get('userEmail') or '').strip()
-            user_id = (
-                user_email_to_id.get(email)
-                or user_email_to_id.get(email.lower())
-            )
+            user_id = user_email_to_id.get(email) or user_email_to_id.get(email.lower())
             title = str(payload.get('title') or '').strip()
-
             if not user_id or not title:
                 skipped += 1
                 continue
@@ -83,12 +95,10 @@ def import_private_entries_data(feature_data, user_email_to_id):
             kind = str(payload.get('kind') or 'note').strip().lower()
             if kind not in ('note', 'gift', 'birthday'):
                 kind = 'note'
-
             status = str(payload.get('status') or 'idea').strip().lower()
             if status not in ('idea', 'reserved', 'bought', 'given'):
                 status = 'idea'
 
-            # Doppelte Eintraege beim erneuten Einspielen vermeiden.
             exists = (
                 session.query(PrivateEntry)
                 .filter(
@@ -117,8 +127,62 @@ def import_private_entries_data(feature_data, user_email_to_id):
             ))
             imported += 1
 
+        for payload in feature_data.get('lists', []):
+            email = str(payload.get('userEmail') or '').strip()
+            user_id = user_email_to_id.get(email) or user_email_to_id.get(email.lower())
+            title = str(payload.get('title') or '').strip()
+            if not user_id or not title:
+                skipped += 1
+                continue
+
+            private_list = (
+                session.query(PrivateList)
+                .filter(PrivateList.userID == user_id, PrivateList.title == title[:255])
+                .first()
+            )
+            if not private_list:
+                private_list = PrivateList(
+                    userID=user_id,
+                    title=title[:255],
+                    icon=str(payload.get('icon') or 'checklist')[:64],
+                )
+                session.add(private_list)
+                session.flush()
+                lists_imported += 1
+
+            existing_titles = {
+                row[0]
+                for row in session.query(PrivateListItem.title)
+                .filter(PrivateListItem.listID == private_list.id)
+                .all()
+            }
+            for index, item_payload in enumerate(payload.get('items', []), start=1):
+                item_title = str(item_payload.get('title') or '').strip()
+                if not item_title or item_title in existing_titles:
+                    if not item_title:
+                        skipped += 1
+                    continue
+                position = item_payload.get('position')
+                try:
+                    position = int(position)
+                except (TypeError, ValueError):
+                    position = index
+                session.add(PrivateListItem(
+                    listID=private_list.id,
+                    title=item_title[:255],
+                    completed=bool(item_payload.get('completed')),
+                    position=position,
+                ))
+                existing_titles.add(item_title)
+                items_imported += 1
+
         session.commit()
-        return {'entries': imported, 'skipped': skipped}
+        return {
+            'entries': imported,
+            'lists': lists_imported,
+            'items': items_imported,
+            'skipped': skipped,
+        }
     except Exception:
         session.rollback()
         raise

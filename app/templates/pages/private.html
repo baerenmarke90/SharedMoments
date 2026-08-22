@@ -133,35 +133,37 @@
          <div class="private-hint">
             <i>lock</i>
             <div>
-               Dieser Bereich gehört nur dir. Weder Notizen noch Geschenkideen
-               tauchen in eurer Story, im Jahresrückblick oder auf dem Gerät
+               Dieser Bereich gehört nur dir. Notizen, Geschenkideen, Geburtstage
+               und private Listen tauchen weder in eurer Story noch auf dem Gerät
                deines Partners auf.
             </div>
          </div>
 
-         {% if private_notes_enabled and private_gifts_enabled %}
          <nav class="private-tabs">
+            {% if private_notes_enabled %}
             <a class="chip round {% if private_kind == 'note' %}fill{% endif %}"
                href="{{ url_for('pages.private_area', kind='note') }}">
                <i>sticky_note_2</i>
                <span>Notizen ({{ private_counts.note }})</span>
             </a>
-
+            {% endif %}
+            {% if private_gifts_enabled %}
             <a class="chip round {% if private_kind == 'gift' %}fill{% endif %}"
                href="{{ url_for('pages.private_area', kind='gift') }}">
                <i>card_giftcard</i>
                <span>Geschenke ({{ private_counts.gift }})</span>
             </a>
-
-            {% if private_gifts_enabled %}
             <a class="chip round {% if private_kind == 'birthday' %}fill{% endif %}"
                href="{{ url_for('pages.private_area', kind='birthday') }}">
                <i>cake</i>
                <span>Geburtstage ({{ private_counts.birthday }})</span>
             </a>
             {% endif %}
+            <a class="chip round" href="{{ url_for('pages.private_lists_page') }}">
+               <i>checklist</i>
+               <span>Listen ({{ private_list_count }})</span>
+            </a>
          </nav>
-         {% endif %}
 
          {% if private_entries %}
          {% for entry in private_entries %}
