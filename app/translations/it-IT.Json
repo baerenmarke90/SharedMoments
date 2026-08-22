@@ -40,70 +40,6 @@
         "translatedText": "Conto alla Rovescia"
     },
     {
-        "entityID": 1,
-        "fieldName": "in a relationship",
-        "helpText": null,
-        "languageCode": "it-IT",
-        "entityType": "relationship_status",
-        "translatedText": "in una relazione"
-    },
-    {
-        "entityID": 2,
-        "fieldName": "engaged",
-        "helpText": null,
-        "languageCode": "it-IT",
-        "entityType": "relationship_status",
-        "translatedText": "fidanzati"
-    },
-    {
-        "entityID": 3,
-        "fieldName": "married",
-        "helpText": null,
-        "languageCode": "it-IT",
-        "entityType": "relationship_status",
-        "translatedText": "sposati"
-    },
-    {
-        "entityID": 4,
-        "fieldName": "in an open relationship",
-        "helpText": null,
-        "languageCode": "it-IT",
-        "entityType": "relationship_status",
-        "translatedText": "in una relazione aperta"
-    },
-    {
-        "entityID": 5,
-        "fieldName": "in a complicated relationship",
-        "helpText": null,
-        "languageCode": "it-IT",
-        "entityType": "relationship_status",
-        "translatedText": "in una relazione complicata"
-    },
-    {
-        "entityID": 0,
-        "fieldName": "banner_text_anniversary",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
-        "languageCode": "it-IT",
-        "entityType": "static",
-        "translatedText": "Siamo {relationship_status} da {years_count}, {months_count} e {days_count}. Equivale a {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni."
-    },
-    {
-        "entityID": 0,
-        "fieldName": "banner_text_engaged",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
-        "languageCode": "it-IT",
-        "entityType": "static",
-        "translatedText": "Siamo {relationship_status} da {years_count}, {months_count} e {days_count}. Equivale a {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni. Siamo in una relazione dal {anniversary_date}."
-    },
-    {
-        "entityID": 0,
-        "fieldName": "banner_text_wedding",
-        "helpText": "Consulta il <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki#-translation\">wiki</a> per una descrizione dettagliata su come inserire questa traduzione.",
-        "languageCode": "it-IT",
-        "entityType": "static",
-        "translatedText": "Siamo {relationship_status} da {years_count}, {months_count} e {days_count}. Equivale a {diffInMonthsTotal} mesi, {diffInWeeksTotal} settimane o {diffInDays} giorni."
-    },
-    {
         "entityID": 0,
         "fieldName": "Year",
         "helpText": "",
@@ -1153,14 +1089,6 @@
     },
     {
         "entityID": 0,
-        "fieldName": "sm_edition",
-        "helpText": "",
-        "languageCode": "it-IT",
-        "entityType": "setting",
-        "translatedText": "Edizione"
-    },
-    {
-        "entityID": 0,
         "fieldName": "sm_version",
         "helpText": "",
         "languageCode": "it-IT",
@@ -1177,14 +1105,6 @@
     },
     {
         "entityID": 0,
-        "fieldName": "title",
-        "helpText": "",
-        "languageCode": "it-IT",
-        "entityType": "setting",
-        "translatedText": "Titolo"
-    },
-    {
-        "entityID": 0,
         "fieldName": "family_name",
         "helpText": "",
         "languageCode": "it-IT",
@@ -1198,14 +1118,6 @@
         "languageCode": "it-IT",
         "entityType": "setting",
         "translatedText": "Nome Gruppo Amici"
-    },
-    {
-        "entityID": 0,
-        "fieldName": "relationship_status",
-        "helpText": "",
-        "languageCode": "it-IT",
-        "entityType": "setting",
-        "translatedText": "Stato Relazione"
     },
     {
         "entityID": 0,

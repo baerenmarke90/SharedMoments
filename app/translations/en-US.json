@@ -40,70 +40,6 @@
         "translatedText": "Countdown"
     },
     {
-        "entityID": 1,
-        "fieldName": "in a relationship",
-        "helpText": null,
-        "languageCode": "en-US",
-        "entityType": "relationship_status",
-        "translatedText": "in a relationship"
-    },
-    {
-        "entityID": 2,
-        "fieldName": "engaged",
-        "helpText": null,
-        "languageCode": "en-US",
-        "entityType": "relationship_status",
-        "translatedText": "engaged"
-    },
-    {
-        "entityID": 3,
-        "fieldName": "married",
-        "helpText": null,
-        "languageCode": "en-US",
-        "entityType": "relationship_status",
-        "translatedText": "married"
-    },
-    {
-        "entityID": 4,
-        "fieldName": "in an open relationship",
-        "helpText": null,
-        "languageCode": "en-US",
-        "entityType": "relationship_status",
-        "translatedText": "in an open relationship"
-    },
-    {
-        "entityID": 5,
-        "fieldName": "in a complicated relationship",
-        "helpText": null,
-        "languageCode": "en-US",
-        "entityType": "relationship_status",
-        "translatedText": "in a complicated relationship"
-    },
-    {
-        "entityID": 0,
-        "fieldName": "banner_text_anniversary",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a detailed description of how to enter this translation.",
-        "languageCode": "en-US",
-        "entityType": "static",
-        "translatedText": "We have been {relationship_status} for {years_count}, {months_count}, and {days_count}. That's equivalent to {diffInMonthsTotal} months, {diffInWeeksTotal} weeks, or {diffInDays} days."
-    },
-    {
-        "entityID": 0,
-        "fieldName": "banner_text_engaged",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a detailed description of how to enter this translation.",
-        "languageCode": "en-US",
-        "entityType": "static",
-        "translatedText": "We have been {relationship_status} for {years_count}, {months_count}, and {days_count}. That's equivalent to {diffInMonthsTotal} months, {diffInWeeksTotal} weeks, or {diffInDays} days. We have been in a relationship since {anniversary_date}."
-    },
-    {
-        "entityID": 0,
-        "fieldName": "banner_text_wedding",
-        "helpText": "Check the <a class=\"link underline\" target=\"_blank\" href=\"https://github.com/tech-kev/SharedMoments/wiki/Translation#special-strings-with-variables\">wiki</a> for a detailed description of how to enter this translation.",
-        "languageCode": "en-US",
-        "entityType": "static",
-        "translatedText": "We have been {relationship_status} for {years_count}, {months_count}, and {days_count}. That's equivalent to {diffInMonthsTotal} months, {diffInWeeksTotal} weeks, or {diffInDays} days."
-    },
-    {
         "entityID": 0,
         "fieldName": "Year",
         "helpText": "",
@@ -1153,14 +1089,6 @@
     },
     {
         "entityID": 0,
-        "fieldName": "sm_edition",
-        "helpText": "",
-        "languageCode": "en-US",
-        "entityType": "setting",
-        "translatedText": "Edition"
-    },
-    {
-        "entityID": 0,
         "fieldName": "sm_version",
         "helpText": "",
         "languageCode": "en-US",
@@ -1177,14 +1105,6 @@
     },
     {
         "entityID": 0,
-        "fieldName": "title",
-        "helpText": "",
-        "languageCode": "en-US",
-        "entityType": "setting",
-        "translatedText": "Title"
-    },
-    {
-        "entityID": 0,
         "fieldName": "family_name",
         "helpText": "",
         "languageCode": "en-US",
@@ -1198,14 +1118,6 @@
         "languageCode": "en-US",
         "entityType": "setting",
         "translatedText": "Friend Group Name"
-    },
-    {
-        "entityID": 0,
-        "fieldName": "relationship_status",
-        "helpText": "",
-        "languageCode": "en-US",
-        "entityType": "setting",
-        "translatedText": "Relationship Status"
     },
     {
         "entityID": 0,
@@ -4215,7 +4127,7 @@
         "entityType": "ui",
         "translatedText": "Dark"
     },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moments",
     "helpText": null,
@@ -4223,7 +4135,7 @@
     "entityType": "ui",
     "translatedText": "Heart Moments"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Keep the little moments that made you feel loved, seen, appreciated or grateful.",
     "helpText": null,
@@ -4231,7 +4143,7 @@
     "entityType": "ui",
     "translatedText": "Keep the little moments that made you feel loved, seen, appreciated or grateful."
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "All Heart Moments",
     "helpText": null,
@@ -4239,7 +4151,7 @@
     "entityType": "ui",
     "translatedText": "All"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Shared Heart Moments",
     "helpText": null,
@@ -4247,7 +4159,7 @@
     "entityType": "ui",
     "translatedText": "Shared"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "My Heart Moments",
     "helpText": null,
@@ -4255,7 +4167,7 @@
     "entityType": "ui",
     "translatedText": "From me"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "My private Heart Moments",
     "helpText": null,
@@ -4263,7 +4175,7 @@
     "entityType": "ui",
     "translatedText": "Only for me"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Partner's Heart Moments",
     "helpText": null,
@@ -4271,7 +4183,7 @@
     "entityType": "ui",
     "translatedText": "From you"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Create Heart Moment",
     "helpText": null,
@@ -4279,7 +4191,7 @@
     "entityType": "ui",
     "translatedText": "Create Heart Moment"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Edit Heart Moment",
     "helpText": null,
@@ -4287,7 +4199,7 @@
     "entityType": "ui",
     "translatedText": "Edit Heart Moment"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Moment date",
     "helpText": null,
@@ -4295,7 +4207,7 @@
     "entityType": "ui",
     "translatedText": "Date"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment description",
     "helpText": null,
@@ -4303,7 +4215,7 @@
     "entityType": "ui",
     "translatedText": "Description"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "How did you feel?",
     "helpText": null,
@@ -4311,7 +4223,7 @@
     "entityType": "ui",
     "translatedText": "How did you feel?"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment visibility",
     "helpText": null,
@@ -4319,7 +4231,7 @@
     "entityType": "ui",
     "translatedText": "Visibility"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Shared with partner",
     "helpText": null,
@@ -4327,7 +4239,7 @@
     "entityType": "ui",
     "translatedText": "Shared with partner"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Only visible to me",
     "helpText": null,
@@ -4335,7 +4247,7 @@
     "entityType": "ui",
     "translatedText": "Only visible to me"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart feeling loved",
     "helpText": null,
@@ -4343,7 +4255,7 @@
     "entityType": "ui",
     "translatedText": "Loved"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart feeling seen",
     "helpText": null,
@@ -4351,7 +4263,7 @@
     "entityType": "ui",
     "translatedText": "Seen"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart feeling appreciated",
     "helpText": null,
@@ -4359,7 +4271,7 @@
     "entityType": "ui",
     "translatedText": "Appreciated"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart feeling supported",
     "helpText": null,
@@ -4367,7 +4279,7 @@
     "entityType": "ui",
     "translatedText": "Supported"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart feeling grateful",
     "helpText": null,
@@ -4375,7 +4287,7 @@
     "entityType": "ui",
     "translatedText": "Grateful"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart feeling happy",
     "helpText": null,
@@ -4383,7 +4295,7 @@
     "entityType": "ui",
     "translatedText": "Happy"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "No Heart Moments yet",
     "helpText": null,
@@ -4391,7 +4303,7 @@
     "entityType": "ui",
     "translatedText": "No Heart Moments yet"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Create your first Heart Moment",
     "helpText": null,
@@ -4399,7 +4311,7 @@
     "entityType": "ui",
     "translatedText": "Create your first Heart Moment"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment created successfully",
     "helpText": null,
@@ -4407,7 +4319,7 @@
     "entityType": "ui",
     "translatedText": "Heart Moment created successfully"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment updated successfully",
     "helpText": null,
@@ -4415,7 +4327,7 @@
     "entityType": "ui",
     "translatedText": "Heart Moment updated successfully"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment deleted successfully",
     "helpText": null,
@@ -4423,7 +4335,7 @@
     "entityType": "ui",
     "translatedText": "Heart Moment deleted successfully"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Unable to load Heart Moments",
     "helpText": null,
@@ -4431,7 +4343,7 @@
     "entityType": "ui",
     "translatedText": "Unable to load Heart Moments"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "An error occurred while saving the Heart Moment.",
     "helpText": null,
@@ -4439,7 +4351,7 @@
     "entityType": "ui",
     "translatedText": "An error occurred while saving the Heart Moment."
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "An error occurred while deleting the Heart Moment.",
     "helpText": null,
@@ -4447,7 +4359,7 @@
     "entityType": "ui",
     "translatedText": "An error occurred while deleting the Heart Moment."
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Please describe the Heart Moment",
     "helpText": null,
@@ -4455,7 +4367,7 @@
     "entityType": "ui",
     "translatedText": "Please describe the Heart Moment"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Delete this Heart Moment?",
     "helpText": null,
@@ -4463,7 +4375,7 @@
     "entityType": "ui",
     "translatedText": "Delete this Heart Moment?"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment shared",
     "helpText": null,
@@ -4471,7 +4383,7 @@
     "entityType": "ui",
     "translatedText": "Shared"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment private",
     "helpText": null,
@@ -4479,7 +4391,7 @@
     "entityType": "ui",
     "translatedText": "Private"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Choose photo",
     "helpText": null,
@@ -4487,7 +4399,7 @@
     "entityType": "ui",
     "translatedText": "Choose photo"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Remove photo",
     "helpText": null,
@@ -4495,7 +4407,7 @@
     "entityType": "ui",
     "translatedText": "Remove photo"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Photo preview",
     "helpText": null,
@@ -4503,7 +4415,7 @@
     "entityType": "ui",
     "translatedText": "Photo preview"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment saved, but the photo could not be uploaded.",
     "helpText": null,
@@ -4511,7 +4423,7 @@
     "entityType": "ui",
     "translatedText": "Heart Moment saved, but the photo could not be uploaded."
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "The photo could not be removed.",
     "helpText": null,
@@ -4519,7 +4431,7 @@
     "entityType": "ui",
     "translatedText": "The photo could not be removed."
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Do you remember?",
     "helpText": null,
@@ -4527,7 +4439,7 @@
     "entityType": "ui",
     "translatedText": "Do you remember?"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Heart Moment from",
     "helpText": null,
@@ -4535,7 +4447,7 @@
     "entityType": "ui",
     "translatedText": "From"
   },
-  {
+    {
     "entityID": 0,
     "fieldName": "Open Heart Moment",
     "helpText": null,

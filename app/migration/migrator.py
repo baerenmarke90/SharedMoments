@@ -537,16 +537,7 @@ def _step_migrate_users(status, dry_run, prefix):
 
 
 def _step_migrate_settings(status, dry_run, prefix):
-    """Map v1 settings to v2 settings table.
-
-    v1 settings (option → value, specialvalue):
-      banner       → banner image path (value), strip upload prefix
-      music        → banner song path (value), specialvalue='true'/'false'
-      mainTitle    → app title (value)
-      anniversary  → anniversary date (value)
-      wedding_date → wedding date (value)
-      countdown    → title (value), target date (specialvalue) → migrated as item
-    """
+    # Map still-supported v1 settings to SideBySide settings.
     from app.models import Setting, SessionLocal
 
     v1_settings = read_settings()
@@ -556,9 +547,7 @@ def _step_migrate_settings(status, dry_run, prefix):
 
     session = SessionLocal()
     try:
-        # v2_name → (v1 option name, transform)
         mappings = {
-            'title': ('mainTitle', None),
             'anniversary_date': ('anniversary', None),
             'wedding_date': ('wedding_date', None),
             'banner_image': ('banner', '_strip_upload'),
@@ -566,6 +555,7 @@ def _step_migrate_settings(status, dry_run, prefix):
         }
 
         migrated = 0
+
         for v2_name, (v1_option, transform) in mappings.items():
             v1_value = get_v1_setting(v1_settings, v1_option)
 
@@ -574,40 +564,41 @@ def _step_migrate_settings(status, dry_run, prefix):
 
             v1_value = str(v1_value)
 
-            # Skip fake banner placeholder
             if v1_option == 'banner' and 'fakeimg.pl' in v1_value:
                 log('info', f'{prefix} Skipping placeholder banner image')
                 continue
 
-                mapped = RELATIONSHIP_STATUS_MAP.get(v1_value.lower().strip(), '')
-                if mapped:
-                    v1_value = mapped
-                else:
-                    _warn(prefix, f'Unknown relationship status: "{v1_value}"')
-                    continue
-            elif transform == '_strip_upload':
+            if transform == '_strip_upload':
                 v1_value = _strip_upload_prefix(v1_value)
 
-            v2_setting = session.query(Setting).filter(Setting.name == v2_name).first()
-            if v2_setting:
-                if v2_setting.value and v2_setting.value != '':
-                    log('info', f'{prefix} Setting "{v2_name}" already has value, skipping')
-                    continue
-                log('info', f'{prefix} Setting {v2_name} = "{v1_value}"')
-                if not dry_run:
-                    v2_setting.value = v1_value
-                migrated += 1
+            v2_setting = (
+                session.query(Setting)
+                .filter(Setting.name == v2_name)
+                .first()
+            )
 
-        # Set edition to couples
-        if edition_setting and edition_setting.value != 'couples':
+            if not v2_setting:
+                continue
+
+            if v2_setting.value and v2_setting.value != '':
+                log(
+                    'info',
+                    f'{prefix} Setting "{v2_name}" already has value, skipping'
+                )
+                continue
+
+            log('info', f'{prefix} Setting {v2_name} = "{v1_value}"')
+
             if not dry_run:
-                edition_setting.value = 'couples'
+                v2_setting.value = v1_value
+
             migrated += 1
 
         if not dry_run:
             session.commit()
 
         _summary['settings_migrated'] = migrated
+
     finally:
         session.close()
 

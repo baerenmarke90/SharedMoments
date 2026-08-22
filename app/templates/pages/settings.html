@@ -79,23 +79,32 @@
 
 
               <legend>{{ _('General') }}</legend>
-
-              {% for setting in settings %}
-              {% if setting.category == 'general' and setting.name in ['anniversary_date', 'engaged_date', 'wedding_date'] %}
-              <a class="row padding primary-container{% if has_permission('Update Setting') %} wave" onclick="editSetting('{{setting.name}}', '{{setting.type}}'){% endif %}"
-                {% if setting.name in ['anniversary_date', 'engaged_date', 'wedding_date'] %} data-date-setting="{{ setting.name }}"{% endif %}>
-                <i>{{ setting.icon }}</i>
-                <div class="max">
-                  <h6 class="small" id="{{ setting.name }}-name">{{ _(setting.name) }}</h6>
-
-                  <div id="{{setting.name}}-value">{{ setting.value }}</div>
+               {% for setting in settings %}
+               {% if setting.category == 'general'
+                     and setting.name in ['anniversary_date', 'engaged_date', 'wedding_date'] %}
+               <a class="row padding primary-container{% if has_permission('Update Setting') %} wave{% endif %}"
+                  {% if has_permission('Update Setting') %}
+                  onclick="editSetting('{{ setting.name }}', '{{ setting.type }}')"
                   {% endif %}
-                </div>
-              </a>
-              {% endif %}
-              {% endfor %}
-
-              {# banner_song file upload (couples edition) #}
+                  data-date-setting="{{ setting.name }}">
+                 <i>{{ setting.icon }}</i>
+                 <div class="max">
+                   <h6 class="small" id="{{ setting.name }}-name">
+                     {{ _(setting.name) }}
+                   </h6>
+                   {% if setting.type == 'date' %}
+                   <div id="{{ setting.name }}-value"
+                        data-value="{{ setting.value or '' }}">
+                     {{ setting.value | format_string_date_dmy if setting.value else '-' }}
+                   </div>
+                   {% else %}
+                   <div id="{{ setting.name }}-value">{{ setting.value }}</div>
+                   {% endif %}
+                 </div>
+               </a>
+               {% endif %}
+               {% endfor %}
+               {# banner_song file upload (couples edition) #}
               {% for setting in settings %}
               {% if setting.name == 'banner_song' %}
               <a class="row padding primary-container{% if has_permission('Update Setting') %} wave{% endif %}" {% if has_permission('Update Setting') %}onclick="document.getElementById('banner-song-input').click()"{% endif %}>
