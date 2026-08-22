@@ -284,8 +284,16 @@ function deleteListTypeFromDialog() {
 
 let sortableInstance = null;
 
-function changeNavOrder(mode) {
+async function changeNavOrder(mode) {
     if (mode == 'edit') {
+        // SortableJS haengt nicht mehr im head, sondern kommt erst hier.
+        try {
+            await loadScriptOnce('https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js');
+        } catch (error) {
+            showSnackbar('navbar', true, 'error', String(error), null, false);
+            return;
+        }
+
         const checkElements = document.getElementsByClassName('check');
         for (let i = 0; i < checkElements.length; i++) {
             checkElements[i].textContent = 'drag_handle';

@@ -3,8 +3,8 @@
   "short_name": "SharedMoments",
   "start_url": "/home",
   "display": "standalone",
-  "background_color": "#1c1b1f",
-  "theme_color": "#6750a4",
+  "background_color": "#faf6fb",
+  "theme_color": "#faf6fb",
   "orientation": "portrait-primary",
   "icons": [
     {

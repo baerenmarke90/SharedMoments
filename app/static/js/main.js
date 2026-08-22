@@ -25,11 +25,40 @@ window.addEventListener('popstate', function() {
    }
 });
 
+// Laedt ein externes Skript genau einmal und erst, wenn es gebraucht wird.
+// Ersetzt die frueheren <script>-Tags fuer html2canvas und SortableJS im head.
+const _loadedScripts = {};
+
+function loadScriptOnce(src) {
+   if (_loadedScripts[src]) return _loadedScripts[src];
+
+   _loadedScripts[src] = new Promise((resolve, reject) => {
+      const element = document.createElement('script');
+      element.src = src;
+      element.async = true;
+      element.onload = () => resolve();
+      element.onerror = () => {
+         delete _loadedScripts[src];
+         reject(new Error('Script konnte nicht geladen werden: ' + src));
+      };
+      document.head.appendChild(element);
+   });
+
+   return _loadedScripts[src];
+}
+
 // Overlay eines Dialogs ueber <div class="overlay" data-dialog="#dialog-x">
 function setDialogOverlay(id, active) {
    document.querySelectorAll('.overlay[data-dialog="' + id + '"]').forEach((overlay) => {
       overlay.classList.toggle("active", active);
    });
+}
+
+// Solange ein Dialog offen ist, weicht die mobile Bottom-Nav nach unten aus.
+// Wird aus dem tatsaechlichen DOM-Zustand abgeleitet, damit verschachtelte
+// Dialoge die Leiste nicht zu frueh zurueckholen.
+function syncDialogOpenState() {
+   document.body.classList.toggle("dialog-open", !!document.querySelector("dialog.active"));
 }
 
 // Umschalten zwischen Modal anzeigen und verstecken
@@ -84,6 +113,7 @@ function callUi(id) {
       // Neuere Dialoge melden ihr Overlay ueber data-dialog an, statt die
       // Kette oben zu verlaengern.
       setDialogOverlay(id, false);
+      syncDialogOpenState();
       document.body.style.overflow = "auto"; // Scrollen wieder erlauben
    } else {
       // Modal anzeigen
@@ -131,6 +161,7 @@ function callUi(id) {
          document.getElementById("div-overlay-share-item").classList.add("active");
       }
       setDialogOverlay(id, true);
+      syncDialogOpenState();
       document.body.style.overflow = "hidden"; // Scrollen verhindern
       history.pushState({modal: id}, '');
    }
@@ -274,10 +305,16 @@ document.addEventListener('keydown', function(e) {
 
 document.addEventListener('DOMContentLoaded', () => {
    observeLazyImages();
+   syncDialogOpenState();
    const btt = document.getElementById('btn-back-to-top');
    if (btt) {
+      // Nur bei Zustandswechsel ins DOM schreiben - vorher lief bei jedem
+      // Scroll-Event ein Style-Write und damit ein Recalc.
+      let visible = null;
       window.addEventListener('scroll', () => {
          const show = window.scrollY > 300;
+         if (show === visible) return;
+         visible = show;
          btt.style.opacity = show ? '1' : '0';
          btt.style.pointerEvents = show ? 'auto' : 'none';
       }, { passive: true });

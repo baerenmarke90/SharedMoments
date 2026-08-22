@@ -2207,6 +2207,8 @@ async function exportBannerCard() {
    if (playBtn) playBtn.style.display = 'none';
 
    try {
+      // html2canvas haengt nicht mehr im head, sondern kommt erst hier.
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
       const canvas = await html2canvas(article, { scale: 2, useCORS: true });
 
       // Buttons wieder einblenden

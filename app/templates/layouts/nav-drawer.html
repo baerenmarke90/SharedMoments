@@ -13,44 +13,44 @@
        </header>
 
        {% if nav_edition == 'couples' %}
-       <div class="nav-drawer-group">Wir</div>
-       {% endif %}
-
-       <!-- Listenelemente -->
+       {# Couples: nach Bedeutung gruppiert statt nach Datenherkunft.
+          Die eigenen Listen stehen unten unter "Listen", damit sie nicht
+          zwischen Beziehungsseiten auftauchen. #}
+       {% set nav_ns = namespace(home=none, bucket=false, extra=[]) %}
        {% for list_type in list_types %}
-       {% if list_type.navbar == 1
-             and has_list_permission('View', list_type.title)
-             and (list_type.edition == 'all' or list_type.edition == nav_edition)
-             and not (nav_edition == 'couples' and list_type.contentURL == 'bucket-list') %}
-       <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}"
-          {%- if request.path == '/' ~ list_type.contentURL %} class="nav-current" aria-current="page"{% endif %}>
-       <i>{{ list_type.icon }}</i>
-       <span>{% if nav_edition == 'couples' and list_type.title == 'Home' %}Wir{% else %}{{ _(list_type.title) }}{% endif %}</span>
+          {% if list_type.navbar == 1
+                and has_list_permission('View', list_type.title)
+                and (list_type.edition == 'all' or list_type.edition == nav_edition) %}
+             {% if list_type.title == 'Home' %}
+                {% set nav_ns.home = list_type %}
+             {% elif list_type.contentURL != 'bucket-list' %}
+                {% set nav_ns.extra = nav_ns.extra + [list_type] %}
+             {% endif %}
+          {% endif %}
+          {% if list_type.contentURL == 'bucket-list' and has_list_permission('View', list_type.title) %}
+             {% set nav_ns.bucket = true %}
+          {% endif %}
+       {% endfor %}
+
+       <div class="nav-drawer-group">Unsere Beziehung</div>
+       {% if nav_ns.home %}
+       <a id="nav-{{ nav_ns.home.navbarOrder }}" href="/{{ nav_ns.home.contentURL }}"
+          {%- if request.path == '/' ~ nav_ns.home.contentURL %} class="nav-current" aria-current="page"{% endif %}>
+          <i>{{ nav_ns.home.icon }}</i>
+          <span>Wir</span>
        </a>
-       {% if nav_edition == 'couples' and list_type.title == 'Home' %}
+       {% endif %}
        <a href="/story"{{ nav_state('/story') }}>
           <i>auto_stories</i>
           <span>Unsere Geschichte</span>
        </a>
-       {% endif %}
-       {% endif %}
-       {% endfor %}
-
-       <!-- COUPLES CONTENT NAV -->
-       {% if nav_edition == 'couples' %}
        <a href="/year"{{ nav_state('/year') }}>
           <i>calendar_view_month</i>
           <span>Unser Jahr</span>
        </a>
 
-       <div class="nav-drawer-group">Wunsch → Plan → Kapitel</div>
-       {% set bucket_nav = namespace(visible=false) %}
-       {% for list_type in list_types %}
-          {% if list_type.contentURL == 'bucket-list' and has_list_permission('View', list_type.title) %}
-             {% set bucket_nav.visible = true %}
-          {% endif %}
-       {% endfor %}
-       {% if bucket_nav.visible %}
+       <div class="nav-drawer-group">Planen &amp; Erleben</div>
+       {% if nav_ns.bucket %}
        <a href="/bucketlist"{{ nav_state('/bucketlist') }}>
           <i>checklist</i>
           <span>Bucketlist</span>
@@ -65,7 +65,7 @@
           <span>Kapitel</span>
        </a>
 
-       <div class="nav-drawer-group">Inhalte</div>
+       <div class="nav-drawer-group">Momente &amp; Orte</div>
        <a href="/memories"{{ nav_state('/memories') }}>
           <i>photo_library</i>
           <span>Erinnerungen</span>
@@ -84,6 +84,32 @@
           <i>map</i>
           <span>Unsere Orte</span>
        </a>
+
+       {% if nav_ns.extra %}
+       <div class="nav-drawer-group">Listen</div>
+       {% for list_type in nav_ns.extra %}
+       <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}"
+          {%- if request.path == '/' ~ list_type.contentURL %} class="nav-current" aria-current="page"{% endif %}>
+          <i>{{ list_type.icon }}</i>
+          <span>{{ _(list_type.title) }}</span>
+       </a>
+       {% endfor %}
+       {% endif %}
+
+       {% else %}
+
+       <!-- Listenelemente -->
+       {% for list_type in list_types %}
+       {% if list_type.navbar == 1
+             and has_list_permission('View', list_type.title)
+             and (list_type.edition == 'all' or list_type.edition == nav_edition) %}
+       <a id="nav-{{ list_type.navbarOrder }}" href="/{{ list_type.contentURL }}"
+          {%- if request.path == '/' ~ list_type.contentURL %} class="nav-current" aria-current="page"{% endif %}>
+       <i>{{ list_type.icon }}</i>
+       <span>{{ _(list_type.title) }}</span>
+       </a>
+       {% endif %}
+       {% endfor %}
        {% endif %}
 
        {% if has_permission('Manage Lists') %}

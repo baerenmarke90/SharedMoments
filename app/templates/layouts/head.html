@@ -2,51 +2,41 @@
 <meta charset="UTF-8">
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="{{ accent_color|default('#6750A4') }}">
+{# Statusleiste nimmt den Seitenhintergrund auf statt einer kraeftigen
+   Akzentfarbe - das wirkt auf Android deutlich mehr nach App als nach Website. #}
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf6fb">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14111c">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="{{ static_versioned('pwa/sm-icon-192.png') }}">
-<!-- html2canvas (Banner Export) -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
-<!-- SortableJS (Drag & Drop) -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" defer></script>
-<!-- BeerCSS -->
-{% if (accent_color and accent_color != '#6750A4') or (darkmode and darkmode.value == 'AUTO') %}
-<style id="theme-cloak">body { opacity: 0; } body.theme-ready { opacity: 1; transition: opacity 0.05s; }</style>
-{% endif %}
+<!-- BeerCSS
+     html2canvas (Banner-Export) und SortableJS (Sortieren) werden erst bei
+     Bedarf geladen: loadScriptOnce() in main.js. Das spart rund 240 KB auf
+     jedem Seitenaufruf.
+     Die Palette steht fest in css/couple.css, deshalb kein
+     material-dynamic-colors und kein Opacity-Cloak mehr - die Seite malt
+     jetzt sofort statt erst nach dem Modul-Skript. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://cdn.jsdelivr.net/npm/beercss@3.6.13/dist/cdn/beer.min.css" rel="stylesheet">
 <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.6.13/dist/cdn/beer.min.js"></script>
-<script type="module"
-    src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
-<script type="module">
-  window.applyTheme = async (hex) => await ui('theme', hex);
-  const accentColor = '{{ accent_color|default("#6750A4") }}';
-  const darkmodeValue = '{{ darkmode.value if darkmode else "FALSE" }}';
-
-  if (darkmodeValue === 'AUTO') {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    document.body.classList.toggle('dark', mq.matches);
-    if (accentColor && accentColor !== '#6750A4') {
-      await ui('theme', accentColor);
-    }
-    window.__autoDarkMq = mq;
-    window.__autoDarkMqListener = async (e) => {
-      document.body.classList.toggle('dark', e.matches);
-      const currentAccent = document.getElementById('input-custom-accent-color')?.value
-        || document.querySelector('meta[name="theme-color"]')?.content;
-      if (currentAccent && typeof window.applyTheme === 'function') {
-        await window.applyTheme(currentAccent);
-      }
-    };
-    mq.addEventListener('change', window.__autoDarkMqListener);
-  } else if (accentColor && accentColor !== '#6750A4') {
-    await ui('theme', accentColor);
+{% if darkmode and darkmode.value == 'AUTO' %}
+{# Der Grund wird sofort dunkel gemalt, damit vor dem Setzen von body.dark
+   kein weisser Blitz entsteht. Frueher hat das ein body{opacity:0}-Cloak
+   erledigt - das hat die Seite bis zum Modul-Skript komplett leer gelassen. #}
+<style>
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; }
+    html, body { background: #14111c; }
   }
-
-  document.body.classList.add('theme-ready');
-  const cloak = document.getElementById('theme-cloak');
-  if (cloak) cloak.remove();
+</style>
+<script type="module">
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  document.body.classList.toggle('dark', mq.matches);
+  window.__autoDarkMq = mq;
+  window.__autoDarkMqListener = (e) => document.body.classList.toggle('dark', e.matches);
+  mq.addEventListener('change', window.__autoDarkMqListener);
 </script>
+{% endif %}
 <!-- BeerCSS -->
 <!-- PWA Scripts -->
 <script>var translationsArray = {{ translations_json|safe }};</script>
