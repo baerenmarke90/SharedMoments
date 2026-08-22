@@ -16,7 +16,8 @@ from app.db_queries import (get_all_list_types, get_all_relationship_statuses,
     get_couple_plans, get_couple_plan, create_couple_plan,
     update_couple_plan, delete_couple_plan, set_couple_plan_chapter,
     get_couple_bucket_plan_map, link_couple_bucket_plan,
-    sync_bucket_item_to_plan, get_couple_places, get_couple_place,
+    sync_bucket_item_to_plan, return_couple_plan_to_bucketlist,
+    get_couple_places, get_couple_place,
     create_couple_place, update_couple_place, delete_couple_place,
     sync_couple_source_location, bootstrap_couple_places_from_existing_locations,
     get_couple_place_link_map, replace_couple_place_manual_links,
@@ -2243,6 +2244,20 @@ def bucketlist():
 
         search_query = str(request.args.get('q', '')).strip()
         search_needle = search_query.casefold()
+        selected_sort = str(
+            request.args.get('sort', 'created_desc')
+        ).strip().lower()
+        allowed_sorts = {
+            'created_desc',
+            'created_asc',
+            'name_asc',
+            'name_desc',
+            'modified_desc',
+            'status',
+        }
+        if selected_sort not in allowed_sorts:
+            selected_sort = 'created_desc'
+
         plan_map = get_couple_bucket_plan_map()
 
         raw_items = get_items_by_type(
@@ -2301,7 +2316,55 @@ def bucketlist():
                 'creator': creator,
                 'plan': plan_meta,
                 'date_created': item.dateCreated,
+                'date_modified': item.dateModified,
             })
+
+        def bucket_datetime(value):
+            if isinstance(value, datetime):
+                return value
+            if isinstance(value, date):
+                return datetime.combine(value, datetime.min.time())
+            return datetime.min
+
+        if selected_sort == 'name_asc':
+            bucket_items.sort(key=lambda entry: (entry['title'].casefold(), entry['id']))
+        elif selected_sort == 'name_desc':
+            bucket_items.sort(
+                key=lambda entry: (entry['title'].casefold(), entry['id']),
+                reverse=True,
+            )
+        elif selected_sort == 'created_asc':
+            bucket_items.sort(
+                key=lambda entry: (bucket_datetime(entry['date_created']), entry['id'])
+            )
+        elif selected_sort == 'modified_desc':
+            bucket_items.sort(
+                key=lambda entry: (
+                    bucket_datetime(entry['date_modified']),
+                    entry['id'],
+                ),
+                reverse=True,
+            )
+        elif selected_sort == 'status':
+            def bucket_status_rank(entry):
+                if entry['completed']:
+                    return 2
+                if entry.get('plan'):
+                    return 1
+                return 0
+
+            bucket_items.sort(
+                key=lambda entry: (
+                    bucket_status_rank(entry),
+                    entry['title'].casefold(),
+                    entry['id'],
+                )
+            )
+        else:
+            bucket_items.sort(
+                key=lambda entry: (bucket_datetime(entry['date_created']), entry['id']),
+                reverse=True,
+            )
 
         open_count = total_count - done_count
         progress_percent = (
@@ -2322,6 +2385,7 @@ def bucketlist():
             list_type_title=list_type.title,
             selected_status=selected_status,
             search_query=search_query,
+            selected_sort=selected_sort,
             total_count=total_count,
             open_count=open_count,
             planned_count=planned_count,
@@ -2393,8 +2457,19 @@ def toggle_bucket_item_page(item_id):
         if return_status not in {'all', 'open', 'planned', 'done'}:
             return_status = 'open'
         return_query = str(request.form.get('return_q', '')).strip()
+        return_sort = str(
+            request.form.get('return_sort', 'created_desc')
+        ).strip().lower()
+        if return_sort not in {
+            'created_desc', 'created_asc', 'name_asc', 'name_desc',
+            'modified_desc', 'status',
+        }:
+            return_sort = 'created_desc'
 
-        redirect_kwargs = {'status': return_status}
+        redirect_kwargs = {
+            'status': return_status,
+            'sort': return_sort,
+        }
         if return_query:
             redirect_kwargs['q'] = return_query
         return redirect(url_for('pages.bucketlist', **redirect_kwargs))
@@ -2526,6 +2601,14 @@ def plans():
             for plan in get_couple_plans()
         ]
         _attach_source_places(all_plans, 'plan', place_link_map)
+
+        bucket_plan_map = get_couple_bucket_plan_map()
+        bucket_item_by_plan_id = {
+            plan_meta['id']: bucket_item_id
+            for bucket_item_id, plan_meta in bucket_plan_map.items()
+        }
+        for plan in all_plans:
+            plan['bucket_item_id'] = bucket_item_by_plan_id.get(plan['id'])
 
         status_rank = {
             'planned': 0,
@@ -2689,6 +2772,48 @@ def delete_plan_page(plan_id):
         return redirect(url_for(
             'pages.plans',
             error='Der Plan konnte nicht gelöscht werden.',
+        ))
+
+
+@pages_bp.route('/plans/<int:plan_id>/bucketlist', methods=['POST'])
+@jwt_required
+def plan_back_to_bucketlist_page(plan_id):
+    sm_edition = get_setting_by_name('sm_edition').value
+    if sm_edition != 'couples':
+        return redirect(url_for('pages.home'))
+
+    plan = get_couple_plan(plan_id)
+    if not plan:
+        return redirect(url_for('pages.plans'))
+    if plan['createdByUser'] != g.user_id:
+        return redirect(url_for(
+            'pages.plans',
+            error='Du kannst nur deine eigenen Pläne zurück in die Bucketlist legen.',
+        ))
+    if plan.get('status') == 'experienced' or plan.get('chapterID'):
+        return redirect(url_for(
+            'pages.plans',
+            error='Ein erlebter oder bereits als Kapitel festgehaltener Plan kann nicht zurück in die Bucketlist.',
+        ))
+
+    try:
+        bucket_item_id = return_couple_plan_to_bucketlist(plan_id)
+        if not bucket_item_id:
+            return redirect(url_for(
+                'pages.plans',
+                error='Dieser Plan stammt nicht aus der Bucketlist.',
+            ))
+        return redirect(
+            url_for('pages.bucketlist', status='open')
+            + f'#bucket-{bucket_item_id}'
+        )
+    except ValueError as exc:
+        return redirect(url_for('pages.plans', error=str(exc)))
+    except Exception as e:
+        log('error', f'Error while returning plan {plan_id} to Bucketlist: {e}')
+        return redirect(url_for(
+            'pages.plans',
+            error='Der Plan konnte nicht zurück in die Bucketlist gelegt werden.',
         ))
 
 

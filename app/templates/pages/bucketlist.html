@@ -90,6 +90,12 @@
             margin: 0;
          }
 
+         .bucket-sort {
+            width: 190px;
+            min-width: 190px;
+            margin: 0;
+         }
+
          .bucket-filters {
             display: flex;
             align-items: center;
@@ -334,6 +340,20 @@
                padding: 0.75rem 0.85rem;
             }
 
+            .bucket-tools {
+               align-items: stretch;
+               flex-wrap: wrap;
+            }
+
+            .bucket-search {
+               flex-basis: 100%;
+            }
+
+            .bucket-sort {
+               width: 100%;
+               min-width: 0;
+            }
+
             .bucket-item {
                grid-template-columns: 38px minmax(0, 1fr) 24px 34px;
                gap: 0.48rem;
@@ -374,7 +394,7 @@
 
       <main class="responsive bucket-page">
          <p class="bucket-intro">
-            Eure gemeinsame Irgendwann-Liste: alles, was ihr im Leben noch zusammen machen, sehen oder erleben wollt. Wird aus einer Idee etwas Konkretes, macht ihr daraus einen Plan.
+            Eure gemeinsame Liste für alles, was ihr im Leben noch zusammen machen, sehen oder erleben wollt. Wird aus einer Idee etwas Konkretes, macht ihr daraus einen Plan.
          </p>
 
          {% if bucket_error %}
@@ -406,7 +426,7 @@
                       maxlength="255"
                       autocomplete="off"
                       required>
-               <label>Was wollt ihr irgendwann zusammen machen?</label>
+               <label>Was wollt ihr zusammen machen?</label>
             </div>
             <button class="square round" type="submit" aria-label="Zur Bucketlist hinzufügen">
                <i>add</i>
@@ -425,23 +445,34 @@
                          placeholder="Bucketlist durchsuchen">
                </div>
             </div>
+            <div class="field border suffix bucket-sort">
+               <select name="sort" aria-label="Bucketlist sortieren" onchange="this.form.submit()">
+                  <option value="created_desc" {% if selected_sort == 'created_desc' %}selected{% endif %}>Neueste zuerst</option>
+                  <option value="created_asc" {% if selected_sort == 'created_asc' %}selected{% endif %}>Älteste zuerst</option>
+                  <option value="name_asc" {% if selected_sort == 'name_asc' %}selected{% endif %}>Name A–Z</option>
+                  <option value="name_desc" {% if selected_sort == 'name_desc' %}selected{% endif %}>Name Z–A</option>
+                  <option value="modified_desc" {% if selected_sort == 'modified_desc' %}selected{% endif %}>Zuletzt geändert</option>
+                  <option value="status" {% if selected_sort == 'status' %}selected{% endif %}>Nach Status</option>
+               </select>
+               <i>sort</i>
+            </div>
          </form>
 
          <nav class="bucket-filters">
             <a class="chip round bucket-filter-chip{% if selected_status == 'open' %} fill{% endif %}"
-               href="{{ url_for('pages.bucketlist', status='open', q=search_query) if search_query else url_for('pages.bucketlist', status='open') }}">
+               href="{{ url_for('pages.bucketlist', status='open', q=search_query, sort=selected_sort) }}">
                <i>radio_button_unchecked</i><span>Offen {{ open_count }}</span>
             </a>
             <a class="chip round bucket-filter-chip{% if selected_status == 'planned' %} fill{% endif %}"
-               href="{{ url_for('pages.bucketlist', status='planned', q=search_query) if search_query else url_for('pages.bucketlist', status='planned') }}">
+               href="{{ url_for('pages.bucketlist', status='planned', q=search_query, sort=selected_sort) }}">
                <i>event_available</i><span>In Planung {{ planned_count }}</span>
             </a>
             <a class="chip round bucket-filter-chip{% if selected_status == 'done' %} fill{% endif %}"
-               href="{{ url_for('pages.bucketlist', status='done', q=search_query) if search_query else url_for('pages.bucketlist', status='done') }}">
+               href="{{ url_for('pages.bucketlist', status='done', q=search_query, sort=selected_sort) }}">
                <i>check_circle</i><span>Erledigt {{ done_count }}</span>
             </a>
             <a class="chip round bucket-filter-chip{% if selected_status == 'all' %} fill{% endif %}"
-               href="{{ url_for('pages.bucketlist', status='all', q=search_query) if search_query else url_for('pages.bucketlist', status='all') }}">
+               href="{{ url_for('pages.bucketlist', status='all', q=search_query, sort=selected_sort) }}">
                <i>apps</i><span>Alle {{ total_count }}</span>
             </a>
          </nav>
@@ -458,6 +489,7 @@
                   <input type="hidden" name="completed" value="{{ '0' if entry.completed else '1' }}">
                   <input type="hidden" name="return_status" value="{{ selected_status }}">
                   <input type="hidden" name="return_q" value="{{ search_query }}">
+                  <input type="hidden" name="return_sort" value="{{ selected_sort }}">
                   <button class="bucket-check transparent"
                           type="submit"
                           aria-label="{% if entry.completed %}Als offen markieren{% else %}Als erledigt markieren{% endif %}">
@@ -482,7 +514,7 @@
                      {% elif entry.completed %}
                      <span>Erlebt</span>
                      {% else %}
-                     <span>Irgendwann</span>
+                     <span>Offen</span>
                      {% endif %}
                   </div>
                </div>

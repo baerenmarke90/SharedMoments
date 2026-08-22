@@ -294,7 +294,7 @@
 
       <main class="responsive plans-page">
          <p class="plans-intro">
-            Hier werden aus Ideen konkrete Vorhaben. Was ihr irgendwann einmal zusammen machen wollt, sammelt ihr zuerst in der <a href="{{ url_for('pages.bucketlist') }}">Bucketlist</a>. Aus einem erlebten Plan kann später direkt ein Kapitel werden.
+            Hier werden aus Ideen konkrete Vorhaben. Was noch nicht konkret ist, sammelt ihr zuerst in der <a href="{{ url_for('pages.bucketlist') }}">Bucketlist</a>. Aus einem erlebten Plan kann später direkt ein Kapitel werden.
          </p>
 
          {% if plan_error %}
@@ -394,6 +394,17 @@
                         <button class="transparent" type="submit">
                            <i>auto_stories</i>
                            Als Kapitel festhalten
+                        </button>
+                     </form>
+                     {% endif %}
+
+                     {% if plan.bucket_item_id and plan.status != 'experienced' and not plan.chapter %}
+                     <form method="post"
+                           action="{{ url_for('pages.plan_back_to_bucketlist_page', plan_id=plan.id) }}"
+                           onsubmit="return confirm('Diesen Plan zurück in die Bucketlist legen? Der Bucketlist-Eintrag bleibt erhalten; der konkrete Plan wird entfernt.');">
+                        <button class="transparent" type="submit">
+                           <i>undo</i>
+                           Zurück zur Bucketlist
                         </button>
                      </form>
                      {% endif %}

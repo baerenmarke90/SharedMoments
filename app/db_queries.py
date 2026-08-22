@@ -1484,6 +1484,65 @@ def sync_bucket_item_to_plan(bucket_item_id, completed):
         session.close()
 
 
+def return_couple_plan_to_bucketlist(plan_id):
+    """Return a Bucketlist-derived active Plan to the open Bucketlist.
+
+    The original Bucketlist Item is kept. The temporary execution Plan and its
+    place links are removed so the wish becomes a normal open Bucketlist entry
+    again. Experienced plans or plans already converted to a chapter are not
+    reversible through this workflow.
+    """
+    session = SessionLocal()
+    try:
+        plan = (
+            session.query(CouplePlan)
+            .filter(CouplePlan.id == plan_id)
+            .first()
+        )
+        if not plan:
+            return None
+
+        if plan.status == 'experienced' or plan.chapterID:
+            raise ValueError('Experienced plans cannot be returned to the Bucketlist')
+
+        link = (
+            session.query(CoupleBucketPlanLink)
+            .filter(CoupleBucketPlanLink.planID == plan_id)
+            .first()
+        )
+        if not link:
+            return None
+
+        bucket_item = (
+            session.query(Item)
+            .filter(Item.id == link.bucketItemID)
+            .first()
+        )
+        if not bucket_item:
+            return None
+
+        # Keep title changes made while the wish was a concrete plan.
+        if plan.title:
+            bucket_item.title = plan.title
+        bucket_item.content = '0'
+
+        bucket_item_id = bucket_item.id
+
+        session.query(CouplePlaceLink).filter(
+            CouplePlaceLink.sourceType == 'plan',
+            CouplePlaceLink.sourceID == plan_id,
+        ).delete(synchronize_session=False)
+        session.delete(link)
+        session.delete(plan)
+        session.commit()
+        return bucket_item_id
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 # Couple Places
 
 _ALLOWED_PLACE_SOURCE_TYPES = {

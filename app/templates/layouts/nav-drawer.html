@@ -143,18 +143,27 @@
     </div>
     <div id="div-nav-sortable">
     {% for list_type in list_types %}
-    {% if list_type.navbar == 1 %}
     <div class="s12" id="div-nav-{{ list_type.id }}">
-       <a class="row padding surface-container" data-id="{{ list_type.id }}" data-title="{{ list_type.title }}" data-maintitle="{{ list_type.mainTitle }}" data-contenturl="{{ list_type.contentURL }}" data-icon="{{ list_type.icon }}" data-edition="{{ list_type.edition }}">
+       <a class="row padding surface-container"
+          data-id="{{ list_type.id }}"
+          data-title="{{ list_type.title }}"
+          data-maintitle="{{ list_type.mainTitle }}"
+          data-contenturl="{{ list_type.contentURL }}"
+          data-icon="{{ list_type.icon }}"
+          data-edition="{{ list_type.edition }}"
+          data-navbar="{{ 1 if list_type.navbar else 0 }}">
           <i>{{ list_type.icon }}</i>
           <div class="max">
-             <h6 class="small">{{ _(list_type.title) }}</h6>
+             <h6 class="small" style="margin-bottom:.1rem;">{{ _(list_type.title) }}</h6>
+             <div class="small" style="opacity:.62;">
+                {% if list_type.navbar %}Im Menü{% else %}Nicht im Menü{% endif %}
+                · {{ list_type.edition|capitalize }}
+             </div>
           </div>
           <i class="check" onclick="openEditListTypeFromElement(this.closest('a'))">edit</i>
        </a>
        <hr>
     </div>
-    {% endif %}
     {% endfor %}
     </div>
  </dialog>
